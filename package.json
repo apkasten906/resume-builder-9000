@@ -1,0 +1,33 @@
+{
+  "name": "resume-builder-9000",
+  "private": true,
+  "description": "A resume orchestration engine that creates tailored, ATS-friendly resumes",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm -ws run build",
+    "dev": "npm -ws run dev",
+    "test": "npm -ws run test",
+    "lint": "npm -ws run lint",
+    "check-flags": "./scripts/check-flags.ps1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apkasten906/resume-builder-9000.git"
+  },
+  "keywords": [
+    "resume",
+    "ats",
+    "job-search",
+    "typescript",
+    "nextjs"
+  ],
+  "author": "Resume Builder 9000 Team",
+  "license": "MIT"
+}
