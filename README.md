@@ -38,3 +38,14 @@ A resume orchestration engine that compiles a fully tailored, ATS-friendly resum
   - `@rb9k/core`: Shared business logic (TypeScript)
   - `@rb9k/api`: Backend API (Express)
   - `@rb9k/web`: Frontend application (Next.js)
+
+## Development & CI/CD
+
+[![CI Status](https://github.com/apkasten906/resume-builder-9000/actions/workflows/ci.yml/badge.svg)](https://github.com/apkasten906/resume-builder-9000/actions/workflows/ci.yml)
+
+- Strict TypeScript with ESLint
+- Automated testing with Vitest
+- CI/CD pipeline with GitHub Actions
+- Branch protection with required code reviews
+
+See [CI/CD Documentation](./docs/CI_CD.md) for more details.
