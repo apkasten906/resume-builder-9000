@@ -155,6 +155,22 @@ export async function rewriteBullet(bullet: string, style: Style) {
 - Use code splitting and lazy loading
 - Consider edge rendering for global performance
 
+## Command Line Instructions
+
+- Always use PowerShell syntax when suggesting terminal commands
+- For multiple commands, use semicolons (`;`) as separators
+- Use correct PowerShell path conventions (e.g., `Join-Path`)
+- Handle paths with spaces correctly using quotes
+- Use PowerShell-specific commands like `Select-String` instead of grep
+
+```powershell
+# ✅ Good - PowerShell syntax
+Get-ChildItem -Path "src" -Filter "*.ts" -Recurse | Select-String -Pattern "useEffect"
+
+# ❌ Avoid - Bash syntax
+grep -r "useEffect" src/
+```
+
 ## Accessibility
 
 - Use semantic HTML elements

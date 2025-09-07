@@ -10,6 +10,8 @@
     "build": "npm -ws run build",
     "dev": "npm -ws run dev",
     "test": "npm -ws run test",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
     "lint": "npm -ws run lint",
     "check-flags": "./scripts/check-flags.ps1"
   },
@@ -29,5 +31,9 @@
     "nextjs"
   ],
   "author": "Resume Builder 9000 Team",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@vitest/ui": "^3.2.4",
+    "vitest": "^3.2.4"
+  }
 }
