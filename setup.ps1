@@ -44,4 +44,8 @@ npm run build --workspaces
 Write-Host "🧪 Running tests..."
 npm run test --workspaces
 
+# Set up Git hooks
+Write-Host "🪝 Setting up Git hooks..."
+& "$PSScriptRoot\..\scripts\setup-hooks.ps1"
+
 Write-Host "✅ Setup complete! You can now run './dev.ps1' to start the development environment."
