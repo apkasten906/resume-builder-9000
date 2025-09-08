@@ -5,43 +5,59 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Test
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache-dependency-path: "**/package.json"
-
       - name: Install dependencies
         run: npm install
+      - name: Build packages
+        run: npm run build --workspaces
 
+  lint:
+    name: Lint
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache-dependency-path: "**/package.json"
+      - name: Install dependencies
+        run: npm install
+      - name: Run ESLint
+        run: npm run lint
+
+  test:
+    name: Test
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache-dependency-path: "**/package.json"
+      - name: Install dependencies
+        run: npm install
       - name: Run tests
         run: npm test
 
-  build:
-    name: Build
+  upload:
+    name: Upload build artifacts
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache-dependency-path: "**/package.json"
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build packages
-        run: npm run build --workspaces
-
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
