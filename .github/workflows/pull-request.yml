@@ -10,29 +10,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache-dependency-path: '**/package.json'
-      
+          cache-dependency-path: "**/package.json"
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Run linting
         run: npm run lint
-      
+
       - name: Run tests
         run: npm test
-      
+
       - name: Build packages
-        run: npm run build
-      
+        run: npm run build --workspaces
+
       - name: Check for console.log statements
         run: |
           ! grep -r "console.log" --include="*.ts" --include="*.tsx" packages/*/src apps/*/src
-      
+
       - name: Check for TODO comments
         run: |
           TODOS=$(grep -r "TODO" --include="*.ts" --include="*.tsx" --include="*.js" packages/*/src apps/*/src || true)

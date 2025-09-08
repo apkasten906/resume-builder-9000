@@ -7,12 +7,12 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm -ws run build",
-    "dev": "npm -ws run dev",
-    "test": "npm -ws run test",
+    "build": "npm run build --workspaces",
+    "dev": "npm run dev --workspaces",
+    "test": "npm run test --workspaces",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "lint": "npm -ws run lint",
+    "lint": "npm run lint --workspaces",
     "check-flags": "./scripts/check-flags.ps1"
   },
   "engines": {

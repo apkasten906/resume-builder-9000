@@ -2,24 +2,24 @@ name: Deploy
 
 on:
   push:
-    branches: [ main ]
-    
+    branches: [main]
+
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache-dependency-path: '**/package.json'
-      
+          cache-dependency-path: "**/package.json"
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Run tests
         run: npm test
 
@@ -29,19 +29,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache-dependency-path: '**/package.json'
-      
+          cache-dependency-path: "**/package.json"
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Build packages
-        run: npm run build
-      
+        run: npm run build --workspaces
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -50,7 +50,7 @@ jobs:
             apps/web/.next
             packages/api/dist
             packages/core/dist
-  
+
   # Uncomment and customize this section when you're ready to deploy
   # deploy:
   #   name: Deploy
@@ -58,19 +58,19 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - uses: actions/checkout@v3
-  #     
+  #
   #     - name: Download build artifacts
   #       uses: actions/download-artifact@v3
   #       with:
   #         name: build-output
-  #     
+  #
   #     - name: Deploy API
   #       # Add deployment steps for your API
   #       run: echo "Deploying API..."
-  #     
+  #
   #     - name: Deploy Web
   #       # Add deployment steps for your web app
   #       run: echo "Deploying Web app..."
-  #     
+  #
   #     - name: Post-deployment checks
   #       run: echo "Running post-deployment checks..."

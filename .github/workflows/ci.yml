@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [main, dev]
   pull_request:
-    branches: [ main, dev ]
+    branches: [main, dev]
 
 jobs:
   lint:
@@ -12,51 +12,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache-dependency-path: '**/package.json'
-      
+          cache-dependency-path: "**/package.json"
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Run ESLint
         run: npm run lint
-  
+
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache-dependency-path: '**/package.json'
-      
+          cache-dependency-path: "**/package.json"
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Run tests
         run: npm test
-  
+
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache-dependency-path: '**/package.json'
-      
+          cache-dependency-path: "**/package.json"
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Build packages
-        run: npm run build
+        run: npm run build --workspaces
