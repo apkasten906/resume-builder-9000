@@ -14,7 +14,8 @@
     "vitest": "vitest --workspace",
     "vitest:ui": "vitest --workspace --ui",
     "lint": "npm --workspaces run lint",
-    "check-flags": "./scripts/check-flags.ps1"
+    "check-flags": "./scripts/check-flags.ps1",
+    "update-deps": "npx npm-check-updates -u && npm install"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -47,6 +48,7 @@
     "zod": "^4.1.5"
   },
   "devDependencies": {
+    "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.6.2",
