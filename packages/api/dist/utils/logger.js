@@ -27,7 +27,12 @@ winston_1.default.addColors(colors);
 // Determine log level based on environment
 const level = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
 // Create format for console output
-const consoleFormat = winston_1.default.format.combine(winston_1.default.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston_1.default.format.colorize({ all: true }), winston_1.default.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`));
+const consoleFormat = winston_1.default.format.combine(winston_1.default.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston_1.default.format.colorize({ all: true }), winston_1.default.format.printf((info) => {
+    const timestamp = typeof info.timestamp === 'string' ? info.timestamp : 'N/A';
+    const level = typeof info.level === 'string' ? info.level : 'unknown';
+    const message = typeof info.message === 'string' ? info.message : '';
+    return `${timestamp} ${level}: ${message}`;
+}));
 // Create format for file output (JSON)
 const fileFormat = winston_1.default.format.combine(winston_1.default.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston_1.default.format.json());
 // Create the logger instance
@@ -67,7 +72,7 @@ const httpLogger = (0, morgan_1.default)(
 exports.httpLogger = httpLogger;
 // Create a custom error handler middleware
 const errorLogger = (err, req, res, next) => {
-    logger.error(`${err.name}: ${err.message}`, {
+    logger.error(`Error occurred: ${err.message}`, {
         url: req.originalUrl,
         method: req.method,
         stack: err.stack,

@@ -20,7 +20,7 @@ async function connectDatabase() {
     // Open the database
     db = await (0, sqlite_1.open)({
         filename: './resume.db',
-        driver: sqlite3_1.default.Database
+        driver: sqlite3_1.default.Database,
     });
     // Create tables if they don't exist
     await db.exec(`
@@ -45,14 +45,9 @@ async function getResumeFromDb(id) {
             return null;
         }
         // Parse JSON data
+        const parsedResumeData = JSON.parse(result.resume_data);
         logger_1.logger.debug('Resume found in database', { resumeId: id });
-        return {
-            id: result.id,
-            content: result.content,
-            resumeData: JSON.parse(result.resume_data),
-            jobDetails: JSON.parse(result.job_details),
-            createdAt: result.created_at
-        };
+        return parsedResumeData;
     }
     catch (error) {
         logger_1.logger.error('Error retrieving resume from database', { error, resumeId: id });

@@ -17,5 +17,7 @@ module.exports = {
   rules: {
     '@typescript-eslint/explicit-function-return-type': 'error',
     '@typescript-eslint/no-unused-vars': 'warn',
+    'no-console': ['error', { allow: ['warn', 'error'] }],
+    'no-warning-comments': ['warn', { terms: ['todo', 'fixme'], location: 'start' }],
   },
 };
