@@ -8,9 +8,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>): JSX.Element {
   return (
     <html lang="en">
       <body>
@@ -20,16 +20,26 @@ export default function RootLayout({
               <h1 className="text-2xl font-bold">Resume Builder 9000</h1>
               <nav>
                 <ul className="flex gap-4">
-                  <li><a href="/" className="hover:underline">Home</a></li>
-                  <li><a href="/build" className="hover:underline">Create Resume</a></li>
-                  <li><a href="/about" className="hover:underline">About</a></li>
+                  <li>
+                    <a href="/" className="hover:underline">
+                      Home
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/build" className="hover:underline">
+                      Create Resume
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/about" className="hover:underline">
+                      About
+                    </a>
+                  </li>
                 </ul>
               </nav>
             </div>
           </header>
-          <div className="container mx-auto p-6">
-            {children}
-          </div>
+          <div className="container mx-auto p-6">{children}</div>
           <footer className="bg-gray-800 text-white py-6 mt-auto">
             <div className="container mx-auto text-center">
               <p>© {new Date().getFullYear()} Resume Builder 9000. All rights reserved.</p>
