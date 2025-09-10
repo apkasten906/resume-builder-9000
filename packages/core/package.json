@@ -8,8 +8,8 @@
     "dev": "tsc --watch",
     "build": "tsc",
     "lint": "eslint src --ext .ts",
-    "test": "vitest run --config ./vitest.config.ts",
-    "test:watch": "vitest --config ./vitest.config.ts"
+    "test": "vitest run --config ./vitest.config.mjs",
+    "test:watch": "vitest --config ./vitest.config.mjs"
   },
   "dependencies": {
     "zod": "^3.22.2"
