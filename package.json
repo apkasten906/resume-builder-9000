@@ -7,10 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm -ws run build",
-    "dev": "npm -ws run dev",
-    "test": "npm -ws run test",
-    "lint": "npm -ws run lint",
+    "build": "npm --workspaces run build",
+    "dev": "npm --workspaces run dev",
+    "test": "npm --workspaces run test",
+    "test:watch": "npm --workspaces run test:watch",
+    "lint": "npm --workspaces run lint",
     "check-flags": "./scripts/check-flags.ps1"
   },
   "engines": {
@@ -29,5 +30,13 @@
     "nextjs"
   ],
   "author": "Resume Builder 9000 Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@types/morgan": "^1.9.10",
+    "@types/sqlite3": "^3.1.11",
+    "morgan": "^1.10.1",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "winston": "^3.17.0"
+  }
 }

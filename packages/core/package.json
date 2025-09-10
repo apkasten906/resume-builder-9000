@@ -1,0 +1,23 @@
+{
+  "name": "@rb9k/core",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run --config ./vitest.config.mjs",
+    "test:watch": "vitest --config ./vitest.config.mjs"
+  },
+  "dependencies": {
+    "zod": "^3.22.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.0",
+    "eslint": "^8.49.0",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.4"
+  }
+}

@@ -41,33 +41,40 @@ if ($LLMModel) { $env:LLM_MODEL = $LLMModel }
 if (Test-Path ".env.example") { Copy-Item -Path ".env.example" -Destination ".env" -Force }
 
 # Display config
-Write-Host "🚀 Starting Resume Builder 9000 in development mode"
-Write-Host "🚩 External LLM: $($env:ALLOW_EXTERNAL_LLM)"
+Write-Host "Starting Resume Builder 9000 in development mode"
+Write-Host "External LLM: $($env:ALLOW_EXTERNAL_LLM)"
 if ($env:ALLOW_EXTERNAL_LLM -eq "true" -and $LLMProvider) {
-  Write-Host "🔌 Provider: $($env:LLM_PROVIDER), Model: $($env:LLM_MODEL)"
+  Write-Host "Provider: $($env:LLM_PROVIDER), Model: $($env:LLM_MODEL)"
 }
 
 # Install dependencies and build packages
 npm i
-npm run build --workspaces
+npm run build
 
 # Run tests unless we're only running specific components
 if (-not $ApiOnly -and -not $WebOnly) {
-  npm run test --workspaces
+  Write-Host "Running tests..."
+  try {
+    npm run test --if-present
+  } catch {
+    Write-Host "[ERROR] Some tests may have failed. See output above."
+    # Optionally log to a file
+    Add-Content -Path "$PSScriptRoot\dev-error.log" -Value "Test run failed at $(Get-Date)"
+  }
 }
 
 # Start development servers
 if (-not $WebOnly) {
-  Start-Process -NoNewWindow powershell -ArgumentList "-Command cd $PSScriptRoot\..\packages\api && npm run dev"
-  Write-Host "🚀 API server started on http://localhost:3001"
+  Start-Process -NoNewWindow powershell -ArgumentList "-Command cd $PSScriptRoot\packages\api; npm run dev"
+  Write-Host "API server started on http://localhost:3001"
 }
 
 if (-not $ApiOnly) {
-  Start-Process -NoNewWindow powershell -ArgumentList "-Command cd $PSScriptRoot\..\apps\web && npm run dev"
-  Write-Host "🚀 Web frontend started on http://localhost:3000"
+  Start-Process -NoNewWindow powershell -ArgumentList "-Command cd $PSScriptRoot\apps\web; npm run dev"
+  Write-Host "Web frontend started on http://localhost:3000"
 }
 
-Write-Host "✨ Development environment is running"
+Write-Host "Development environment is running"
 Write-Host "Press Ctrl+C to stop"
 
 # Keep script running

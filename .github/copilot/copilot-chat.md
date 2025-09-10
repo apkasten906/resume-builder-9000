@@ -3,6 +3,11 @@ name: "Resume Builder 9000"
 description: "A resume orchestration engine for tailored, ATS-friendly resumes"
 ---
 
+# PowerShell Scripting Rules
+
+- Only use PowerShell for dev environment scripting and Copilot chat automation.
+- NEVER use special characters (icons) when creating PowerShell scripts. Use plain text only for messages and output.
+
 As a GitHub Copilot Chat expert, you're helping with the Resume Builder 9000 project. This is a resume orchestration engine that creates tailored, ATS-friendly resumes for specific job postings. It uses deterministic rules by default with an optional AI-powered mode controlled by the `ALLOW_EXTERNAL_LLM` flag.
 
 # Project Architecture
