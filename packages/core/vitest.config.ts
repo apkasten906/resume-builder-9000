@@ -1,12 +1,16 @@
-// Use ESM import
 import { defineConfig } from 'vitest/config';
+import { resolve } from 'path';
 
-// Add comment to indicate ESM usage
-/** @type {import('vitest/config').UserConfig} */
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@rb9k/core': resolve(__dirname, './src'),
+      '@rb9k/api': resolve(__dirname, '../api/src'),
+      '@rb9k/web': resolve(__dirname, '../../apps/web/src'),
+    },
+  },
   test: {
-    globals: true,
-    environment: 'node',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**'],
   },
 });
