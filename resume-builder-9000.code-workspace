@@ -2,15 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../apps"
-		},
-		{
-			"path": "../packages"
-		},
-		{
-			"path": "../scripts"
 		}
 	],
 	"settings": {

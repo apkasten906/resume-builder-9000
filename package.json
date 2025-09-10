@@ -11,6 +11,8 @@
     "dev": "npm --workspaces run dev",
     "test": "npm --workspaces run test",
     "test:watch": "npm --workspaces run test:watch",
+    "vitest": "vitest --workspace",
+    "vitest:ui": "vitest --workspace --ui",
     "lint": "npm --workspaces run lint",
     "check-flags": "./scripts/check-flags.ps1"
   },
@@ -38,5 +40,11 @@
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.6.2",
+    "vitest": "^3.2.4"
   }
 }

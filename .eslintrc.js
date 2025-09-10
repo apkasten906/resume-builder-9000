@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
   ignorePatterns: ['node_modules', 'dist', '.next', 'coverage'],
@@ -11,7 +11,7 @@ module.exports = {
       './tsconfig.json',
       './packages/*/tsconfig.json',
       './apps/*/tsconfig.json',
-      './tsconfig.eslint.json'
+      './tsconfig.eslint.json',
     ],
   },
   rules: {
@@ -19,10 +19,7 @@ module.exports = {
     'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
     'no-debugger': 'warn',
     '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/explicit-function-return-type': [
-      'warn',
-      { allowExpressions: true },
-    ],
+    '@typescript-eslint/explicit-function-return-type': ['warn', { allowExpressions: true }],
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 
     // Code quality
@@ -33,6 +30,7 @@ module.exports = {
     // Style
     semi: ['error', 'always'],
     quotes: ['error', 'single', { avoidEscape: true }],
+    'linebreak-style': ['error', 'windows'],
   },
   overrides: [
     {
@@ -45,16 +43,16 @@ module.exports = {
       },
     },
     {
-      files: ['**/*.config.js', '**/*.config.mjs'],
+      files: ['**/*.config.js', '**/*.config.mjs', '**/*.config.ts'],
       env: {
-        node: true
-      }
+        node: true,
+      },
     },
     {
       files: ['.eslintrc.js'],
       env: {
-        node: true
-      }
+        node: true,
+      },
     },
   ],
 };
