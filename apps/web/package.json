@@ -1,0 +1,46 @@
+{
+  "name": "@rb9k/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run --config ./vitest.config.mjs",
+    "test:watch": "vitest --config ./vitest.config.mjs"
+  },
+  "vitest": {
+    "environment": "jsdom",
+    "setupFiles": [
+      "./tests/setup.ts"
+    ]
+  },
+  "dependencies": {
+    "@rb9k/core": "*",
+    "@tailwindcss/typography": "^0.5.10",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "lucide-react": "^0.284.0",
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^1.14.0",
+    "tailwindcss": "^3.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^20.6.0",
+    "@types/react": "^18.2.21",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^5.0.2",
+    "autoprefixer": "^10.4.15",
+    "eslint": "^8.49.0",
+    "eslint-config-next": "^14.0.0",
+    "jsdom": "^26.1.0",
+    "postcss": "^8.4.29",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.4"
+  }
+}

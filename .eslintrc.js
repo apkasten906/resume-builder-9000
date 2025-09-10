@@ -1,47 +1,60 @@
 module.exports = {
   root: true,
-  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-  parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint"],
-  ignorePatterns: ["node_modules", "dist", ".next", "coverage"],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint'],
+  ignorePatterns: ['node_modules', 'dist', '.next', 'coverage'],
   parserOptions: {
     ecmaVersion: 2020,
-    sourceType: "module",
+    sourceType: 'module',
     project: [
-      "./tsconfig.json",
-      "./packages/*/tsconfig.json",
-      "./apps/*/tsconfig.json",
+      './tsconfig.json',
+      './packages/*/tsconfig.json',
+      './apps/*/tsconfig.json',
+      './tsconfig.eslint.json'
     ],
   },
   rules: {
     // Error prevention
-    "no-console": ["warn", { allow: ["warn", "error", "info"] }],
-    "no-debugger": "warn",
-    "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/explicit-function-return-type": [
-      "warn",
+    'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
+    'no-debugger': 'warn',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/explicit-function-return-type': [
+      'warn',
       { allowExpressions: true },
     ],
-    "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 
     // Code quality
-    "@typescript-eslint/no-floating-promises": "error",
-    "@typescript-eslint/await-thenable": "error",
-    "@typescript-eslint/no-misused-promises": "error",
+    '@typescript-eslint/no-floating-promises': 'error',
+    '@typescript-eslint/await-thenable': 'error',
+    '@typescript-eslint/no-misused-promises': 'error',
 
     // Style
-    semi: ["error", "always"],
-    quotes: ["error", "single", { avoidEscape: true }],
+    semi: ['error', 'always'],
+    quotes: ['error', 'single', { avoidEscape: true }],
   },
   overrides: [
     {
-      files: ["**/*.test.ts", "**/*.spec.ts", "**/*.test.tsx", "**/*.spec.tsx"],
+      files: ['**/*.test.ts', '**/*.spec.ts', '**/*.test.tsx', '**/*.spec.tsx'],
       env: {
         jest: true,
       },
       rules: {
-        "@typescript-eslint/no-explicit-any": "off",
+        '@typescript-eslint/no-explicit-any': 'off',
       },
+    },
+    {
+      files: ['**/*.config.js', '**/*.config.mjs'],
+      env: {
+        node: true
+      }
+    },
+    {
+      files: ['.eslintrc.js'],
+      env: {
+        node: true
+      }
     },
   ],
 };

@@ -11,6 +11,11 @@ Resume Builder 9000 is a resume orchestration engine that creates tailored, ATS-
 - **API**: Node.js/Express backend with SQLite database
 - **Web**: Next.js App Router frontend with Tailwind CSS and shadcn/ui
 
+## PowerShell Scripting Rules
+
+- Only use PowerShell for dev environment scripting and Copilot chat automation.
+- NEVER use special characters (icons) when creating PowerShell scripts. Use plain text only for messages and output.
+
 ## Feature Flags
 
 - `ALLOW_EXTERNAL_LLM`: Controls whether to use deterministic rules only (false) or allow AI assistance (true)

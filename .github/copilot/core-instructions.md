@@ -4,6 +4,11 @@ applyTo: "packages/core/**"
 
 # Core Package Guidelines
 
+## PowerShell Scripting Rules
+
+- Only use PowerShell for dev environment scripting and Copilot chat automation.
+- NEVER use special characters (icons) when creating PowerShell scripts. Use plain text only for messages and output.
+
 ## Purpose
 
 The `@rb9k/core` package contains the central business logic for Resume Builder 9000. It handles:
