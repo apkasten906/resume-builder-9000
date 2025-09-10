@@ -12,7 +12,8 @@
       "presentation": {
         "reveal": "always",
         "panel": "new"
-      }
+      },
+      "problemMatcher": []
     },
     {
       "label": "Watch Vitest Tests",
@@ -22,7 +23,19 @@
       "presentation": {
         "reveal": "always",
         "panel": "new"
-      }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Dev Script",
+      "type": "shell",
+      "command": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
     }
   ]
 }
