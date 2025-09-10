@@ -21,7 +21,7 @@ This project is a resume orchestration engine that creates tailored, ATS-friendl
 
 ## PowerShell Scripting Rules
 
-- Only use PowerShell for dev environment scripting and Copilot chat automation.
+- ALWAYS use PowerShell for dev environment scripting and Copilot chat automation.
 - NEVER use special characters (icons) when creating PowerShell scripts. Use plain text only for messages and output.
 
 ## Setup Instructions

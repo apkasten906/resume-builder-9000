@@ -8,9 +8,9 @@ const zod_1 = require("zod");
 const router = (0, express_1.Router)();
 // Get a resume by ID
 router.get('/:id', (req, res) => {
-    (0, resume_1.getResumeById)(req, res).catch(error => {
+    (0, resume_1.getResumeById)(req, res).catch((error) => {
         logger_1.logger.error('Error fetching resume in route handler', {
-            error,
+            error: String(error),
             method: req.method,
             url: req.originalUrl,
             resumeId: req.params.id,
@@ -27,18 +27,31 @@ router.post('/', (req, res) => {
     async function handleRequest() {
         try {
             const { resumeData, jobDetails } = req.body;
-            // Validate input data
-            const validResumeData = core_1.ResumeDataSchema.parse(resumeData);
-            const validJobDetails = core_1.JobDetailsSchema.parse(jobDetails);
-            // Generate resume
-            const result = await (0, resume_1.generateResume)(validResumeData, validJobDetails);
-            // Save resume to database
-            const savedResume = await (0, resume_1.saveResume)(result);
-            res.status(201).json(savedResume);
+            try {
+                // Generate resume with validated data directly
+                const result = await (0, resume_1.generateResume)(
+                // TypeScript will infer the correct types from the parse method
+                core_1.ResumeDataSchema.parse(resumeData), core_1.JobDetailsSchema.parse(jobDetails));
+                // Save resume to database
+                const savedResume = await (0, resume_1.saveResume)(result);
+                res.status(201).json(savedResume);
+            }
+            catch (validationError) {
+                if (isZodError(validationError)) {
+                    logger_1.logger.warn('Validation error in resume generation', {
+                        validationErrors: validationError.errors,
+                    });
+                    res.status(400).json({ error: 'Invalid input data', details: validationError.errors });
+                }
+                else {
+                    throw validationError; // Re-throw for the outer catch to handle
+                }
+            }
+            // No code here - we already sent response in the try-catch block
         }
         catch (error) {
             logger_1.logger.error('Error generating resume', {
-                error,
+                error: String(error),
                 method: req.method,
                 url: req.originalUrl,
             });
