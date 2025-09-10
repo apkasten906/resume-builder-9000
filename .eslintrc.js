@@ -1,6 +1,11 @@
 module.exports = {
   root: true,
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'prettier',
+    'next/core-web-vitals',
+  ],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
   ignorePatterns: ['node_modules', 'dist', '.next', 'coverage'],
@@ -30,7 +35,7 @@ module.exports = {
     // Style
     semi: ['error', 'always'],
     quotes: ['error', 'single', { avoidEscape: true }],
-    'linebreak-style': ['error', 'windows'],
+    'linebreak-style': 'off',
   },
   overrides: [
     {
