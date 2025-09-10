@@ -1,6 +1,7 @@
 import winston from 'winston';
 import morgan from 'morgan';
 import { Request, Response } from 'express';
+import { TransformableInfo } from 'logform';
 
 // Define log levels
 const levels = {
@@ -30,15 +31,18 @@ const level = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`,
-  ),
+  winston.format.printf((info: TransformableInfo) => {
+    const timestamp = typeof info.timestamp === 'string' ? info.timestamp : 'N/A';
+    const level = typeof info.level === 'string' ? info.level : 'unknown';
+    const message = typeof info.message === 'string' ? info.message : '';
+    return `${timestamp} ${level}: ${message}`;
+  })
 );
 
 // Create format for file output (JSON)
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.json(),
+  winston.format.json()
 );
 
 // Create the logger instance
@@ -75,17 +79,12 @@ const httpLogger = morgan(
         logger.http(message.trim());
       },
     },
-  },
+  }
 );
 
 // Create a custom error handler middleware
-const errorLogger = (
-  err: Error, 
-  req: Request, 
-  res: Response, 
-  next: () => void
-): void => {
-  logger.error(`${err.name}: ${err.message}`, {
+const errorLogger = (err: Error, req: Request, res: Response, next: () => void): void => {
+  logger.error(`Error occurred: ${err.message}`, {
     url: req.originalUrl,
     method: req.method,
     stack: err.stack,

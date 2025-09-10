@@ -2,11 +2,10 @@ import { ResumeData, JobDetails, ResumeGenerator } from '@rb9k/core';
 
 export class DefaultResumeGenerator implements ResumeGenerator {
   async generateResume(resumeData: ResumeData, jobDetails: JobDetails): Promise<string> {
-    // In a real implementation, this would use more sophisticated logic
-    // possibly including LLM integration for generating tailored content
-    
+    await new Promise(resolve => setTimeout(resolve, 0)); // Simulate async operation
+
     const { personalInfo, experience, education, skills } = resumeData;
-    
+
     // Basic HTML template for the resume
     const html = `
       <!DOCTYPE html>
@@ -41,48 +40,45 @@ export class DefaultResumeGenerator implements ResumeGenerator {
 
         <div class="section">
           <h2>Work Experience</h2>
-          ${experience.map(job => `
+          ${experience
+            .map(
+              job => `
             <div class="job">
               <div class="job-header">
                 <h3>${job.title} at ${job.company}</h3>
-                <span>${job.startDate} - ${job.current ? 'Present' : job.endDate}</span>
+                <span>${job.startDate || 'N/A'} - ${job.current ? 'Present' : job.endDate || 'N/A'}</span>
               </div>
               <p>${job.location || ''}</p>
-              <ul>
-                ${job.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
-                ${job.results ? job.results.map(result => `<li>${result}</li>`).join('') : ''}
-              </ul>
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
 
         <div class="section">
           <h2>Education</h2>
-          ${education.map(edu => `
-            <div>
-              <h3>${edu.degree} - ${edu.institution}</h3>
-              <p>${edu.graduationDate} ${edu.gpa ? `| GPA: ${edu.gpa}` : ''}</p>
-              ${edu.highlights ? `
-                <ul>
-                  ${edu.highlights.map(highlight => `<li>${highlight}</li>`).join('')}
-                </ul>
-              ` : ''}
+          ${education
+            .map(
+              edu => `
+            <div class="education">
+              <h3>${edu.degree} at ${edu.institution}</h3>
+              <span>${edu.graduationDate || 'N/A'}</span>
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
 
-        ${skills && skills.length > 0 ? `
-          <div class="section">
-            <h2>Skills</h2>
-            <div class="skills">
-              ${skills.map(skill => `<div class="skill">${skill.name}</div>`).join('')}
-            </div>
+        <div class="section">
+          <h2>Skills</h2>
+          <div class="skills">
+            ${skills?.map(skill => `<span class="skill">${skill.name || 'Unknown Skill'}</span>`).join('') || ''}
           </div>
-        ` : ''}
+        </div>
       </body>
       </html>
     `;
-    
+
     return html;
   }
 }

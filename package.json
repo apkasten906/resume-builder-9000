@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "npm --workspaces run build",
-    "dev": "npm --workspaces run dev",
+    "dev": "npm ci && npm run lint && npm --workspaces run dev",
     "test": "npm --workspaces run test",
     "test:watch": "npm --workspaces run test:watch",
     "vitest": "vitest --workspace",
