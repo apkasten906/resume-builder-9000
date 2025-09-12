@@ -3,12 +3,59 @@ import { z } from 'zod';
 // Resume related types
 export const PersonalInfoSchema = z.object({
   fullName: z.string(),
-  email: z.string().email(),
+  email: z
+    .string()
+    .email()
+    .refine(val => val.endsWith('@gmail.com') || val.endsWith('@outlook.com'), {
+      message: 'Email must be a gmail.com or outlook.com address',
+    }),
   phone: z.string().optional(),
   location: z.string().optional(),
-  linkedIn: z.string().url().optional(),
-  website: z.string().url().optional(),
-  github: z.string().url().optional(),
+  linkedIn: z
+    .string()
+    .refine(
+      val => {
+        if (!val) return true;
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid URL' }
+    )
+    .optional(),
+  website: z
+    .string()
+    .refine(
+      val => {
+        if (!val) return true;
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid URL' }
+    )
+    .optional(),
+  github: z
+    .string()
+    .refine(
+      val => {
+        if (!val) return true;
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid URL' }
+    )
+    .optional(),
 });
 
 export type PersonalInfo = z.infer<typeof PersonalInfoSchema>;
@@ -65,9 +112,23 @@ export const JobDetailsSchema = z.object({
   location: z.string().optional(),
   description: z.string(),
   requirements: z.array(z.string()).optional(),
-  url: z.string().url().optional(),
+  url: z
+    .string()
+    .refine(
+      val => {
+        if (!val) return true;
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid URL' }
+    )
+    .optional(),
 });
 
 export type JobDetails = z.infer<typeof JobDetailsSchema>;
 
-export * from './resume';
+export * from './resume.js';

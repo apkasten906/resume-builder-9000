@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: 'Learn about Resume Builder 9000',
 };
 
-export default function AboutPage(): JSX.Element {
+export default function AboutPage() {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">About Resume Builder 9000</h1>

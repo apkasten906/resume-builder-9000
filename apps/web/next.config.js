@@ -10,6 +10,9 @@ const nextConfig = {
       },
     ];
   },
+  compiler: {
+    reactRemoveProperties: false,
+  },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

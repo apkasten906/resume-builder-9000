@@ -4,10 +4,11 @@
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src --config ../../.eslintrc.cjs",
     "test": "vitest run --config ./vitest.config.mjs",
     "test:watch": "vitest --config ./vitest.config.mjs",
     "update-deps": "npx npm-check-updates -u && npm install"
@@ -17,8 +18,15 @@
   },
   "devDependencies": {
     "@types/node": "^20.6.0",
-    "eslint": "^9.35.0",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
+    "eslint": "^8.57.1",
+    "globals": "^16.4.0",
     "typescript": "^5.2.2",
     "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
   }
 }

@@ -1,4 +1,4 @@
-import { ResumeData, JobDetails } from './index';
+import { ResumeData, JobDetails } from './index.js';
 export interface ResumeGenerator {
     /**
      * Generates a resume tailored to a specific job

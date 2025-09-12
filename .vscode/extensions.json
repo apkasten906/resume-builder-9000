@@ -1,5 +1,7 @@
 {
   "recommendations": [
     // No Python extensions recommended for this workspace
+    "editorconfig.editorconfig",
+    "davidanson.vscode-markdownlint"
   ]
 }

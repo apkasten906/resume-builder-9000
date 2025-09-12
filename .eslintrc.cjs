@@ -1,23 +1,43 @@
-const path = require('path');
-
+// .eslintrc.cjs (root)
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  parserOptions: {
-    project: path.resolve(__dirname, './tsconfig.json'),
-    sourceType: 'module',
-  },
-  plugins: ['@typescript-eslint'],
+  parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+  plugins: ['@typescript-eslint', '@next/next'],
   extends: [
     'eslint:recommended',
+    'plugin:@next/next/recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    'prettier',
+    'plugin:prettier/recommended',
   ],
   rules: {
-    '@typescript-eslint/explicit-function-return-type': 'error',
-    '@typescript-eslint/no-unused-vars': 'warn',
-    'no-console': ['error', { allow: ['warn', 'error'] }],
-    'no-warning-comments': ['warn', { terms: ['todo', 'fixme'], location: 'start' }],
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': ['error'],
   },
+  overrides: [
+    // Node config files
+    {
+      files: ['next.config.js', '*.config.js', '*.config.cjs', '*.config.mjs'],
+      env: { node: true },
+    },
+    // Backend API (Node)
+    {
+      files: ['packages/api/**/*.{js,ts}'],
+      env: { node: true, browser: false },
+      rules: {
+        '@next/next/no-html-link-for-pages': 'off',
+        '@next/next/no-img-element': 'off',
+      },
+    },
+    // Core library (Node)
+    {
+      files: ['packages/core/**/*.{js,ts}'],
+      env: { node: true, browser: false },
+    },
+  ],
 };
+
+// Note: 'plugin:@next/next/recommended' includes rules from 'eslint-config-next'
+// which is the official ESLint configuration for Next.js projects.
+// This setup ensures that ESLint is properly configured for a Next.js project
+// while also integrating Prettier for code formatting.

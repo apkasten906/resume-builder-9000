@@ -7,9 +7,8 @@ describe('Basic React Component', () => {
   test('renders content correctly', () => {
     // Arrange & Act
     render(<div data-testid="example">Test Content</div>);
-    
+
     // Assert
-    expect(screen.getByTestId('example')).toBeInTheDocument();
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
 });

@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResumeService = void 0;
-class ResumeService {
+export class ResumeService {
     generator;
     formatter;
     constructor(generator, formatter) {
@@ -16,4 +13,3 @@ class ResumeService {
         return resumeContent;
     }
 }
-exports.ResumeService = ResumeService;

@@ -18,8 +18,8 @@
     "update-deps": "npx npm-check-updates -u && npm install"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
   },
   "repository": {
     "type": "git",
@@ -39,6 +39,7 @@
     "@types/express": "^5.0.3",
     "@types/morgan": "^1.9.10",
     "@types/sqlite3": "^3.1.11",
+    "better-sqlite3": "^12.2.0",
     "express": "^5.1.0",
     "morgan": "^1.10.1",
     "sqlite": "^5.1.1",
@@ -48,10 +49,16 @@
     "zod": "^4.1.5"
   },
   "devDependencies": {
-    "eslint": "^9.35.0",
+    "@next/eslint-plugin-next": "^14.2.32",
+    "@types/better-sqlite3": "^7.6.13",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
+    "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "next": "14.2.32",
     "prettier": "^3.6.2",
+    "tsx": "^4.20.5",
     "vitest": "^3.2.4"
   },
   "type": "module"
