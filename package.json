@@ -7,15 +7,19 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm -ws run build",
-    "dev": "npm -ws run dev",
-    "test": "npm -ws run test",
-    "lint": "npm -ws run lint",
-    "check-flags": "./scripts/check-flags.ps1"
+    "build": "npm --workspaces run build",
+    "dev": "npm ci && npm run lint && npm --workspaces run dev",
+    "test": "npm --workspaces run test",
+    "test:watch": "npm --workspaces run test:watch",
+    "vitest": "vitest --workspace",
+    "vitest:ui": "vitest --workspace --ui",
+    "lint": "npm --workspaces run lint",
+    "check-flags": "./scripts/check-flags.ps1",
+    "update-deps": "npx npm-check-updates -u && npm install"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
   },
   "repository": {
     "type": "git",
@@ -29,5 +33,33 @@
     "nextjs"
   ],
   "author": "Resume Builder 9000 Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@rb9k/core": "^0.1.0",
+    "@types/express": "^5.0.3",
+    "@types/morgan": "^1.9.10",
+    "@types/sqlite3": "^3.1.11",
+    "better-sqlite3": "^12.2.0",
+    "express": "^5.1.0",
+    "morgan": "^1.10.1",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "vite": "^7.1.5",
+    "winston": "^3.17.0",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "^14.2.32",
+    "@types/better-sqlite3": "^7.6.13",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "next": "14.2.32",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.5",
+    "vitest": "^3.2.4"
+  },
+  "type": "module"
 }

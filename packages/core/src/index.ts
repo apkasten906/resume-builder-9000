@@ -1,0 +1,134 @@
+import { z } from 'zod';
+
+// Resume related types
+export const PersonalInfoSchema = z.object({
+  fullName: z.string(),
+  email: z
+    .string()
+    .email()
+    .refine(val => val.endsWith('@gmail.com') || val.endsWith('@outlook.com'), {
+      message: 'Email must be a gmail.com or outlook.com address',
+    }),
+  phone: z.string().optional(),
+  location: z.string().optional(),
+  linkedIn: z
+    .string()
+    .refine(
+      val => {
+        if (!val) return true;
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid URL' }
+    )
+    .optional(),
+  website: z
+    .string()
+    .refine(
+      val => {
+        if (!val) return true;
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid URL' }
+    )
+    .optional(),
+  github: z
+    .string()
+    .refine(
+      val => {
+        if (!val) return true;
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid URL' }
+    )
+    .optional(),
+});
+
+export type PersonalInfo = z.infer<typeof PersonalInfoSchema>;
+
+export const ExperienceSchema = z.object({
+  title: z.string(),
+  company: z.string(),
+  location: z.string().optional(),
+  startDate: z.string(),
+  endDate: z.string().optional(),
+  current: z.boolean().default(false),
+  responsibilities: z.array(z.string()),
+  results: z.array(z.string()).optional(),
+  roleRelevance: z.record(z.string(), z.number()).optional(),
+});
+
+export type Experience = z.infer<typeof ExperienceSchema>;
+
+export const EducationSchema = z.object({
+  degree: z.string(),
+  institution: z.string(),
+  location: z.string().optional(),
+  graduationDate: z.string(),
+  gpa: z.string().optional(),
+  highlights: z.array(z.string()).optional(),
+});
+
+export type Education = z.infer<typeof EducationSchema>;
+
+export const SkillSchema = z.object({
+  name: z.string(),
+  level: z.number().min(1).max(5).optional(),
+  category: z.string().optional(),
+});
+
+export type Skill = z.infer<typeof SkillSchema>;
+
+export const ResumeDataSchema = z.object({
+  personalInfo: PersonalInfoSchema,
+  summary: z.string().optional(),
+  experience: z.array(ExperienceSchema),
+  education: z.array(EducationSchema),
+  skills: z.array(SkillSchema).optional(),
+  certifications: z.array(z.string()).optional(),
+  projects: z.array(z.string()).optional(),
+});
+
+export type ResumeData = z.infer<typeof ResumeDataSchema>;
+
+// Job related types
+export const JobDetailsSchema = z.object({
+  title: z.string(),
+  company: z.string().optional(),
+  location: z.string().optional(),
+  description: z.string(),
+  requirements: z.array(z.string()).optional(),
+  url: z
+    .string()
+    .refine(
+      val => {
+        if (!val) return true;
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid URL' }
+    )
+    .optional(),
+});
+
+export type JobDetails = z.infer<typeof JobDetailsSchema>;
+
+export * from './resume.js';
