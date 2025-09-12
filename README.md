@@ -1,51 +1,29 @@
-# resume-builder-9000
+# Resume Builder 9000
 
-A resume orchestration engine that compiles a fully tailored, ATS-friendly resume (and optional cover letter) for a specific job posting.
+Welcome to the Resume Builder 9000! This project is designed to help you create tailored, ATS-friendly resumes with ease.
 
-## Inputs:
+## Features
+- Frontend: Next.js with Tailwind CSS
+- Backend: Node.js with Express and SQLite
+- Shared business logic in TypeScript
 
-- You Personal Information
-- Your Work Experience
-- - Responsibilities - What were you expected to do?
-  - Results - What did you accomplish? Did you go beyond your role?
-  - Role Relevance - What roles do each of your Responsibitities / Results relate to? How relevant to each role are they?
-- Job To Apply For
-- - Link to the job you are applying for OR
-  - A general Role you would like to apply for OR
-  - Your Dream Job?
+## Getting Started
+Run the following commands to set up the project:
 
-## Output:
+1. Install dependencies:
+   npm install
 
-- A printable resume tailored for the job you specify with a unique URL that can be downloaded as PDF
+2. Start the development server:
+   npm run dev
 
-# Technology Stack
+3. Build the project:
+   npm run build
 
-## Frontend
+4. Run tests:
+   npm test
 
-- Next.js (App Router)
-- Tailwind CSS
-- shadcn/ui components
+## Contributing
+Feel free to submit issues and pull requests. We welcome contributions from the community!
 
-## Backend
-
-- Node.js with Express
-- SQLite for database (MVP)
-
-## Architecture
-
-- Monorepo structure with workspaces
-- Packages:
-  - `@rb9k/core`: Shared business logic (TypeScript)
-  - `@rb9k/api`: Backend API (Express)
-  - `@rb9k/web`: Frontend application (Next.js)
-
-## Development & CI/CD
-
-[![CI Status](https://github.com/apkasten906/resume-builder-9000/actions/workflows/ci.yml/badge.svg)](https://github.com/apkasten906/resume-builder-9000/actions/workflows/ci.yml)
-
-- Strict TypeScript with ESLint
-- Automated testing with Vitest
-- CI/CD pipeline with GitHub Actions
-- Branch protection with required code reviews
-
-See [CI/CD Documentation](./docs/CI_CD.md) for more details.
+## License
+This project is licensed under the MIT License.
