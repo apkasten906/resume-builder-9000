@@ -1,4 +1,12 @@
-# Resume Builder 9000
+import { writeFileSync } from 'fs';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = join(__filename, '..');
+
+const readmePath = join(__dirname, 'README.md');
+const content = `# Resume Builder 9000
 
 Welcome to the Resume Builder 9000! This project is designed to help you create tailored, ATS-friendly resumes with ease.
 
@@ -26,4 +34,7 @@ Run the following commands to set up the project:
 Feel free to submit issues and pull requests. We welcome contributions from the community!
 
 ## License
-This project is licensed under the MIT License.
+This project is licensed under the MIT License.`;
+
+writeFileSync(readmePath, content, 'utf8');
+console.log('README.md has been updated successfully.');
