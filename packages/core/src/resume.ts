@@ -1,4 +1,4 @@
-import { ResumeData, JobDetails } from './index';
+import { ResumeData, JobDetails } from './index.js';
 
 export interface ResumeGenerator {
   /**
@@ -27,14 +27,14 @@ export class ResumeService {
     this.generator = generator;
     this.formatter = formatter;
   }
-  
+
   async createResume(resumeData: ResumeData, jobDetails: JobDetails): Promise<string | Buffer> {
     const resumeContent = await this.generator.generateResume(resumeData, jobDetails);
-    
+
     if (this.formatter) {
       return this.formatter.format(resumeContent);
     }
-    
+
     return resumeContent;
   }
 }

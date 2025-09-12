@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import resumeRoutes from './routes/resume';
-import { connectDatabase } from './db';
-import { logger, httpLogger, errorLogger } from './utils/logger';
+import { resumeRoutes } from './controllers/resume.js';
+import { connectDatabase } from './db.js';
+import { logger, httpLogger, errorLogger } from './utils/logger.js';
 
 // Load environment variables
 dotenv.config();
@@ -29,16 +29,16 @@ app.get('/api/health', (req, res) => {
 app.use(errorLogger);
 
 // Initialize database
-connectDatabase()
-  .then(() => {
-    // Start server
-    app.listen(port, () => {
-      logger.info(`API server running on http://localhost:${port}`);
-    });
-  })
-  .catch((err) => {
-    logger.error('Failed to connect to database:', { error: err });
-    process.exit(1);
+try {
+  connectDatabase();
+
+  // Start server
+  app.listen(port, () => {
+    logger.info(`API server running on http://localhost:${port}`);
   });
+} catch (err) {
+  logger.error('Failed to connect to database:', { error: err });
+  process.exit(1);
+}
 
 export default app;

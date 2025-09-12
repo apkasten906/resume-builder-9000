@@ -84,4 +84,4 @@ export declare const JobDetailsSchema: z.ZodObject<{
     url: z.ZodOptional<z.ZodString>;
 }, z.core.$strip>;
 export type JobDetails = z.infer<typeof JobDetailsSchema>;
-export * from './resume';
+export * from './resume.js';

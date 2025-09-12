@@ -1,23 +1,23 @@
 import { describe, test, expect, vi } from 'vitest';
 import supertest from 'supertest';
-import app from '../src/index';
+import { default as app } from '../src/index.js';
 
 // Mock the database connection
 vi.mock('../src/db', () => ({
-  connectDatabase: vi.fn().mockResolvedValue({}),
-  getResumeFromDb: vi.fn().mockImplementation((id) => {
+  connectDatabase: vi.fn(() => ({})),
+  getResumeFromDb: vi.fn(id => {
     if (id === 'test-resume-id') {
-      return Promise.resolve({
+      return {
         id: 'test-resume-id',
         content: 'Test resume content',
         resumeData: { name: 'John Doe' },
         jobDetails: { title: 'Developer' },
-        createdAt: '2025-09-10T12:00:00.000Z'
-      });
+        createdAt: '2025-09-10T12:00:00.000Z',
+      };
     }
-    return Promise.resolve(null);
+    return null;
   }),
-  insertResume: vi.fn().mockResolvedValue('test-resume-id')
+  insertResume: vi.fn(resumeData => 'test-resume-id'),
 }));
 
 // Mock the resume generator service
@@ -26,7 +26,7 @@ vi.mock('../src/services/resume-generator', () => ({
     generateResume(): Promise<string> {
       return Promise.resolve('Generated resume content');
     }
-  }
+  },
 }));
 
 // Mock the logger to prevent console output during tests
@@ -94,9 +94,7 @@ describe('API Routes', () => {
       description: 'Experienced developer needed',
     };
 
-    const response = await supertest(app)
-      .post('/api/resumes')
-      .send({ resumeData, jobDetails });
+    const response = await supertest(app).post('/api/resumes').send({ resumeData, jobDetails });
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('id', 'test-resume-id');

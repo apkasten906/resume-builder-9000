@@ -40,4 +40,4 @@ This project is a resume orchestration engine that creates tailored, ATS-friendl
 
 ## Further Instructions
 
-- See the files in the copilot folder for more specific instructions on how to contribute to this project.
+- After reading these instructions read the files in the `instructions` and `copilot` folders for additional contribution guidelines and instructions.

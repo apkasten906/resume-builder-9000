@@ -5,11 +5,11 @@ export const metadata: Metadata = {
   description: 'Create your tailored, ATS-friendly resume',
 };
 
-export default function BuildPage(): JSX.Element {
+export default function BuildPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Create Your Resume</h1>
-      
+
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
         <form className="space-y-4">
@@ -59,7 +59,7 @@ export default function BuildPage(): JSX.Element {
               />
             </div>
           </div>
-          
+
           <div className="pt-4">
             <button
               type="button"
@@ -70,7 +70,7 @@ export default function BuildPage(): JSX.Element {
           </div>
         </form>
       </div>
-      
+
       {/* Additional sections would be added here, but they would be hidden/shown based on step state */}
     </div>
   );

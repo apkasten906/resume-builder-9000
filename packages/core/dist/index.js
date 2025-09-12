@@ -1,71 +1,111 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.JobDetailsSchema = exports.ResumeDataSchema = exports.SkillSchema = exports.EducationSchema = exports.ExperienceSchema = exports.PersonalInfoSchema = void 0;
-const zod_1 = require("zod");
+import { z } from 'zod';
 // Resume related types
-exports.PersonalInfoSchema = zod_1.z.object({
-    fullName: zod_1.z.string(),
-    email: zod_1.z.string().email(),
-    phone: zod_1.z.string().optional(),
-    location: zod_1.z.string().optional(),
-    linkedIn: zod_1.z.string().url().optional(),
-    website: zod_1.z.string().url().optional(),
-    github: zod_1.z.string().url().optional(),
+export const PersonalInfoSchema = z.object({
+    fullName: z.string(),
+    email: z
+        .string()
+        .email()
+        .refine(val => val.endsWith('@gmail.com') || val.endsWith('@outlook.com'), {
+        message: 'Email must be a gmail.com or outlook.com address',
+    }),
+    phone: z.string().optional(),
+    location: z.string().optional(),
+    linkedIn: z
+        .string()
+        .refine(val => {
+        if (!val)
+            return true;
+        try {
+            new URL(val);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }, { message: 'Invalid URL' })
+        .optional(),
+    website: z
+        .string()
+        .refine(val => {
+        if (!val)
+            return true;
+        try {
+            new URL(val);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }, { message: 'Invalid URL' })
+        .optional(),
+    github: z
+        .string()
+        .refine(val => {
+        if (!val)
+            return true;
+        try {
+            new URL(val);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }, { message: 'Invalid URL' })
+        .optional(),
 });
-exports.ExperienceSchema = zod_1.z.object({
-    title: zod_1.z.string(),
-    company: zod_1.z.string(),
-    location: zod_1.z.string().optional(),
-    startDate: zod_1.z.string(),
-    endDate: zod_1.z.string().optional(),
-    current: zod_1.z.boolean().default(false),
-    responsibilities: zod_1.z.array(zod_1.z.string()),
-    results: zod_1.z.array(zod_1.z.string()).optional(),
-    roleRelevance: zod_1.z.record(zod_1.z.string(), zod_1.z.number()).optional(),
+export const ExperienceSchema = z.object({
+    title: z.string(),
+    company: z.string(),
+    location: z.string().optional(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
+    current: z.boolean().default(false),
+    responsibilities: z.array(z.string()),
+    results: z.array(z.string()).optional(),
+    roleRelevance: z.record(z.string(), z.number()).optional(),
 });
-exports.EducationSchema = zod_1.z.object({
-    degree: zod_1.z.string(),
-    institution: zod_1.z.string(),
-    location: zod_1.z.string().optional(),
-    graduationDate: zod_1.z.string(),
-    gpa: zod_1.z.string().optional(),
-    highlights: zod_1.z.array(zod_1.z.string()).optional(),
+export const EducationSchema = z.object({
+    degree: z.string(),
+    institution: z.string(),
+    location: z.string().optional(),
+    graduationDate: z.string(),
+    gpa: z.string().optional(),
+    highlights: z.array(z.string()).optional(),
 });
-exports.SkillSchema = zod_1.z.object({
-    name: zod_1.z.string(),
-    level: zod_1.z.number().min(1).max(5).optional(),
-    category: zod_1.z.string().optional(),
+export const SkillSchema = z.object({
+    name: z.string(),
+    level: z.number().min(1).max(5).optional(),
+    category: z.string().optional(),
 });
-exports.ResumeDataSchema = zod_1.z.object({
-    personalInfo: exports.PersonalInfoSchema,
-    summary: zod_1.z.string().optional(),
-    experience: zod_1.z.array(exports.ExperienceSchema),
-    education: zod_1.z.array(exports.EducationSchema),
-    skills: zod_1.z.array(exports.SkillSchema).optional(),
-    certifications: zod_1.z.array(zod_1.z.string()).optional(),
-    projects: zod_1.z.array(zod_1.z.string()).optional(),
+export const ResumeDataSchema = z.object({
+    personalInfo: PersonalInfoSchema,
+    summary: z.string().optional(),
+    experience: z.array(ExperienceSchema),
+    education: z.array(EducationSchema),
+    skills: z.array(SkillSchema).optional(),
+    certifications: z.array(z.string()).optional(),
+    projects: z.array(z.string()).optional(),
 });
 // Job related types
-exports.JobDetailsSchema = zod_1.z.object({
-    title: zod_1.z.string(),
-    company: zod_1.z.string().optional(),
-    location: zod_1.z.string().optional(),
-    description: zod_1.z.string(),
-    requirements: zod_1.z.array(zod_1.z.string()).optional(),
-    url: zod_1.z.string().url().optional(),
+export const JobDetailsSchema = z.object({
+    title: z.string(),
+    company: z.string().optional(),
+    location: z.string().optional(),
+    description: z.string(),
+    requirements: z.array(z.string()).optional(),
+    url: z
+        .string()
+        .refine(val => {
+        if (!val)
+            return true;
+        try {
+            new URL(val);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }, { message: 'Invalid URL' })
+        .optional(),
 });
-__exportStar(require("./resume"), exports);
+export * from './resume.js';

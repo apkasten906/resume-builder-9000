@@ -1,12 +1,11 @@
-import sqlite3 from 'sqlite3';
-import { open, Database } from 'sqlite';
-import { logger } from './utils/logger';
-import { StoredResume, DatabaseRow } from './types/database';
+import BetterSQLite3 from 'better-sqlite3';
+import { logger } from './utils/logger.js';
+import { StoredResume, DatabaseRow } from './types/database.js';
 
 // Global database connection
-let db: Database | null = null;
+let db: BetterSQLite3.Database | null = null;
 
-export async function connectDatabase(): Promise<Database> {
+export function connectDatabase(): BetterSQLite3.Database {
   if (db) {
     logger.debug('Using existing database connection');
     return db;
@@ -14,13 +13,10 @@ export async function connectDatabase(): Promise<Database> {
 
   logger.info('Opening new database connection');
   // Open the database
-  db = await open({
-    filename: './resume.db',
-    driver: sqlite3.Database,
-  });
+  db = new BetterSQLite3('./resume.db');
 
   // Create tables if they don't exist
-  await db.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS resumes (
       id TEXT PRIMARY KEY,
       content TEXT NOT NULL,
@@ -34,12 +30,13 @@ export async function connectDatabase(): Promise<Database> {
   return db;
 }
 
-export async function getResumeFromDb(id: string): Promise<StoredResume | null> {
-  const database = await connectDatabase();
+export function getResumeFromDb(id: string): StoredResume | null {
+  const database = connectDatabase();
   logger.debug('Fetching resume from database', { resumeId: id });
 
   try {
-    const result = await database.get<DatabaseRow>('SELECT * FROM resumes WHERE id = ?', id);
+    const stmt = database.prepare('SELECT * FROM resumes WHERE id = ?');
+    const result = stmt.get(id) as DatabaseRow | undefined;
 
     if (!result) {
       logger.info('Resume not found in database', { resumeId: id });
@@ -56,8 +53,8 @@ export async function getResumeFromDb(id: string): Promise<StoredResume | null> 
   }
 }
 
-export async function insertResume(resumeData: Omit<StoredResume, 'id'>): Promise<string> {
-  const database = await connectDatabase();
+export function insertResume(resumeData: Omit<StoredResume, 'id'>): string {
+  const database = connectDatabase();
 
   // Generate a unique ID
   const id = generateUniqueId();
@@ -65,8 +62,11 @@ export async function insertResume(resumeData: Omit<StoredResume, 'id'>): Promis
   logger.debug('Inserting resume into database', { resumeId: id });
 
   try {
-    await database.run(
-      'INSERT INTO resumes (id, content, resume_data, job_details, created_at) VALUES (?, ?, ?, ?, ?)',
+    const stmt = database.prepare(
+      'INSERT INTO resumes (id, content, resume_data, job_details, created_at) VALUES (?, ?, ?, ?, ?)'
+    );
+
+    stmt.run(
       id,
       resumeData.content,
       JSON.stringify(resumeData.resumeData),

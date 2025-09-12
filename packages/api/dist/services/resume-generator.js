@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.DefaultResumeGenerator = void 0;
-class DefaultResumeGenerator {
+export class DefaultResumeGenerator {
     async generateResume(resumeData, jobDetails) {
         await new Promise(resolve => setTimeout(resolve, 0)); // Simulate async operation
         const { personalInfo, experience, education, skills } = resumeData;
@@ -76,4 +73,3 @@ class DefaultResumeGenerator {
         return html;
     }
 }
-exports.DefaultResumeGenerator = DefaultResumeGenerator;

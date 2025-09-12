@@ -1,4 +1,5 @@
-import { ResumeData, JobDetails, ResumeGenerator } from '@rb9k/core';
+import { ResumeData, JobDetails } from '@rb9k/core';
+import { ResumeGenerator } from '@rb9k/core/dist/resume.js';
 
 export class DefaultResumeGenerator implements ResumeGenerator {
   async generateResume(resumeData: ResumeData, jobDetails: JobDetails): Promise<string> {

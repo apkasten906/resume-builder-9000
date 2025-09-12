@@ -21,7 +21,7 @@
   // Formatting settings
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.eslint": "always"
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[javascript]": {
@@ -35,5 +35,33 @@
   },
 
   // ESLint settings
-  "eslint.validate": ["javascript", "typescript", "javascriptreact", "typescriptreact"]
+  "eslint.validate": ["javascript", "typescript", "javascriptreact", "typescriptreact"],
+  "eslint.run": "onSave",
+  "eslint.alwaysShowStatus": true,
+  "eslint.format.enable": true,
+  "eslint.lintTask.enable": true,
+  "eslint.codeAction.showDocumentation": {
+    "enable": true
+  },
+  "chat.modeFilesLocations": {
+    "chatmodes": true
+  },
+  "chat.promptFilesLocations": {
+    "prompts": true
+  },
+  "chat.instructionsFilesLocations": {
+    "instructions": true
+  },
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false,
+    "editor.formatOnSave": true
+  },
+  "editor.rulers": [100],
+  "files.associations": {
+    "*.chatmode.md": "markdown",
+    "*.instructions.md": "markdown",
+    "*.prompt.md": "markdown"
+  }
 }
