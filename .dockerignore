@@ -1,0 +1,27 @@
+# Ignore node_modules
+node_modules
+
+# Ignore logs
+logs
+
+# Ignore test files
+tests
+
+# Ignore Docker-related files
+Dockerfile
+docker-compose.yml
+
+# Ignore other unnecessary files
+*.md
+*.lock
+*.log
+*.sqlite
+*.db
+*.env
+*.tar
+*.zip
+*.tgz
+*.bak
+*.tmp
+*.swp
+*.DS_Store

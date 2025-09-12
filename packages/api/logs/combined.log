@@ -43,3 +43,6 @@
 {"level":"http","message":"::1 GET /api/resumes/%7Bid%7D 404 28 - 6.942 ms","timestamp":"2025-09-12 18:40:51"}
 {"level":"http","message":"::1 GET /favicon.ico 404 150 - 0.269 ms","timestamp":"2025-09-12 18:40:51"}
 {"level":"http","message":"::1 GET /api/resumes/ 404 151 - 0.350 ms","timestamp":"2025-09-12 18:40:54"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-12 22:14:01"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-12 22:14:01"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-12 22:14:01"}

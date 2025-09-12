@@ -7,10 +7,67 @@ import { logger } from '../utils/logger.js';
 // Express router for resume endpoints
 const resumeRoutes = Router();
 
+/**
+ * @swagger
+ * /api/resumes/{id}:
+ *   get:
+ *     summary: Get a resume by ID
+ *     description: Retrieve a specific resume by its unique identifier
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Unique identifier for the resume
+ *     responses:
+ *       200:
+ *         description: Resume found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 content:
+ *                   type: string
+ *                 metadata:
+ *                   type: object
+ *       404:
+ *         description: Resume not found
+ *       500:
+ *         description: Internal server error
+ */
 resumeRoutes.get('/:id', async (req, res) => {
   await getResumeById(req, res);
 });
 
+/**
+ * @swagger
+ * /api/resumes:
+ *   post:
+ *     summary: Create a new resume
+ *     description: Generate a new resume based on user data and job details
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               resumeData:
+ *                 type: object
+ *                 description: User's resume data
+ *               jobDetails:
+ *                 type: object
+ *                 description: Target job details
+ *     responses:
+ *       201:
+ *         description: Resume created successfully
+ *       500:
+ *         description: Failed to create resume
+ */
 resumeRoutes.post('/', async (req, res) => {
   try {
     const { resumeData, jobDetails } = req.body;
