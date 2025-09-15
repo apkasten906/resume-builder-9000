@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^14.2.32",
+    "@playwright/test": "^1.55.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",

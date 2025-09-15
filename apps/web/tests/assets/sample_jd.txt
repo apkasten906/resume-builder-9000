@@ -1,0 +1,9 @@
+Job Title: Software Engineer
+Location: Remote
+Requirements:
+- Experience with Node.js
+- Experience with React
+- Familiarity with Docker
+Preferred:
+- Experience with CI/CD
+- Knowledge of SQLite
