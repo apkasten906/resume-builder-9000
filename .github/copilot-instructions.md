@@ -14,10 +14,18 @@ This project is a resume orchestration engine that creates tailored, ATS-friendl
 
 ## Development Guidelines
 
-- Follow TypeScript best practices with strict typing
-- Maintain clean code using ESLint rules
-- Write tests for all new functionality using Vitest
-- Follow the branch protection rules for PRs
+Follow accessibility best practices
+
+## Issue-Based Workflow Steps
+
+- For each new feature or UI spec issue, create a dedicated branch (e.g., `feature/<issue-name>`).
+- Before implementation, comment out any Playwright or other tests that cannot yet pass for the feature.
+- Work on the feature in its branch, enabling tests only when the UI or logic is ready.
+- Repeat this process for each issue to ensure isolated, test-driven development and clean PRs.
+- As you implement each step, commit your changes with clear messages describing what was implemented and any decisions made.
+- Document key decisions and implementation notes in the PR or issue as you progress.
+- When starting work on a new issue, set the status of the Issue to In Progress in the tracker/project board.
+- If any new cases are discovered that require testing, add a new acceptance criterion (AC) in Gherkin syntax to the story/issue.
 
 ## PowerShell Scripting Rules
 
