@@ -49,10 +49,10 @@ COPY --from=api-builder /app/packages/api/package.json /app/packages/api/package
 COPY --from=api-builder /app/packages/core/dist /app/packages/core/dist
 COPY --from=api-builder /app/packages/core/package.json /app/packages/core/package.json
 
-# Install dependencies
+WORKDIR /app/packages/core
+RUN npm install --omit=dev
 WORKDIR /app/packages/api
-RUN npm install --omit=dev && \
-    npm link ../core
+RUN npm install --omit=dev && npm link ../core
 
 # Expose the port that the API runs on
 EXPOSE 4000

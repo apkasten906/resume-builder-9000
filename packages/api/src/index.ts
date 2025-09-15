@@ -5,7 +5,7 @@ import swaggerUi from 'swagger-ui-express';
 import { resumeRoutes } from './controllers/resume.js';
 import { connectDatabase } from './db.js';
 import { logger, httpLogger, errorLogger } from './utils/logger.js';
-import { specs } from './utils/swagger.js';
+import { openApiSpec } from './utils/openapi.js';
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +20,9 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+
+// Redirect root to Swagger UI
+app.get('/', (req, res) => res.redirect('/api/docs'));
 app.use('/api/resumes', resumeRoutes);
 
 // Health check endpoint
@@ -27,8 +30,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Swagger documentation
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specs));
+// Swagger documentation (using zod-openapi spec)
+// Serve OpenAPI spec as JSON
+app.get('/api/docs/openapi.json', (req, res) => res.json(openApiSpec));
+// Configure Swagger UI to use the spec URL
+app.use(
+  '/api/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(undefined, { swaggerUrl: '/api/docs/openapi.json' })
+);
 
 /**
  * @swagger
