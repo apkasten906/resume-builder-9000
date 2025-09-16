@@ -3,9 +3,7 @@ import { z } from 'zod';
 // Resume related types
 export const PersonalInfoSchema = z.object({
   fullName: z.string(),
-  email: z
-    .string()
-    .email(),
+  email: z.email(),
   phone: z.string().optional(),
   location: z.string().optional(),
   linkedIn: z
