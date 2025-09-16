@@ -35,6 +35,6 @@ Feel free to submit issues and pull requests. We welcome contributions from the 
 
 ## License
 This project is licensed under the MIT License.`;
-
 writeFileSync(readmePath, content, 'utf8');
+
 console.log('README.md has been updated successfully.');
