@@ -5,14 +5,15 @@ node_modules
 logs
 
 # Ignore test files
-tests
+!tests
 
 # Ignore Docker-related files
-Dockerfile
-docker-compose.yml
+!Dockerfile
+!docker-compose.yml
 
 # Ignore other unnecessary files
 *.md
+!apps/web/tests
 *.lock
 *.log
 *.sqlite
