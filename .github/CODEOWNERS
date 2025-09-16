@@ -1,0 +1,34 @@
+# Code Owners for Resume Builder 9000
+
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+
+- @apkasten906
+
+# Core package owners
+
+/packages/core/ @apkasten906
+
+# API package owners
+
+/packages/api/ @apkasten906
+
+# Web app owners
+
+/apps/web/ @apkasten906
+
+# GitHub Actions workflows
+
+/.github/workflows/ @apkasten906
+
+# Documentation
+
+/docs/ @apkasten906
+/README.md @apkasten906
+
+# Configuration files
+
+_.json @apkasten906
+_.config.js @apkasten906
+\*.config.ts @apkasten906

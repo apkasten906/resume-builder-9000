@@ -1,0 +1,44 @@
+name: Pull Request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linting
+        run: npm run lint
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build packages
+        run: npm run build
+      
+      - name: Check for console.log statements
+        run: |
+          ! grep -r "console.log" --include="*.ts" --include="*.tsx" packages/*/src apps/*/src
+      
+      - name: Check for TODO comments
+        run: |
+          TODOS=$(grep -r "TODO" --include="*.ts" --include="*.tsx" --include="*.js" packages/*/src apps/*/src || true)
+          if [[ ! -z "$TODOS" ]]; then
+            echo "TODOs found in code. Please resolve them before merging:"
+            echo "$TODOS"
+            echo "If these TODOs are being tracked in issues, add the issue number to the comment (e.g., TODO: #123)."
+            exit 0
+          fi

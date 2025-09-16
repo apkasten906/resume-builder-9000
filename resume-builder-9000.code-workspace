@@ -1,0 +1,40 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		// Recommended extensions for project tech stack
+		"extensions": {
+			"recommendations": [
+				"dbaeumer.vscode-eslint", // Linting
+				"esbenp.prettier-vscode", // Formatting
+				"ms-vscode.vscode-typescript-next", // TypeScript
+				"bradlc.vscode-tailwindcss", // Tailwind
+				"prisma.prisma", // SQLite/Prisma
+				"shadcn.ui", // shadcn/ui
+				"wix.vscode-import-cost" // Import cost visualization
+			]
+		},
+		// Formatting and linting
+		"editor.formatOnSave": true,
+		"[typescript]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"[javascript]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"[json]": {
+			"editor.defaultFormatter": "esbenp.prettier-vscode"
+		},
+		"eslint.enable": true,
+		// TypeScript settings
+		"typescript.tsdk": "node_modules/typescript/lib",
+		"typescript.enablePromptUseWorkspaceTsdk": true,
+		// Node.js
+		"nodejs.autoDetect": "on",
+		// SQLite
+		"sqlite.useWorkspace": true
+	}
+}

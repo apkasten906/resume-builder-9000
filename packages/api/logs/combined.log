@@ -1,0 +1,45 @@
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-10 17:42:23"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-10 17:42:23"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-10 17:42:23"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-10 19:24:21"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-10 19:24:21"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-10 19:24:21"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-10 19:27:04"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-10 19:27:04"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-10 19:27:04"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-10 19:27:44"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-10 19:27:44"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-10 19:27:44"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-10 19:41:08"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-10 19:41:08"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-10 19:41:08"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-10 20:16:48"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-10 20:16:48"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-10 20:16:48"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-10 23:37:59"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-10 23:37:59"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-10 23:37:59"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-10 23:47:26"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-10 23:47:26"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-10 23:47:26"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-11 10:32:16"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-11 10:32:16"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-11 10:32:16"}
+{"level":"http","message":"::1 GET /api/health?id=a4b0bd66-3d7a-468e-a830-42eca427048f&vscodeBrowserReqId=1757579585020 200 54 - 2.036 ms","timestamp":"2025-09-11 10:33:05"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-11 10:33:28"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-11 10:33:28"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-11 10:33:28"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-12 16:24:20"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-12 16:24:20"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-12 16:24:20"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-12 18:39:17"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-12 18:39:17"}
+{"level":"info","message":"API server running on http://localhost:3001","timestamp":"2025-09-12 18:39:17"}
+{"level":"http","message":"::1 GET / 404 139 - 3.572 ms","timestamp":"2025-09-12 18:39:33"}
+{"level":"http","message":"::1 GET / 404 139 - 0.460 ms","timestamp":"2025-09-12 18:39:46"}
+{"level":"debug","message":"Using existing database connection","timestamp":"2025-09-12 18:40:51"}
+{"level":"debug","message":"Fetching resume from database","resumeId":"{id}","timestamp":"2025-09-12 18:40:51"}
+{"level":"info","message":"Resume not found in database","resumeId":"{id}","timestamp":"2025-09-12 18:40:51"}
+{"level":"http","message":"::1 GET /api/resumes/%7Bid%7D 404 28 - 6.942 ms","timestamp":"2025-09-12 18:40:51"}
+{"level":"http","message":"::1 GET /favicon.ico 404 150 - 0.269 ms","timestamp":"2025-09-12 18:40:51"}
+{"level":"http","message":"::1 GET /api/resumes/ 404 151 - 0.350 ms","timestamp":"2025-09-12 18:40:54"}
