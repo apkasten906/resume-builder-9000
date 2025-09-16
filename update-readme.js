@@ -1,9 +1,9 @@
 import { writeFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, '..');
+const __dirname = dirname(__filename);
 
 const readmePath = join(__dirname, 'README.md');
 const content = `# Resume Builder 9000
@@ -35,6 +35,6 @@ Feel free to submit issues and pull requests. We welcome contributions from the 
 
 ## License
 This project is licensed under the MIT License.`;
-
 writeFileSync(readmePath, content, 'utf8');
+
 console.log('README.md has been updated successfully.');

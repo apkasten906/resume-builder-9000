@@ -3,12 +3,7 @@ import { z } from 'zod';
 // Resume related types
 export const PersonalInfoSchema = z.object({
   fullName: z.string(),
-  email: z
-    .string()
-    .email()
-    .refine(val => val.endsWith('@gmail.com') || val.endsWith('@outlook.com'), {
-      message: 'Email must be a gmail.com or outlook.com address',
-    }),
+  email: z.email(),
   phone: z.string().optional(),
   location: z.string().optional(),
   linkedIn: z
