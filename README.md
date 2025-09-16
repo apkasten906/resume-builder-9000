@@ -1,20 +1,29 @@
-# resume-builder-9000
-An application for dynamically creating and hosting resumes based on work experience and the job being applied for.
+# Resume Builder 9000
 
-## Inputs:
-- You Personal Information
-- Your Work Experience
-- - Responsibilities - What were you expected to do?
-  - Results - What did you accomplish?  Did you go beyond your role?
-  - Role Relevance - What roles do each of your Responsibitities / Results relate to?  How relevant to each role are they?
-- Job To Apply For
-- - Link to the job you are applying for OR
-  - A general Role you would like to apply for OR
-  - Your Dream Job?
+Welcome to the Resume Builder 9000! This project is designed to help you create tailored, ATS-friendly resumes with ease.
 
-## Output:
-- A printable resume tailored for the job you specify with a unique URL that can be downloaded as PDF
+## Features
+- Frontend: Next.js with Tailwind CSS
+- Backend: Node.js with Express and SQLite
+- Shared business logic in TypeScript
 
-# Technology
-## Frotend - Angular
-## Backend - python
+## Getting Started
+Run the following commands to set up the project:
+
+1. Install dependencies:
+   npm install
+
+2. Start the development server:
+   npm run dev
+
+3. Build the project:
+   npm run build
+
+4. Run tests:
+   npm test
+
+## Contributing
+Feel free to submit issues and pull requests. We welcome contributions from the community!
+
+## License
+This project is licensed under the MIT License.
