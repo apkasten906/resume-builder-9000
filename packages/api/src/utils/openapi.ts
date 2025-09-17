@@ -1,9 +1,19 @@
+import { z } from 'zod';
 import { createDocument, createSchema } from 'zod-openapi';
 import { ResumeDataSchema, JobDetailsSchema } from '@rb9k/core';
+
+const StoredResumeSchema = z.object({
+  id: z.string(),
+  content: z.string(),
+  resumeData: ResumeDataSchema,
+  jobDetails: JobDetailsSchema,
+  createdAt: z.string(),
+});
 
 const schemas = {
   ResumeData: createSchema(ResumeDataSchema).schema,
   JobDetails: createSchema(JobDetailsSchema).schema,
+  StoredResume: createSchema(StoredResumeSchema).schema,
 };
 
 export const openApiSpec = createDocument({
@@ -43,6 +53,36 @@ export const openApiSpec = createDocument({
       },
     },
     '/api/resumes': {
+      get: {
+        summary: 'List all resumes',
+        description: 'Retrieve all uploaded resumes',
+        responses: {
+          200: {
+            description: 'List of resumes',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/StoredResume' },
+                },
+              },
+            },
+          },
+          500: {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       post: {
         summary: 'Create a new resume',
         description: 'Generate a new resume based on user data and job details',

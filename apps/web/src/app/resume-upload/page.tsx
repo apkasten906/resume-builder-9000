@@ -25,13 +25,23 @@ export default function ResumeUploadPage() {
     }
     setUploading(true);
     try {
-      // Simulate upload and parsing (replace with real API call)
-      await new Promise(res => setTimeout(res, 1000));
-      // Fake parsed data for demo
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/resumes', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || 'Failed to upload or parse resume.');
+        return;
+      }
+      const data = await res.json();
+      // Assume backend returns { summary, experience, skills }
       setParsed({
-        summary: 'Summary: Experienced software engineer with a focus on resume parsing.',
-        experience: ['Company A: Senior Engineer (2020-2023)', 'Company B: Developer (2017-2020)'],
-        skills: ['TypeScript', 'Node.js', 'React', 'Resume Parsing'],
+        summary: data.summary,
+        experience: data.experience,
+        skills: data.skills,
       });
       setSuccess(true);
     } catch {
