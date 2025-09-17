@@ -5,6 +5,8 @@ import { ResumeService } from '@rb9k/core/dist/resume.js';
 import { DefaultResumeGenerator } from '../services/resume-generator.js';
 import { getResumeFromDb, insertResume, getAllResumesFromDb } from '../db.js';
 import { logger } from '../utils/logger.js';
+import pdfParse from 'pdf-parse';
+import mammoth from 'mammoth';
 
 // Express router for resume endpoints
 const resumeRoutes = Router();
@@ -73,14 +75,63 @@ resumeRoutes.post('/', upload.single('file'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    // TODO: Replace with real parsing logic
-    // For demo, return fake parsed data
-    const parsed = {
-      summary: 'Summary: Experienced software engineer with a focus on resume parsing.',
-      experience: ['Company A: Senior Engineer (2020-2023)', 'Company B: Developer (2017-2020)'],
-      skills: ['TypeScript', 'Node.js', 'React', 'Resume Parsing'],
+
+    // Parse resume file (PDF or DOCX)
+    let text = '';
+    const fileBuffer = req.file.buffer;
+    const fileName = req.file.originalname.toLowerCase();
+    if (fileName.endsWith('.pdf')) {
+      const pdfData = await pdfParse(fileBuffer);
+      text = pdfData.text;
+    } else if (fileName.endsWith('.docx')) {
+      const result = await mammoth.extractRawText({ buffer: fileBuffer });
+      text = result.value;
+    } else {
+      return res
+        .status(400)
+        .json({ error: 'Unsupported file type. Only PDF and DOCX are supported.' });
+    }
+
+    // Very basic parsing logic (for demo):
+    // Extract name, email, and skills from the text using regex (improve as needed)
+    const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    const fullNameMatch = text.match(/([A-Z][a-z]+\s[A-Z][a-z]+)/);
+    const skillsMatch = text.match(/Skills:?\s*([\w\s,]+)/i);
+
+    const parsed: ResumeData = {
+      personalInfo: {
+        fullName: fullNameMatch ? fullNameMatch[1] : 'Unknown',
+        email: emailMatch ? emailMatch[0] : 'unknown@example.com',
+      },
+      summary: text.split('\n').slice(0, 3).join(' ').trim(),
+      experience: [],
+      education: [],
+      skills: skillsMatch
+        ? skillsMatch[1]
+            .split(',')
+            .map(s => ({ name: s.trim() }))
+            .filter(s => s.name)
+        : [],
+      certifications: [],
+      projects: [],
     };
-    res.status(200).json(parsed);
+
+    // Persist to database
+    const storedResume = {
+      content: req.file.buffer.toString('base64'), // Store file as base64 string
+      resumeData: parsed,
+      // Provide required jobDetails fields with placeholder values for UI upload flow
+      jobDetails: {
+        title: '',
+        description: '',
+      },
+      createdAt: new Date().toISOString(),
+    };
+    const id = insertResume(storedResume);
+    res.status(201).json({
+      id,
+      ...storedResume,
+    });
   } catch (error) {
     // Log error without console.error to avoid lint errors
     logger.error('Error uploading/parsing resume', {
