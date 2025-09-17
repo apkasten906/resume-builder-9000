@@ -40,6 +40,10 @@ Follow accessibility best practices
   - `-WithLLM`: To enable external LLM integration
   - `-ApiOnly`/`-WebOnly`: To run specific parts of the application
 
+## Playwright E2E Testing
+
+- Always use Playwright with the `dot` reporter (`--reporter=dot`) for automated and autonomous test runs. This ensures the process exits automatically after tests complete, enabling hands-off debugging and CI/CD workflows.
+
 ## Feature Development
 
 - Keep ATS-friendliness as a priority for resume generation
