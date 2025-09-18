@@ -15,3 +15,17 @@ yarn-debug.log*
 yarn-error.log*
 apps/web/.next/trace
 packages/api/logs/combined.log
+
+# Temporary files created by Next.js
+apps/web/.next/
+apps/web/out/
+
+# Temporary files created by other processes
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# SQLite temporary files
+packages/api/resume.db-shm
+packages/api/resume.db-wal
