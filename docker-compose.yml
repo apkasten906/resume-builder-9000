@@ -1,0 +1,32 @@
+services:
+  resumebuilder-frontend:
+    image: resumebuilder-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+  resumebuilder-api:
+    image: resumebuilder-api
+    build:
+      context: .
+      dockerfile: ./packages/api/Dockerfile
+    ports:
+      - '4000:4000'
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+    restart: always
+    # We'll use a simple healthcheck that just verifies the node process is running
+    healthcheck:
+      test: ['CMD', 'pgrep', '-f', 'node']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
