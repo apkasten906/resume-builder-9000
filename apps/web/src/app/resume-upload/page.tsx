@@ -18,9 +18,15 @@ export default function ResumeUploadPage() {
     setParsed(null);
     const file = e.target.files?.[0];
     if (!file) return;
-    // Only allow PDF, DOCX, TXT
-    if (!/(pdf|docx|txt)$/i.test(file.name.split('.').pop() || '')) {
-      setError('Unsupported file type. Please upload a PDF, DOCX, or TXT file.');
+    // Only allow PDF, DOCX, TXT, MD
+    const allowedTypes = ['pdf', 'docx', 'txt', 'md'];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!allowedTypes.includes(ext)) {
+      setError('Unsupported file type. Please upload a PDF, DOCX, TXT, or MD file.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File is too large. Maximum size is 5MB.');
       return;
     }
     setUploading(true);
@@ -62,13 +68,17 @@ export default function ResumeUploadPage() {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.docx,.txt"
+          accept=".pdf,.docx,.txt,.md"
           data-testid="resume-upload-input"
           className="block w-full border border-gray-300 rounded px-3 py-2"
           onChange={handleFileChange}
           aria-label="Resume file input"
+          aria-describedby="resume-upload-desc"
           disabled={uploading}
         />
+        <div id="resume-upload-desc" className="text-sm text-gray-500">
+          Accepted formats: PDF, DOCX, TXT, MD. Max size: 5MB.
+        </div>
         {uploading && <div className="text-blue-600">Uploading...</div>}
         {error && (
           <div className="text-red-600" data-testid="resume-upload-error" role="alert">

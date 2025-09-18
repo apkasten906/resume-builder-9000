@@ -24,6 +24,8 @@ app.use(express.json());
 // Redirect root to Swagger UI
 app.get('/', (req, res) => res.redirect('/api/docs'));
 app.use('/api/resumes', resumeRoutes);
+// Alias for /api/resumes/parse to support vertical slice contract
+app.use('/api/resumes/parse', resumeRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

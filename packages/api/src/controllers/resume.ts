@@ -52,51 +52,85 @@ const upload = multer({ storage: multer.memoryStorage() });
  *       500:
  *         description: Internal server error
  */
+
+function validateFile(file: Express.Multer.File): {
+  valid: boolean;
+  error?: string;
+  status?: number;
+} {
+  if (!file) {
+    return { valid: false, error: 'No file uploaded', status: 400 };
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return { valid: false, error: 'File is too large. Maximum size is 5MB.', status: 413 };
+  }
+  const allowedTypes = ['.pdf', '.docx', '.txt', '.md'];
+  const fileName = file.originalname.toLowerCase();
+  const ext = allowedTypes.find(type => fileName.endsWith(type));
+  if (!ext) {
+    return {
+      valid: false,
+      error: 'Unsupported file type. Only PDF, DOCX, TXT, and MD are supported.',
+      status: 400,
+    };
+  }
+  return { valid: true };
+}
+
+async function parseFileText(file: Express.Multer.File): Promise<string> {
+  const fileName = file.originalname.toLowerCase();
+  const fileBuffer = file.buffer;
+  if (fileName.endsWith('.pdf')) {
+    const pdfData = await pdfParse(fileBuffer);
+    return pdfData.text;
+  } else if (fileName.endsWith('.docx')) {
+    const result = await mammoth.extractRawText({ buffer: fileBuffer });
+    return result.value;
+  } else if (fileName.endsWith('.txt') || fileName.endsWith('.md')) {
+    return fileBuffer.toString('utf-8');
+  }
+  return '';
+}
+
+function handleJsonResume(req: Request, res: Response) {
+  const { resumeData, jobDetails } = req.body;
+  if (!resumeData || !jobDetails) {
+    return res.status(400).json({ error: 'Missing resumeData or jobDetails' });
+  }
+  // Simulate DB insert and return
+  const id = 'test-resume-id';
+  return res.status(201).json({
+    id,
+    content: 'Test resume content',
+    resumeData,
+    jobDetails,
+    createdAt: new Date().toISOString(),
+  });
+}
+
 resumeRoutes.post('/', upload.single('file'), async (req, res) => {
   try {
     // If JSON, handle API test (Vitest)
     if (req.is('application/json')) {
-      const { resumeData, jobDetails } = req.body;
-      if (!resumeData || !jobDetails) {
-        return res.status(400).json({ error: 'Missing resumeData or jobDetails' });
-      }
-      // Simulate DB insert and return
-      const id = 'test-resume-id';
-      return res.status(201).json({
-        id,
-        content: 'Test resume content',
-        resumeData,
-        jobDetails,
-        createdAt: new Date().toISOString(),
-      });
+      return handleJsonResume(req, res);
     }
 
     // If multipart, handle file upload (UI)
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+    const file = req.file;
+    const validation = validateFile(file as Express.Multer.File);
+    if (!validation.valid) {
+      return res.status(validation.status || 400).json({ error: validation.error });
     }
 
-    // Parse resume file (PDF or DOCX)
-    let text = '';
-    const fileBuffer = req.file.buffer;
-    const fileName = req.file.originalname.toLowerCase();
-    if (fileName.endsWith('.pdf')) {
-      const pdfData = await pdfParse(fileBuffer);
-      text = pdfData.text;
-    } else if (fileName.endsWith('.docx')) {
-      const result = await mammoth.extractRawText({ buffer: fileBuffer });
-      text = result.value;
-    } else {
-      return res
-        .status(400)
-        .json({ error: 'Unsupported file type. Only PDF and DOCX are supported.' });
-    }
+    // file is guaranteed defined after validation
+    const fileCasted = file as Express.Multer.File;
+    const text = await parseFileText(fileCasted);
 
     // Very basic parsing logic (for demo):
     // Extract name, email, and skills from the text using regex (improve as needed)
-    const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-    const fullNameMatch = text.match(/([A-Z][a-z]+\s[A-Z][a-z]+)/);
-    const skillsMatch = text.match(/Skills:?\s*([\w\s,]+)/i);
+    const emailMatch = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.exec(text);
+    const fullNameMatch = /([A-Z][a-z]+\s[A-Z][a-z]+)/.exec(text);
+    const skillsMatch = /Skills:?\s*([\w\s,]+)/i.exec(text);
 
     const parsed: ResumeData = {
       personalInfo: {
@@ -118,7 +152,7 @@ resumeRoutes.post('/', upload.single('file'), async (req, res) => {
 
     // Persist to database
     const storedResume = {
-      content: req.file.buffer.toString('base64'), // Store file as base64 string
+      content: fileCasted.buffer.toString('base64'), // Store file as base64 string
       resumeData: parsed,
       // Provide required jobDetails fields with placeholder values for UI upload flow
       jobDetails: {
@@ -127,10 +161,12 @@ resumeRoutes.post('/', upload.single('file'), async (req, res) => {
       },
       createdAt: new Date().toISOString(),
     };
-    const id = insertResume(storedResume);
+    insertResume(storedResume);
+    // Return only the preview contract for UI
     res.status(201).json({
-      id,
-      ...storedResume,
+      summary: parsed.summary,
+      experience: parsed.experience ? parsed.experience.map(e => e.title || '') : [],
+      skills: Array.isArray(parsed.skills) ? parsed.skills.map(s => s.name) : [],
     });
   } catch (error) {
     // Log error without console.error to avoid lint errors
