@@ -31,6 +31,11 @@ export default function RootLayout({
                     </a>
                   </li>
                   <li>
+                    <a href="/resume-upload" className="hover:underline">
+                      Resume Upload
+                    </a>
+                  </li>
+                  <li>
                     <a href="/about" className="hover:underline">
                       About
                     </a>

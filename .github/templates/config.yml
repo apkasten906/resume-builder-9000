@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 📋 Vertical Slice Guidelines
+    url: https://github.com/apkasten906/resume-builder-9000/blob/main/.github/ISSUE_TEMPLATE/README.md
+    about: Please read our issue template guidelines before creating new issues.

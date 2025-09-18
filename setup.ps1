@@ -36,13 +36,22 @@ if (Test-Path ".env.example") {
 Write-Host "📦 Installing dependencies..."
 npm install
 
+
 # Build packages
 Write-Host "🛠️ Building packages..."
 npm run build --workspaces
 
-# Run tests
+# Run unit/integration tests
 Write-Host "🧪 Running tests..."
 npm run test --workspaces
+
+# Install Playwright browsers (for E2E tests)
+Write-Host "🌐 Installing Playwright browsers..."
+npx playwright install
+
+# Run Playwright E2E tests with dot reporter for autonomous exit
+Write-Host "🤖 Running Playwright E2E tests (dot reporter)..."
+npx playwright test apps/web/tests/e2e --reporter=dot
 
 # Set up Git hooks
 Write-Host "🪝 Setting up Git hooks..."
