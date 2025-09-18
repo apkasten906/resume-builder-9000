@@ -21,9 +21,22 @@ A resume **orchestration engine** that compiles a fully tailored, ATS-friendly r
 
 ### A1: Parse Uploaded Resume(s)
 
-- Accept `.pdf`, `.docx`, `.txt`.
+- Accept `.pdf`, `.docx`, `.txt`, `.md` (max 5MB per file).
+- Upload via UI drag-and-drop or file picker (`<ResumeUpload>` component).
+- API endpoint: `POST /api/resumes/parse` (multipart form, file field `file`).
+- Validation: allowed types, max size 5MB. Returns 400 for unsupported, 413 for too large.
 - Extract: summary, experience (title, employer, dates), bullets, education, skills.
 - Normalize dates `YYYY-MM`. Confidence flags for low-quality fields.
+- Parsed JSON preview is shown in UI before persisting.
+- On success, parsed resume is persisted in DB with schema:
+
+      	```sql
+      id TEXT PK,
+      content TEXT (base64),
+      resume_data TEXT (JSON),
+      job_details TEXT (JSON),
+      created_at TEXT
+      ```
 
 ### A2: Manual Editor
 
@@ -89,7 +102,7 @@ See `packages/core/src/types.ts` for `JobProfile`, `Achievement`, etc.
 
 ## API (MVP)
 
-- `POST /api/ingest/resume` → candidate_id
+- `POST /api/resumes/parse` → parses and persists resume, returns preview JSON `{ summary, experience, skills }`.
 - `POST /api/ingest/jd` → job_id
 - `POST /api/tailor` → run + outputs
 

@@ -19,11 +19,13 @@
     ]
   },
   "dependencies": {
+    "@playwright/test": "^1.55.0",
     "@rb9k/core": "*",
     "@tailwindcss/typography": "^0.5.16",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.543.0",
+    "playwright": "^1.55.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwind-merge": "^3.3.1",
