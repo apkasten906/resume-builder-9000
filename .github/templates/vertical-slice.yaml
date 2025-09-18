@@ -1,0 +1,80 @@
+
+👉 This is easiest: contributors just fill out the Markdown.
+
+---
+
+## ✅ Option 2: Use YAML Issue Forms (structured fields)
+
+File: `.github/ISSUE_TEMPLATE/vertical-slice.yml`
+
+```yaml
+name: "Vertical Slice Story"
+description: "End-to-end feature covering frontend, API, business logic, and database"
+title: "[Story] "
+labels: ["story", "vertical-slice"]
+
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Short description of the feature
+    validations:
+      required: true
+
+  - type: textarea
+    id: frontend
+    attributes:
+      label: Frontend
+      description: Components, states, validation, accessibility
+    validations:
+      required: true
+
+  - type: textarea
+    id: api
+    attributes:
+      label: API
+      description: Endpoints, payloads, responses, errors
+    validations:
+      required: true
+
+  - type: textarea
+    id: business_logic
+    attributes:
+      label: Business Logic
+      description: Rules, edge cases, error handling
+
+  - type: textarea
+    id: database
+    attributes:
+      label: Database
+      description: Tables, schema, migrations
+
+  - type: textarea
+    id: contracts
+    attributes:
+      label: Contracts (Types/DTOs)
+      description: Interfaces in TypeScript/DTO schemas
+      render: ts
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria (Gherkin)
+      description: Write scenarios in Gherkin format
+      render: gherkin
+
+  - type: checkboxes
+    id: definition_of_done
+    attributes:
+      label: Definition of Done
+      description: Tick all before closing the story
+      options:
+        - label: UI implemented and wired to API
+        - label: API endpoint implemented with validation
+        - label: Business logic complete with unit tests
+        - label: Database schema migrated and persisted
+        - label: End-to-end tests cover happy and error paths
+        - label: Code reviewed and approved
+        - label: Deployed to staging and verified working
+        - label: Documentation updated (README, Architecture, API docs)

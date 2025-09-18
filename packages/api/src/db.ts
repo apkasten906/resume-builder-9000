@@ -1,3 +1,21 @@
+export function getAllResumesFromDb(): StoredResume[] {
+  const database = connectDatabase();
+  logger.debug('Fetching all resumes from database');
+  try {
+    const stmt = database.prepare('SELECT * FROM resumes ORDER BY created_at DESC');
+    const results = stmt.all() as DatabaseRow[];
+    return results.map(result => ({
+      id: result.id,
+      content: result.content,
+      resumeData: JSON.parse(result.resume_data),
+      jobDetails: JSON.parse(result.job_details),
+      createdAt: result.created_at,
+    }));
+  } catch (error) {
+    logger.error('Error retrieving all resumes from database', { error });
+    throw error;
+  }
+}
 import { randomUUID } from 'crypto';
 import BetterSQLite3 from 'better-sqlite3';
 import { logger } from './utils/logger.js';

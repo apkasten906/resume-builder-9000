@@ -13,5 +13,9 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-apps/web/.next/trace
+apps/web/.next/
+apps/web/test-results/
+test-results/
+apps/web/out/
+apps/web/.vercel/
 packages/api/logs/combined.log
