@@ -6,6 +6,18 @@ The domain model is structured to represent the core entities and their relation
 
 1. **Resume**:
    - Represents a user's resume.
+   - Uploaded via UI (`<ResumeUpload>`) and parsed via API (`POST /api/resumes/parse`).
+   - Supported types: PDF, DOCX, TXT, MD (max 5MB).
+   - DB schema:
+
+     ```sql
+     id TEXT PRIMARY KEY,
+     content TEXT, -- base64 file
+     resume_data TEXT, -- JSON
+     job_details TEXT, -- JSON
+     created_at TEXT
+     ```
+
    - Contains fields such as `name`, `contactInfo`, `workExperience`, and `skills`.
 
 2. **Work Experience**:

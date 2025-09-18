@@ -4,8 +4,8 @@
 flowchart TD
     A[User Login] -->|JWT Auth| B[Dashboard]
 
-    B --> C[Upload Resume]
-    C -->|Parse & Store| D[Resume JSON]
+    B --> C[Upload Resume (UI)]
+    C -->|POST /api/resumes/parse, Validate, Preview| D[Resume JSON]
 
     B --> E[Upload / Paste Job Description]
     E -->|Parse & Store| F[JD JSON]
