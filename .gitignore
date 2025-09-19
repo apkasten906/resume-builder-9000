@@ -33,3 +33,27 @@ Thumbs.db
 # SQLite temporary files
 packages/api/resume.db-shm
 packages/api/resume.db-wal
+
+# Build output
+/dist/
+**/dist/
+
+# VS Code settings
+.vscode/
+
+# Coverage reports
+coverage/
+**/coverage/
+
+# Local environment overrides
+.env.*.local
+
+# JetBrains IDE
+.idea/
+
+# Build artifacts (if used)
+build/
+**/build/
+
+# Misc log files
+*.log

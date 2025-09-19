@@ -15,9 +15,12 @@ export default defineConfig({
   retries: 1,
   use: {
     // Point to appropriate hostnames based on environment
-    baseURL: process.env.DOCKER_E2E_TEST
-      ? 'http://resumebuilder-frontend:3000'
-      : 'http://localhost:3000',
+    // Allow baseURL override for local/dev/CI
+    baseURL:
+      process.env.BASE_URL ||
+      (process.env.DOCKER_E2E_TEST
+        ? 'http://resumebuilder-frontend:3000'
+        : 'http://localhost:3000'),
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

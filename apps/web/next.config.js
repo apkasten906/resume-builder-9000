@@ -2,7 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://resumebuilder-api:4000/api';
+    // Use localhost for dev, allow override for Docker or CI
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
     return [
       {
         source: '/api/:path*',

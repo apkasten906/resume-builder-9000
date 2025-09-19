@@ -36,6 +36,68 @@ Run the following commands to set up the project:
    npm test
    ```
 
+## Running the Environment
+
+### Local Setup
+
+To run the environment locally without Docker, use the following script:
+
+#### Windows
+
+```powershell
+./dev.ps1
+```
+
+#### Linux/Mac
+
+```bash
+bash ./dev.sh
+```
+
+### Docker Setup
+
+To run the project using Docker Compose, use the following command:
+
+```bash
+docker-compose up
+```
+
+> **Note:** For speed, it is recommended to use the local setup during development.
+
+## Testing
+
+### Unit Tests
+
+We use **Vitest** for unit testing. To run the unit tests:
+
+```bash
+npm run test:unit
+```
+
+### Integration/E2E Tests
+
+We use **Playwright** for integration and E2E testing. To run these tests:
+
+```bash
+npm run test:e2e
+```
+
+### Combined Testing Script
+
+To run both Vitest and Playwright tests sequentially:
+
+#### Windows
+
+```powershell
+npm run test:all
+```
+
+#### Linux/Mac
+
+```bash
+npm run test:all
+```
+
 ## Contributing
 
 Feel free to submit issues and pull requests. We welcome contributions from the community!

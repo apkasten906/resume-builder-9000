@@ -1,3 +1,36 @@
+import { randomUUID } from 'crypto';
+import BetterSQLite3 from 'better-sqlite3';
+
+import { logger } from './utils/logger.js';
+import { StoredResume, DatabaseRow } from './types/database.js';
+
+// Explicitly declare the type for the database connection
+let db: InstanceType<typeof BetterSQLite3> | null = null;
+
+export function connectDatabase(): InstanceType<typeof BetterSQLite3> {
+  if (db) {
+    logger.debug('Using existing database connection');
+    return db;
+  }
+
+  logger.info('Opening new database connection');
+  db = new BetterSQLite3('./resume.db');
+
+  // Create tables if they don't exist
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS resumes (
+      id TEXT PRIMARY KEY,
+      content TEXT NOT NULL,
+      resume_data TEXT NOT NULL,
+      job_details TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  logger.info('Database initialized successfully');
+  return db;
+}
+
 export function getAllResumesFromDb(): StoredResume[] {
   const database = connectDatabase();
   logger.debug('Fetching all resumes from database');
@@ -15,38 +48,6 @@ export function getAllResumesFromDb(): StoredResume[] {
     logger.error('Error retrieving all resumes from database', { error });
     throw error;
   }
-}
-import { randomUUID } from 'crypto';
-import BetterSQLite3 from 'better-sqlite3';
-import { logger } from './utils/logger.js';
-import { StoredResume, DatabaseRow } from './types/database.js';
-
-// Global database connection
-let db: BetterSQLite3.Database | null = null;
-
-export function connectDatabase(): BetterSQLite3.Database {
-  if (db) {
-    logger.debug('Using existing database connection');
-    return db;
-  }
-
-  logger.info('Opening new database connection');
-  // Open the database
-  db = new BetterSQLite3('./resume.db');
-
-  // Create tables if they don't exist
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS resumes (
-      id TEXT PRIMARY KEY,
-      content TEXT NOT NULL,
-      resume_data TEXT NOT NULL,
-      job_details TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    )
-  `);
-
-  logger.info('Database initialized successfully');
-  return db;
 }
 
 export function getResumeFromDb(id: string): StoredResume | null {

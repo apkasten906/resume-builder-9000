@@ -15,7 +15,10 @@
     "vitest:ui": "vitest --workspace --ui",
     "lint": "npm --workspaces run lint",
     "check-flags": "./scripts/check-flags.ps1",
-    "update-deps": "npx npm-check-updates -u && npm install"
+    "update-deps": "npx npm-check-updates -u && npm install",
+    "test:unit": "vitest run",
+    "test:e2e": "npx playwright test",
+    "test:all": "npm run test:unit && npm run test:e2e"
   },
   "engines": {
     "node": ">=22.0.0",
