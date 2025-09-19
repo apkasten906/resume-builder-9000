@@ -32,10 +32,15 @@ if ($Fresh) {
   if (Test-Path .\packages\core\node_modules) { Remove-Item .\packages\core\node_modules -Recurse -Force }
 }
 
+
 # Set environment variables
 $env:ALLOW_EXTERNAL_LLM = if ($WithLLM) { "true" } else { "false" }
 if ($LLMProvider) { $env:LLM_PROVIDER = $LLMProvider }
 if ($LLMModel) { $env:LLM_MODEL = $LLMModel }
+
+# Allow passing BASE_URL and NEXT_PUBLIC_API_URL for tests and dev server
+if ($env:BASE_URL -eq $null) { $env:BASE_URL = "http://localhost:3000" }
+if ($env:NEXT_PUBLIC_API_URL -eq $null) { $env:NEXT_PUBLIC_API_URL = "http://localhost:4000/api" }
 
 # Copy example environment file if it exists
 if (Test-Path ".env.example") { Copy-Item -Path ".env.example" -Destination ".env" -Force }
@@ -66,7 +71,7 @@ if (-not $ApiOnly -and -not $WebOnly) {
 # Start development servers
 if (-not $WebOnly) {
   Start-Process -NoNewWindow powershell -ArgumentList "-Command cd $PSScriptRoot\packages\api; npm run dev"
-  Write-Host "API server started on http://localhost:3001"
+  Write-Host "API server started on http://localhost:4000"
 }
 
 if (-not $ApiOnly) {

@@ -5,7 +5,7 @@ node_modules
 logs
 
 # Ignore test files
-!tests
+tests
 
 # Ignore Docker-related files
 !Dockerfile
@@ -13,7 +13,6 @@ logs
 
 # Ignore other unnecessary files
 *.md
-!apps/web/tests
 *.lock
 *.log
 *.sqlite

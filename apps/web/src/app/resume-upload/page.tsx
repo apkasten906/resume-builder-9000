@@ -11,6 +11,7 @@ export default function ResumeUploadPage() {
     experience: string[];
     skills: string[];
   }>(null);
+  const [debug, setDebug] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -33,16 +34,47 @@ export default function ResumeUploadPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      const isPlaywright =
+        typeof window !== 'undefined' &&
+        window.navigator.userAgent.toLowerCase().includes('playwright');
       const res = await fetch('/api/resumes', {
         method: 'POST',
         body: formData,
+        headers: isPlaywright ? { 'x-dev-e2e-test': 'true' } : undefined,
       });
+      let debugInfo = '';
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || 'Failed to upload or parse resume.');
+        debugInfo = `Error: ${JSON.stringify(data)}`;
+        setDebug(debugInfo);
+        // Always print debug info to console for E2E
+        if (
+          typeof window !== 'undefined' &&
+          window.navigator.userAgent.toLowerCase().includes('playwright')
+        ) {
+          // eslint-disable-next-line no-console
+          console.log('RESUME UPLOAD DEBUG:', debugInfo);
+        }
+        // Show a visible error if backend returns empty error object
+        if (!data.error || Object.keys(data).length === 0) {
+          setError(
+            'Resume upload failed: No response from backend. Please check backend logs or E2E mode.'
+          );
+        } else {
+          setError(data.error || debugInfo || 'Failed to upload or parse resume.');
+        }
         return;
       }
       const data = await res.json();
+      debugInfo = `Success: ${JSON.stringify(data)}`;
+      setDebug(debugInfo);
+      if (
+        typeof window !== 'undefined' &&
+        window.navigator.userAgent.toLowerCase().includes('playwright')
+      ) {
+        // eslint-disable-next-line no-console
+        console.log('RESUME UPLOAD DEBUG:', debugInfo);
+      }
       // Assume backend returns { summary, experience, skills }
       setParsed({
         summary: data.summary,
@@ -50,7 +82,8 @@ export default function ResumeUploadPage() {
         skills: data.skills,
       });
       setSuccess(true);
-    } catch {
+    } catch (err) {
+      setDebug(`Exception: ${err instanceof Error ? err.stack || err.message : String(err)}`);
       setError('Failed to upload or parse resume.');
     } finally {
       setUploading(false);
@@ -95,6 +128,14 @@ export default function ResumeUploadPage() {
           </output>
         )}
       </form>
+      {debug && (
+        <pre
+          data-testid="resume-upload-debug"
+          style={{ color: '#888', fontSize: 12, marginTop: 8 }}
+        >
+          {debug}
+        </pre>
+      )}
       {parsed && (
         <section className="mt-8">
           <h2 className="text-xl font-semibold mb-2">Parsed Resume Data</h2>

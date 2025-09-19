@@ -1,11 +1,11 @@
 import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import { resumeRoutes } from './controllers/resume.js';
 import { connectDatabase } from './db.js';
 import { logger, httpLogger, errorLogger } from './utils/logger.js';
 import { openApiSpec } from './utils/openapi.js';
+import cors from 'cors';
 
 // Load environment variables
 dotenv.config();
