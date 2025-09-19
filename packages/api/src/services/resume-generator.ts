@@ -1,5 +1,4 @@
-import { ResumeData, JobDetails } from '@rb9k/core';
-import { ResumeGenerator } from '@rb9k/core/dist/resume.js';
+import { ResumeData, JobDetails, ResumeGenerator } from '@rb9k/core';
 
 export class DefaultResumeGenerator implements ResumeGenerator {
   async generateResume(resumeData: ResumeData, jobDetails: JobDetails): Promise<string> {
@@ -43,7 +42,7 @@ export class DefaultResumeGenerator implements ResumeGenerator {
           <h2>Work Experience</h2>
           ${experience
             .map(
-              job => `
+              (job: (typeof experience)[number]) => `
             <div class="job">
               <div class="job-header">
                 <h3>${job.title} at ${job.company}</h3>
