@@ -59,7 +59,7 @@ export class DefaultResumeGenerator implements ResumeGenerator {
           <h2>Education</h2>
           ${education
             .map(
-              edu => `
+              (edu: (typeof education)[number]) => `
             <div class="education">
               <h3>${edu.degree} at ${edu.institution}</h3>
               <span>${edu.graduationDate || 'N/A'}</span>
@@ -72,7 +72,7 @@ export class DefaultResumeGenerator implements ResumeGenerator {
         <div class="section">
           <h2>Skills</h2>
           <div class="skills">
-            ${skills?.map(skill => `<span class="skill">${skill.name || 'Unknown Skill'}</span>`).join('') || ''}
+            ${skills?.map((skill: (typeof skills)[number]) => `<span class="skill">${skill.name || 'Unknown Skill'}</span>`).join('') || ''}
           </div>
         </div>
       </body>
