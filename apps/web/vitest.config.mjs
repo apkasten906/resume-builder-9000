@@ -17,7 +17,11 @@ export default defineConfig({
       reporter: ['text', 'html'],
     },
     deps: {
-      inline: ['@testing-library/jest-dom'],
+      optimizer: {
+        web: {
+          include: ['@testing-library/jest-dom'],
+        },
+      },
     },
   },
 });

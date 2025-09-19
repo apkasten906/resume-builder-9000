@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "npm --workspaces run build",
-    "dev": "npm ci && npm run lint && npm --workspaces run dev",
+  "dev": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
     "test": "npm --workspaces run test",
     "test:watch": "npm --workspaces run test:watch",
     "vitest": "vitest --workspace",
