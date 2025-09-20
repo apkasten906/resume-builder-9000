@@ -44,7 +44,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
+      - name: Build core package
+        run: npm run build --workspace=packages/core
       - name: Run unit tests
         run: npm run test:unit
 
@@ -67,6 +68,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build core package
+        run: npm run build --workspace=packages/core
 
       - name: Run E2E tests
         run: npm run test:e2e
