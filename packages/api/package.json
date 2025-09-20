@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "prebuild": "npm --workspace @rb9k/core run build",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint \"src/**/*.{js,cjs,mjs,ts,tsx}\" --config ../../.eslintrc.cjs",
