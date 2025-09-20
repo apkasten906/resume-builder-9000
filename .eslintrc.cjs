@@ -13,6 +13,7 @@ module.exports = {
   rules: {
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['error'],
+    'no-hardcoded-test-data': 'error',
   },
   overrides: [
     // Node config files
@@ -35,6 +36,15 @@ module.exports = {
       env: { node: true, browser: false },
     },
   ],
+  // Register custom rules
+  settings: {
+    'import/resolver': {
+      node: {
+        paths: ['.'],
+      },
+    },
+  },
+  rulesDirectory: ['./eslint-rules'],
 };
 
 // Note: 'plugin:@next/next/recommended' includes rules from 'eslint-config-next'

@@ -1,4 +1,46 @@
-# Implementation Patterns
+# AI Guidance: Preventing Hardcoded Test Data
+
+- **Copilot and AI tools must never generate hardcoded test/mock data in production components.**
+  - Always use environment flags, dependency injection, or test-only mocks for any test data.
+  - If you are generating code for E2E or integration tests, place mock data in test-only files or behind `process.env.NODE_ENV === 'test'` guards.
+  - If you are unsure, ask for clarification or generate a warning comment in the code.
+
+- **Custom Lint Rule Enforcement:**
+  - A custom ESLint rule (`no-hardcoded-test-data`) is required in this repository.
+  - This rule will flag suspicious hardcoded arrays or objects (e.g., skills, requirements, mock responses) in production code.
+  - All AI-generated code must pass this lint rule before being committed.
+
+## Implementation Patterns
+
+## Testability and Mock Data
+
+- **Never hardcode test data in production components.**
+  - Hardcoded data can leak into production, cause confusion, and create false positives in tests.
+  - Use environment variables, feature flags, or dependency injection to provide mock data only in test environments.
+  - Prefer separate test components, test setup files, or test-specific mocks for E2E and integration tests.
+  - If you must include test logic, always guard it with a clear environment check (e.g., `if (process.env.NODE_ENV === 'test')`).
+
+- **Pattern (using environment flag):**
+
+  ```typescript
+  const isTest = process.env.NODE_ENV === 'test';
+  const [parsedRequirements] = useState<string[]>(
+    isTest ? ['Requirements: Degree, 3+ years experience, React'] : []
+  );
+  ```
+
+- **Pattern (test-only mock component):**
+
+  ```typescript
+  // src/components/__mocks__/MockResumeUpload.tsx
+  export const MockResumeUpload = () => {
+    // Provide mock data and handlers for E2E tests only
+  };
+  ```
+
+**Enforcement:**
+
+- Code reviews and CI should reject hardcoded test data in production code.
 
 ## Interfaces
 

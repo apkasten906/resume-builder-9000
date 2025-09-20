@@ -96,6 +96,9 @@ A resume **orchestration engine** that compiles a fully tailored, ATS-friendly r
 - Parsing libs: pdf/dox parsers (rules/heuristics only).
 - **Everything works offline with `ALLOW_EXTERNAL_LLM=false`.**
 
+- Monorepo uses cross-platform dev scripts: `dev.ps1` (Windows), `dev.sh` (Linux/Mac), and `dev:ci` (for CI environments).
+- CI/CD pipeline is optimized for build/test efficiency and reliability. See `docs/architecture/ci-architecture.md` and `docs/learnings/ci-learnings.md` for details.
+
 ## Data Model (MVP)
 
 See `packages/core/src/types.ts` for `JobProfile`, `Achievement`, etc.
