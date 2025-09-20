@@ -14,7 +14,7 @@
     "update-deps": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {
-    "@rb9k/core": "file:../core",
+    "@rb9k/core": "*",
     "@types/morgan": "^1.9.10",
     "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
