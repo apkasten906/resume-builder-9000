@@ -9,6 +9,7 @@
   "scripts": {
     "build": "npm --workspaces run build",
     "dev": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
+    "dev:ci": "concurrently \"npm run dev --workspace=packages/api\" \"npm run dev --workspace=apps/web\"",
     "test": "npm --workspaces run test",
     "test:watch": "npm --workspaces run test:watch",
     "vitest": "vitest --workspace",
@@ -58,6 +59,7 @@
     "zod-openapi": "^5.4.1"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "@next/eslint-plugin-next": "^14.2.32",
     "@playwright/test": "^1.55.0",
     "@types/better-sqlite3": "^7.6.13",
