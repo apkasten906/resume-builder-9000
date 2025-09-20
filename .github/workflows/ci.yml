@@ -72,8 +72,19 @@ jobs:
       - name: Build core package
         run: npm run build --workspace=packages/core
 
+      - name: Install wait-on
+        run: npm install wait-on --no-save
+
+      - name: Start servers
+        run: npm run dev &
+        env:
+          NODE_ENV: test
+
+      - name: Wait for servers to be ready
+        run: npx wait-on http://localhost:3000 http://localhost:4000
+
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: npx playwright test --config=apps/web/tests/e2e/playwright.config.ts
 
   build:
     name: Build
