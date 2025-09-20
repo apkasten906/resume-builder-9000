@@ -18,17 +18,20 @@ Run the following commands to set up the project:
    npm install
    ```
 
-2. Start the development server:
+2. Start the development server (for local development):
 
    ```bash
    npm run dev
    ```
 
-3. Build the project:
+   > **Note:** You do not need to build before running the dev server. The dev server handles hot reloading and TypeScript transpilation automatically.
+
+3. Build the project (for production):
 
    ```bash
    npm run build
    ```
+   > **Note:** Only run this step if you are preparing for production deployment. In production, you would typically run the built output with a separate command (e.g., `npm start`).
 
 4. Run tests:
 
