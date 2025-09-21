@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 // Test/mock resume upload handler
-export function handleJsonResume(req: Request, res: Response) {
+export function handleJsonResume(req: Request, res: Response): Response {
   const { resumeData, jobDetails } = req.body;
   if (!resumeData || !jobDetails) {
     return res.status(400).json({ error: 'Missing resumeData or jobDetails' });

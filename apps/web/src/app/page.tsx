@@ -1,4 +1,5 @@
-export default function Home() {
+import type { ReactElement } from 'react';
+export default function Home(): ReactElement {
   return (
     <div className="space-y-8">
       <section className="bg-white p-8 rounded-lg shadow-md">

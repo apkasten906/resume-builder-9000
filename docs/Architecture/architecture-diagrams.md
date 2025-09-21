@@ -5,15 +5,20 @@
 ```plaintext
 resume-build-9000-dev/
 ├── apps/
-│   └── web/                # Frontend application (Next.js)
-│       ├── src/app/        # Feature-based components
-│       ├── src/pages/      # Routing and pages
+│   └── web/                        # Frontend application (Next.js)
+│       ├── src/app/                # App Router: user-facing routes only (no test/mocks)
+│       ├── src/components/         # (optional) Shared UI components
+│       ├── src/pages/              # (optional) Legacy routing and pages
+│       └── tests/
+│           ├── unit/               # Unit tests, test-only components, and mocks│           │
+│           │   └── __mocks__/
+│           └── e2e/                # End-to-end tests
 ├── packages/
-│   ├── api/                # Backend API (Express)
-│   │   ├── controllers/    # Route handlers
-│   │   ├── services/       # Business logic
-│   │   ├── utils/          # Utility functions
-│   ├── core/               # Shared business logic
+│   ├── api/                        # Backend API (Express)
+│   │   ├── controllers/            # Route handlers
+│   │   ├── services/               # Business logic
+│   │   ├── utils/                  # Utility functions
+│   ├── core/                       # Shared business logic
 ```
 
 ## Component Interaction
@@ -31,6 +36,7 @@ resume-build-9000-dev/
 1. **Frontend**:
    - User interacts with the UI.
    - Sends requests to the backend API.
+   - **All test-only code, mocks, and test data are isolated in `tests/` and never present in production routes/components.**
 
 2. **Backend**:
    - Receives requests from the frontend.

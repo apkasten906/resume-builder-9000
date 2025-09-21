@@ -6,11 +6,12 @@ export const metadata: Metadata = {
   description: 'Create tailored, ATS-friendly resumes',
 };
 
+import type { ReactElement, ReactNode } from 'react';
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
-}>) {
+  readonly children: ReactNode;
+}>): ReactElement {
   return (
     <html lang="en">
       <body>

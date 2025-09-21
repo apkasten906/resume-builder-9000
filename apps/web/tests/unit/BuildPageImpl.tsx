@@ -1,21 +1,28 @@
 'use client';
 import React, { useRef, useState } from 'react';
 
-export default function BuildPage() {
+export type BuildPageImplProps = {
+  readonly parsedRequirements?: string[];
+  readonly parsedSkills?: string[];
+};
+
+import type { ReactElement } from 'react';
+export default function BuildPageImpl({
+  parsedRequirements,
+  parsedSkills,
+}: BuildPageImplProps): ReactElement {
   const jdInputRef = useRef<HTMLInputElement>(null);
   // For E2E test simplicity, default to true so 'Run Tailor' is always enabled
   // Always show parsed requirements/skills for E2E test simplicity
-  const [parsedRequirements] = useState<string[]>([
-    'Requirements: Degree, 3+ years experience, React',
-  ]);
-  const [parsedSkills] = useState<string[]>(['React', 'TypeScript', 'Teamwork']);
+  const [requirements] = useState<string[]>(parsedRequirements ?? []);
+  const [skills] = useState<string[]>(parsedSkills ?? []);
   const [tailorSuccess, setTailorSuccess] = useState(false);
   const [outputResume, setOutputResume] = useState('');
   const [redflagMustHave, setRedflagMustHave] = useState(false);
   const [redflagPageLength, setRedflagPageLength] = useState(false);
 
   // Mock JD upload handler
-  const handleJdUpload = async () => {
+  const handleJdUpload = async (): Promise<void> => {
     setTailorSuccess(false);
     setOutputResume('');
     setRedflagMustHave(false);
@@ -23,7 +30,7 @@ export default function BuildPage() {
   };
 
   // Mock tailoring handler
-  const handleRunTailor = () => {
+  const handleRunTailor = (): void => {
     setTailorSuccess(true);
     setOutputResume('ATS-safe Resume\nSkills: React, TypeScript, Teamwork\nExperience: 3+ years');
     setRedflagMustHave(true);
@@ -47,10 +54,10 @@ export default function BuildPage() {
         </div>
       </form>
       <div data-testid="parsed-requirements" className="mb-2">
-        {parsedRequirements.join(', ')}
+        {requirements.join(', ')}
       </div>
       <div data-testid="parsed-skills" className="mb-2">
-        Skills: {parsedSkills.join(', ')}
+        Skills: {skills.join(', ')}
       </div>
       <button
         type="button"
@@ -62,36 +69,15 @@ export default function BuildPage() {
         Run Tailor
       </button>
       {tailorSuccess && (
-        <div data-testid="tailor-success" className="text-green-700 font-semibold mt-4">
-          Tailoring complete!
-        </div>
-      )}
-      {outputResume && (
-        <div data-testid="output-resume" className="mt-4 whitespace-pre-line">
-          {outputResume}
-        </div>
-      )}
-      {tailorSuccess && (
-        <>
-          <button
-            data-testid="download-resume-md"
-            className="mt-2 mr-2 px-3 py-1 bg-gray-200 rounded"
-          >
-            Download Markdown
-          </button>
-          <button data-testid="download-resume-txt" className="mt-2 px-3 py-1 bg-gray-200 rounded">
-            Download TXT
-          </button>
-        </>
-      )}
-      {redflagMustHave && (
-        <div data-testid="redflag-missing-musthave" className="text-red-600 mt-2">
-          Missing must-have: Degree
-        </div>
-      )}
-      {redflagPageLength && (
-        <div data-testid="redflag-page-length" className="text-red-600 mt-2">
-          Resume exceeds 2 pages
+        <div
+          className="mt-4 p-4 border rounded bg-green-50 text-green-800"
+          data-testid="tailor-success"
+        >
+          <pre>{outputResume}</pre>
+          {redflagMustHave && (
+            <div className="text-red-600">Red flag: Must-have skills missing!</div>
+          )}
+          {redflagPageLength && <div className="text-red-600">Red flag: Resume too long!</div>}
         </div>
       )}
     </main>

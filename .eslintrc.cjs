@@ -3,7 +3,12 @@ module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
-  plugins: ['@typescript-eslint', '@next/next'],
+  plugins: [
+    '@typescript-eslint',
+    '@next/next',
+    // Use 'local-rules' for plugin name, not 'eslint-plugin-local-rules'
+    'local-rules',
+  ],
   extends: [
     'eslint:recommended',
     'plugin:@next/next/recommended',
@@ -13,13 +18,30 @@ module.exports = {
   rules: {
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['error'],
-    'no-hardcoded-test-data': 'error',
+    '@typescript-eslint/explicit-function-return-type': 'error',
+    '@typescript-eslint/explicit-module-boundary-types': 'error',
+    '@typescript-eslint/no-explicit-any': 'error',
+    'local-rules/no-hardcoded-test-data': 'error', // Updated to use new plugin
   },
   overrides: [
-    // Node config files
+    // Node and tool config files (relax TypeScript rules and disable custom rules for plain JS config files)
     {
-      files: ['next.config.js', '*.config.js', '*.config.cjs', '*.config.mjs'],
+      files: [
+        'next.config.js',
+        '*.config.js',
+        '*.config.cjs',
+        '*.config.mjs',
+        'tailwind.config.js',
+        'tailwind.config.cjs',
+      ],
       env: { node: true },
+      rules: {
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        'local-rules/no-hardcoded-test-data': 'off',
+      },
     },
     // Backend API (Node)
     {
@@ -35,8 +57,14 @@ module.exports = {
       files: ['packages/core/**/*.{js,ts}'],
       env: { node: true, browser: false },
     },
+    // Exclude custom rule from all test folders (must be last for precedence)
+    {
+      files: ['apps/web/tests/**/*', 'packages/core/tests/**/*', 'packages/api/tests/**/*'],
+      rules: {
+        'local-rules/no-hardcoded-test-data': 'off', // Removed legacy rule
+      },
+    },
   ],
-  // Register custom rules
   settings: {
     'import/resolver': {
       node: {
@@ -44,7 +72,6 @@ module.exports = {
       },
     },
   },
-  rulesDirectory: ['./eslint-rules'],
 };
 
 // Note: 'plugin:@next/next/recommended' includes rules from 'eslint-config-next'

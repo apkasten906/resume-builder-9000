@@ -59,7 +59,6 @@
     "zod-openapi": "^5.4.1"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
     "@next/eslint-plugin-next": "^14.2.32",
     "@playwright/test": "^1.55.0",
     "@types/better-sqlite3": "^7.6.13",
@@ -67,8 +66,10 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
+    "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-local-rules": "^3.0.2",
     "eslint-plugin-prettier": "^5.5.4",
     "next": "14.2.32",
     "patch-package": "^8.0.0",
