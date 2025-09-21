@@ -1,7 +1,8 @@
 'use client';
 import React, { useRef, useState } from 'react';
 
-export default function ResumeUploadPage() {
+import type { ReactElement } from 'react';
+export default function ResumeUploadPage(): ReactElement {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +14,7 @@ export default function ResumeUploadPage() {
   }>(null);
   const [debug, setDebug] = useState<string | null>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     setError(null);
     setSuccess(false);
     setParsed(null);
