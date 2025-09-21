@@ -2,6 +2,7 @@
 import React, { useRef, useState } from 'react';
 
 import type { ReactElement } from 'react';
+import { validateFile, logPlaywrightDebug } from './resume-upload-utils';
 export default function ResumeUploadPage(): ReactElement {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -14,21 +15,17 @@ export default function ResumeUploadPage(): ReactElement {
   }>(null);
   const [debug, setDebug] = useState<string | null>(null);
 
+  // ...existing code...
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     setError(null);
     setSuccess(false);
     setParsed(null);
     const file = e.target.files?.[0];
     if (!file) return;
-    // Only allow PDF, DOCX, TXT, MD
-    const allowedTypes = ['pdf', 'docx', 'txt', 'md'];
-    const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    if (!allowedTypes.includes(ext)) {
-      setError('Unsupported file type. Please upload a PDF, DOCX, TXT, or MD file.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('File is too large. Maximum size is 5MB.');
+    const validationError = validateFile(file);
+    if (validationError) {
+      setError(validationError);
       return;
     }
     setUploading(true);
@@ -48,14 +45,7 @@ export default function ResumeUploadPage(): ReactElement {
         const data = await res.json().catch(() => ({}));
         debugInfo = `Error: ${JSON.stringify(data)}`;
         setDebug(debugInfo);
-        // Always print debug info to console for E2E
-        if (
-          typeof window !== 'undefined' &&
-          window.navigator.userAgent.toLowerCase().includes('playwright')
-        ) {
-          // eslint-disable-next-line no-console
-          console.log('RESUME UPLOAD DEBUG:', debugInfo);
-        }
+        logPlaywrightDebug(debugInfo);
         // Show a visible error if backend returns empty error object
         if (!data.error || Object.keys(data).length === 0) {
           setError(
@@ -69,13 +59,7 @@ export default function ResumeUploadPage(): ReactElement {
       const data = await res.json();
       debugInfo = `Success: ${JSON.stringify(data)}`;
       setDebug(debugInfo);
-      if (
-        typeof window !== 'undefined' &&
-        window.navigator.userAgent.toLowerCase().includes('playwright')
-      ) {
-        // eslint-disable-next-line no-console
-        console.log('RESUME UPLOAD DEBUG:', debugInfo);
-      }
+      logPlaywrightDebug(debugInfo);
       // Assume backend returns { summary, experience, skills }
       setParsed({
         summary: data.summary,
