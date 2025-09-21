@@ -252,3 +252,19 @@
 {"level":"info","message":"Opening new database connection","timestamp":"2025-09-22 00:16:51"}
 {"level":"info","message":"Database initialized successfully","timestamp":"2025-09-22 00:16:51"}
 {"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-22 00:16:51"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-22 00:49:53"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-22 00:49:53"}
+{"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-22 00:49:53"}
+{"level":"http","message":"::1 GET / 302 38 - 4.539 ms","timestamp":"2025-09-22 00:51:41"}
+{"level":"http","message":"::1 GET /api/docs 301 158 - 3.983 ms","timestamp":"2025-09-22 00:51:41"}
+{"level":"http","message":"::1 GET /api/docs/ 200 3106 - 9.750 ms","timestamp":"2025-09-22 00:51:41"}
+{"level":"http","message":"::1 GET /api/docs/swagger-ui-init.js 200 1467 - 0.153 ms","timestamp":"2025-09-22 00:51:41"}
+{"level":"http","message":"::1 GET /api/docs/swagger-ui.css 200 155212 - 53.844 ms","timestamp":"2025-09-22 00:51:41"}
+{"level":"http","message":"::1 GET /api/docs/swagger-ui-standalone-preset.js 200 250335 - 53.467 ms","timestamp":"2025-09-22 00:51:41"}
+{"level":"http","message":"::1 GET /api/docs/swagger-ui-bundle.js 200 1507218 - 53.124 ms","timestamp":"2025-09-22 00:51:41"}
+{"level":"http","message":"::1 GET /api/docs/openapi.json 200 7294 - 0.486 ms","timestamp":"2025-09-22 00:51:41"}
+{"level":"http","message":"::1 GET /api/docs/favicon-32x32.png 200 628 - 8.775 ms","timestamp":"2025-09-22 00:51:41"}
+{"level":"debug","message":"Using existing database connection","timestamp":"2025-09-22 00:51:56"}
+{"level":"debug","message":"Fetching all resumes from database","timestamp":"2025-09-22 00:51:56"}
+{"level":"http","message":"::1 GET /api/resumes 200 6321 - 2.393 ms","timestamp":"2025-09-22 00:51:56"}
+{"level":"http","message":"::1 GET /api/health 200 54 - 0.382 ms","timestamp":"2025-09-22 00:52:11"}
