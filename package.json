@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build": "npm --workspaces run build",
+    "clean": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clean-and-rebuild.ps1",
     "dev": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
     "dev:ci": "concurrently \"npm run dev --workspace=packages/api\" \"npm run dev --workspace=apps/web\"",
     "test": "npm --workspaces run test",
