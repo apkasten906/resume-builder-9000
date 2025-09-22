@@ -1,13 +1,13 @@
-import { ResumeData, JobDetails } from './index.js';
+import { ResumeData, JobDetails, resumeDataToMarkdown } from './index.js';
 
 export interface ResumeGenerator {
   /**
    * Generates a resume tailored to a specific job
    * @param resumeData The user's complete resume data
    * @param jobDetails The details of the job being applied for
-   * @returns A tailored resume as a string (likely in HTML or Markdown format)
+   * @returns A tailored resume as a string (HTML/Markdown) or structured ResumeData for frontend rendering
    */
-  generateResume(resumeData: ResumeData, jobDetails: JobDetails): Promise<string>;
+  generateResume(resumeData: ResumeData, jobDetails: JobDetails): Promise<string | ResumeData>;
 }
 
 export interface ResumeFormatter {
@@ -29,12 +29,14 @@ export class ResumeService {
   }
 
   async createResume(resumeData: ResumeData, jobDetails: JobDetails): Promise<string | Buffer> {
-    const resumeContent = await this.generator.generateResume(resumeData, jobDetails);
-
+    let resumeContent = await this.generator.generateResume(resumeData, jobDetails);
+    // If structured data, serialize to Markdown for downstream formatting or return
+    if (typeof resumeContent !== 'string') {
+      resumeContent = resumeDataToMarkdown(resumeContent);
+    }
     if (this.formatter) {
       return this.formatter.format(resumeContent);
     }
-
     return resumeContent;
   }
 }

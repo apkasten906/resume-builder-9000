@@ -1,6 +1,6 @@
 ---
-name: "Resume Builder 9000"
-description: "A resume orchestration engine for tailored, ATS-friendly resumes"
+name: 'Resume Builder 9000'
+description: 'A resume orchestration engine for tailored, ATS-friendly resumes'
 ---
 
 # PowerShell Scripting Rules

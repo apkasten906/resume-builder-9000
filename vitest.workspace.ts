@@ -6,7 +6,7 @@ import { defineWorkspace } from 'vitest/config';
 
 // @ts-expect-error: Vitest's defineWorkspace is required for monorepo support, but may not have proper type definitions yet. See https://github.com/vitest-dev/vitest/issues/7382
 export default defineWorkspace([
-  'apps/web/vitest.config.mjs',
-  'packages/api/vitest.config.mjs',
-  'packages/core/vitest.config.mjs',
+  'apps/web/vitest.config.ts',
+  'packages/api/vitest.config.ts',
+  'packages/core/vitest.config.ts',
 ]);

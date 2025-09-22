@@ -1,5 +1,5 @@
 ---
-applyTo: "apps/web/**"
+applyTo: 'apps/web/**'
 ---
 
 # Web App Guidelines
@@ -15,7 +15,6 @@ The `@rb9k/web` package is the frontend Next.js application for Resume Builder 9
 ## Next.js Patterns
 
 1. **App Router**
-
    - Use the App Router directory structure
    - Group related routes logically
    - Use loading.tsx and error.tsx for better UX

@@ -1,0 +1,16 @@
+{
+  "name": "eslint-plugin-local-rules",
+  "version": "1.0.0",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "postinstall": "echo 'eslint-plugin-local-rules ready'",
+    "lint": "echo 'No linting needed for plugin package'",
+    "build": "echo 'No build needed for plugin package'",
+    "test": "echo 'No tests for plugin package'"
+  },
+  "type": "commonjs",
+  "private": true
+}

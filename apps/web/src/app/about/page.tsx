@@ -5,7 +5,8 @@ export const metadata: Metadata = {
   description: 'Learn about Resume Builder 9000',
 };
 
-export default function AboutPage() {
+import type { ReactElement } from 'react';
+export default function AboutPage(): ReactElement {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">About Resume Builder 9000</h1>

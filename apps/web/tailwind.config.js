@@ -1,3 +1,4 @@
+/* eslint-disable local-rules/no-hardcoded-test-data */
 /** @type {import('tailwindcss').Config} */
 import typography from '@tailwindcss/typography';
 
