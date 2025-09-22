@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "clean": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clean-and-rebuild.ps1",
     "build": "npm --workspaces run build",
     "clean": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clean-and-rebuild.ps1",
     "dev": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
@@ -47,6 +48,7 @@
     "@types/sqlite3": "^3.1.11",
     "@typescript-eslint/eslint-plugin": "^8.44.0",
     "better-sqlite3": "^12.2.0",
+    "file-type": "^18.7.0",
     "mammoth": "^1.10.0",
     "morgan": "^1.10.1",
     "pdf-parse": "^1.1.1",

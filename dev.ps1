@@ -8,6 +8,11 @@ param(
   [switch]$Help
 )
 
+# Always clean Next.js cache before dev
+if (Test-Path "./apps/web/.next/cache") {
+  Remove-Item -Recurse -Force ./apps/web/.next/cache
+}
+
 if ($Help) {
   Write-Host "Resume Builder 9000 Development Script"
   Write-Host "Usage: ./dev.ps1 [-Fresh] [-WithLLM] [-LLMProvider <provider>] [-LLMModel <model>] [-ApiOnly] [-WebOnly] [-Help]"
@@ -59,12 +64,18 @@ npm run build
 # Run tests unless we're only running specific components
 if (-not $ApiOnly -and -not $WebOnly) {
   Write-Host "Running tests..."
+  $testResult = $null
   try {
-    npm run test --if-present
+    $testResult = npm run test --if-present
   } catch {
     Write-Host "[ERROR] Some tests may have failed. See output above."
-    # Optionally log to a file
     Add-Content -Path "$PSScriptRoot\dev-error.log" -Value "Test run failed at $(Get-Date)"
+    exit 1
+  }
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Tests failed. Stopping dev script."
+    Add-Content -Path "$PSScriptRoot\dev-error.log" -Value "Test run failed at $(Get-Date)"
+    exit 1
   }
 }
 
