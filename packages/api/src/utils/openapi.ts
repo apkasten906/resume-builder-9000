@@ -53,36 +53,6 @@ export const openApiSpec = createDocument({
       },
     },
     '/api/resumes': {
-      get: {
-        summary: 'List all resumes',
-        description: 'Retrieve all uploaded resumes',
-        responses: {
-          200: {
-            description: 'List of resumes',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'array',
-                  items: { $ref: '#/components/schemas/StoredResume' },
-                },
-              },
-            },
-          },
-          500: {
-            description: 'Internal server error',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    error: { type: 'string' },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
       post: {
         summary: 'Parse and extract resume data',
         description: 'Upload a resume file and extract summary, experience, and skills',

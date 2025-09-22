@@ -1,3 +1,11 @@
+## Playwright and Vitest Isolation
+
+**Do not run Playwright and Vitest in the same process or import Vitest utilities in Playwright tests.**
+
+- Mixing these frameworks can cause global pollution errors (e.g., `TypeError: Cannot redefine property: Symbol($$jest-matchers-object)`).
+- Keep E2E (Playwright) and unit/integration (Vitest) tests fully separate in config and imports.
+- If you see this error, check for accidental imports or shared globals between test runners.
+
 # CI/CD Learnings and Troubleshooting
 
 ## Keeping Lock Files in Sync

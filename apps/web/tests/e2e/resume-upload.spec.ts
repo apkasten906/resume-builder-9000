@@ -4,9 +4,13 @@ import { test, expect } from '@playwright/test';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 test.describe('Resume Upload Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`${BASE_URL}/resume-upload`);
+    // Optionally clear file input if needed (handled by reload)
+  });
   test('should upload a resume and show parsed data', async ({ page }) => {
     test.setTimeout(10000);
-    await page.goto(`${BASE_URL}/resume-upload`);
+    // Page is already loaded in beforeEach
     // Intercept the fetch and set the header
     await page.route('/api/resumes', async (route, request) => {
       const headers = {
@@ -23,9 +27,21 @@ test.describe('Resume Upload Flow', () => {
       });
     });
     // Upload the file directly using setInputFiles
-    await page
-      .getByTestId('resume-upload-input')
-      .setInputFiles('apps/web/tests/assets/sample_resume.pdf');
+    // Read the PDF file into a buffer and upload as a Blob to avoid file locking/race issues
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const pdfPath = path.resolve(
+      'apps/web/tests/assets/Resume_BrianFaker_SoftwareDeveloper_English_v1.pdf'
+    );
+    const pdfBuffer = await fs.readFile(pdfPath);
+    const filePayload = {
+      name: 'Resume_BrianFaker_SoftwareDeveloper_English_v1.pdf',
+      mimeType: 'application/pdf',
+      buffer: pdfBuffer,
+    };
+    await page.getByTestId('resume-upload-input').setInputFiles(filePayload);
+    // Wait for file input to be processed by the UI before continuing
+    await page.waitForTimeout(200);
     const debugText = await page
       .locator('[data-testid="resume-upload-debug"]')
       .textContent()
