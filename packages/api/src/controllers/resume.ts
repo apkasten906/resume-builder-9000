@@ -74,15 +74,13 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // removed unused assignment
-    const validationError = validateFile(file);
-    if (validationError) {
-      logger.warn('File validation failed', { error: validationError, file: file?.originalname });
-      if (validationError === 'File too large (max 5MB)') {
-        res.status(413).json({ error: validationError });
-        return;
-      }
-      res.status(400).json({ error: validationError });
+    const validationResult = validateFile(file);
+    if (!validationResult.valid) {
+      logger.warn('File validation failed', {
+        error: validationResult.error,
+        file: file?.originalname,
+      });
+      res.status(validationResult.status || 400).json({ error: validationResult.error });
       return;
     }
 
