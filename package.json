@@ -8,7 +8,6 @@
   ],
   "scripts": {
     "build": "npm --workspaces run build",
-    "clean": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clean-and-rebuild.ps1",
     "dev": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
     "dev:ci": "concurrently \"npm run dev --workspace=packages/api\" \"npm run dev --workspace=apps/web\"",
     "test": "npm --workspaces run test",
@@ -45,7 +44,6 @@
     "@types/express": "^4.17.21",
     "@types/morgan": "^1.9.10",
     "@types/sqlite3": "^3.1.11",
-    "@typescript-eslint/eslint-plugin": "^8.44.0",
     "better-sqlite3": "^12.2.0",
     "mammoth": "^1.10.0",
     "morgan": "^1.10.1",
@@ -65,6 +63,7 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "concurrently": "^8.2.2",
     "eslint": "^8.57.0",

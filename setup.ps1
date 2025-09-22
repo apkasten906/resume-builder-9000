@@ -41,7 +41,7 @@ npm install
 Write-Host "Building packages..."
 npm run build --workspaces
 
-# Run tests
+# Run unit/integration tests
 Write-Host "Running tests..."
 npm run test --workspaces
 
