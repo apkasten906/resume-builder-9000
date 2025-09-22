@@ -20,15 +20,15 @@
     "test:unit": "vitest run",
     "test:e2e": "npx playwright test --config=apps/web/tests/e2e/playwright.config.ts",
     "test:all": "npm run test:unit && npm run test:e2e",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "format": "prettier --write ."
   },
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
   "repository": {
-    "type": "git",
-    "url": "https://github.com/apkasten906/resume-builder-9000.git"
+    "type": "git"
   },
   "keywords": [
     "resume",
@@ -45,7 +45,6 @@
     "@types/morgan": "^1.9.10",
     "@types/sqlite3": "^3.1.11",
     "better-sqlite3": "^12.2.0",
-    "express": "^4.18.2",
     "mammoth": "^1.10.0",
     "morgan": "^1.10.1",
     "pdf-parse": "^1.1.1",

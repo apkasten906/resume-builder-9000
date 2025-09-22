@@ -84,17 +84,16 @@ export const openApiSpec = createDocument({
         },
       },
       post: {
-        summary: 'Create a new resume',
-        description: 'Generate a new resume based on user data and job details',
+        summary: 'Parse and extract resume data',
+        description: 'Upload a resume file and extract summary, experience, and skills',
         requestBody: {
           required: true,
           content: {
-            'application/json': {
+            'multipart/form-data': {
               schema: {
                 type: 'object',
                 properties: {
-                  resumeData: { $ref: '#/components/schemas/ResumeData' },
-                  jobDetails: { $ref: '#/components/schemas/JobDetails' },
+                  file: { type: 'string', format: 'binary' },
                 },
               },
             },
@@ -102,24 +101,54 @@ export const openApiSpec = createDocument({
         },
         responses: {
           201: {
-            description: 'Resume created successfully',
+            description: 'Parsed resume data',
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
                   properties: {
-                    id: { type: 'string' },
-                    content: { type: 'string' },
-                    resumeData: { $ref: '#/components/schemas/ResumeData' },
-                    jobDetails: { $ref: '#/components/schemas/JobDetails' },
-                    createdAt: { type: 'string' },
+                    summary: { type: 'string' },
+                    experience: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                    skills: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: 'Bad request',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          413: {
+            description: 'File too large',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string' },
                   },
                 },
               },
             },
           },
           500: {
-            description: 'Failed to create resume',
+            description: 'Failed to process resume',
             content: {
               'application/json': {
                 schema: {
@@ -152,14 +181,7 @@ export const openApiSpec = createDocument({
             description: 'Resume found',
             content: {
               'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string' },
-                    content: { type: 'string' },
-                    metadata: { type: 'object' },
-                  },
-                },
+                schema: { $ref: '#/components/schemas/StoredResume' },
               },
             },
           },

@@ -1,23 +1,25 @@
 # 📋 Vertical Slice Issue Templates
 
-We use **vertical slice stories** to ensure every feature is implemented end-to-end (Frontend → API → Business Logic → Database).  
+We use **vertical slice stories** to ensure every feature is implemented end-to-end (Frontend → API → Business Logic → Database).
 
 New issues should be created using the provided templates in `.github/ISSUE_TEMPLATE/`. These enforce consistent structure and AI-friendly development.
 
 ---
 
 ## 🔹 How to Create a Story
+
 When creating a new GitHub Issue:
+
 1. Select **“Vertical Slice Story”**.
 2. Fill out all sections:
-   - Summary  
-   - Frontend  
-   - API  
-   - Business Logic  
-   - Database  
-   - Contracts (Types/DTOs)  
-   - Acceptance Criteria (Gherkin)  
-   - Definition of Done  
+   - Summary
+   - Frontend
+   - API
+   - Business Logic
+   - Database
+   - Contracts (Types/DTOs)
+   - Acceptance Criteria (Gherkin)
+   - Definition of Done
 
 ---
 
@@ -26,6 +28,7 @@ When creating a new GitHub Issue:
 Use **Gherkin** for writing Acceptance Criteria. This ensures scenarios are clear and testable.
 
 ### Example Template
+
 ```gherkin
 Feature: <Feature name>
   Scenario: <Scenario description>
@@ -35,6 +38,7 @@ Feature: <Feature name>
 ```
 
 ### Example for Resume Upload
+
 ```gherkin
 Feature: Resume Upload
   Scenario: Upload valid resume
@@ -57,6 +61,7 @@ Every story must include a checklist of conditions that must be met before closi
 Check off each when the task is complete.
 
 ### Example DoD
+
 ```markdown
 - [ ] UI implemented and wired to API
 - [ ] API endpoint implemented with validation
@@ -68,7 +73,8 @@ Check off each when the task is complete.
 ---
 
 ## 🔹 Why This Matters
-- Ensures **vertical slices**: one story = one complete feature.  
-- Keeps **Copilot/GPT** aligned across frontend, backend, and DB.  
-- Produces **testable acceptance criteria**.  
-- Enforces **consistency and accessibility** across the app.  
+
+- Ensures **vertical slices**: one story = one complete feature.
+- Keeps **Copilot/GPT** aligned across frontend, backend, and DB.
+- Produces **testable acceptance criteria**.
+- Enforces **consistency and accessibility** across the app.

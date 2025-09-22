@@ -27,8 +27,8 @@ export default function RootLayout({
                     </a>
                   </li>
                   <li>
-                    <a href="/build" className="hover:underline">
-                      Create Resume
+                    <a href="/compose" className="hover:underline">
+                      Compose
                     </a>
                   </li>
                   <li>

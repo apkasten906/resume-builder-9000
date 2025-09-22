@@ -11,8 +11,8 @@ import { handleJsonResume } from './testResume.js';
 // Express router for resume endpoints
 const resumeRoutes = Router();
 
-// Multer setup for file uploads (memory storage)
-const upload = multer({ storage: multer.memoryStorage() });
+// Multer setup for file uploads (memory storage, 5MB limit)
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 /**
  * @swagger
@@ -57,25 +57,33 @@ const upload = multer({ storage: multer.memoryStorage() });
  *       503:
  *         description: Service unavailable
  */
-resumeRoutes.post('/', upload.single('file'), async (req: Request, res: Response) => {
+export const parseResumeHandler = upload.single('file');
+export const postResumeHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     // If JSON, handle API test (Vitest)
     if (req.is('application/json')) {
-      return handleJsonResume(req, res);
+      handleJsonResume(req, res);
+      return;
     }
 
     // If multipart, handle file upload (UI)
     const file = req.file;
     if (!file) {
       logger.warn('No file uploaded', { headers: req.headers });
-      return res.status(400).json({ error: 'No file uploaded' });
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
     }
 
     // removed unused assignment
     const validationError = validateFile(file);
     if (validationError) {
       logger.warn('File validation failed', { error: validationError, file: file?.originalname });
-      return res.status(400).json({ error: validationError });
+      if (validationError === 'File too large (max 5MB)') {
+        res.status(413).json({ error: validationError });
+        return;
+      }
+      res.status(400).json({ error: validationError });
+      return;
     }
 
     // DEV/E2E TEST MODE: Always enable for Playwright, explicit test header/env, or test environment
@@ -87,14 +95,19 @@ resumeRoutes.post('/', upload.single('file'), async (req: Request, res: Response
       devE2eTest: process.env.DEV_E2E_TEST,
     });
 
-    // FORCE E2E contract in any non-production environment
-    if (process.env.NODE_ENV !== 'production') {
-      logger.info('E2E mode (non-production) triggered for resume upload');
-      return res.status(201).json({
+    // Only stub for E2E/test, not all non-production
+    if (
+      process.env.NODE_ENV === 'test' ||
+      process.env.PLAYWRIGHT_TEST === 'true' ||
+      process.env.DEV_E2E_TEST === 'true'
+    ) {
+      logger.info('E2E/test mode triggered for resume upload');
+      res.status(201).json({
         summary: 'Summary: Experienced software engineer with 5+ years in web development.',
         experience: ['Software Engineer at Acme Corp, 2018-2023'],
         skills: ['JavaScript', 'TypeScript', 'React', 'Node.js'],
       });
+      return;
     }
 
     // file is guaranteed defined after validation
@@ -124,12 +137,15 @@ resumeRoutes.post('/', upload.single('file'), async (req: Request, res: Response
     if (skills.length === 0) skills = ['No skills found.'];
 
     // Return parsed data
-    return res.status(201).json({ summary, experience, skills });
+    res.status(201).json({ summary, experience, skills });
+    return;
   } catch (error) {
     logger.error('Error processing resume upload', { error });
-    return res.status(500).json({ error: 'Failed to process resume' });
+    res.status(500).json({ error: 'Failed to process resume' });
+    return;
   }
-});
+};
+resumeRoutes.post('/', parseResumeHandler, postResumeHandler);
 
 /**
  * @swagger

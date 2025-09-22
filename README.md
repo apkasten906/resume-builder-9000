@@ -31,6 +31,7 @@ Run the following commands to set up the project:
    ```bash
    npm run build
    ```
+
    > **Note:** Only run this step if you are preparing for production deployment. In production, you would typically run the built output with a separate command (e.g., `npm start`).
 
 4. Run tests:

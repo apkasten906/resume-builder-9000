@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
-import { resumeRoutes } from './controllers/resume.js';
+import { resumeRoutes, parseResumeHandler, postResumeHandler } from './controllers/resume.js';
 import { connectDatabase } from './db.js';
 import { logger, httpLogger, errorLogger } from './utils/logger.js';
 import { openApiSpec } from './utils/openapi.js';
@@ -24,8 +24,8 @@ app.use(express.json());
 // Redirect root to Swagger UI
 app.get('/', (req, res) => res.redirect('/api/docs'));
 app.use('/api/resumes', resumeRoutes);
-// Alias for /api/resumes/parse to support vertical slice contract
-app.use('/api/resumes/parse', resumeRoutes);
+// Only mount POST /api/resumes/parse for contract, not full router
+app.post('/api/resumes/parse', parseResumeHandler, postResumeHandler);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

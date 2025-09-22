@@ -51,9 +51,5 @@ coverage/
 # JetBrains IDE
 .idea/
 
-# Build artifacts (if used)
-build/
-**/build/
-
 # Misc log files
 *.log

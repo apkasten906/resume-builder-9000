@@ -11,6 +11,7 @@ assignees: ''
 As a user, I want to see all of my applications in a dashboard view so I can quickly review progress and statuses.
 
 **Acceptance Criteria:**
+
 ```gherkin
 Given I have multiple applications
 When I open the dashboard
@@ -18,10 +19,10 @@ Then I see a list of job applications with company, job title, status, and salar
 ```
 
 **Definition of Done:**
+
 - List view implemented (API + UI).
 - Filtering by status and company available.
 - Resume and cover letter links visible.
-
 
 ---
 

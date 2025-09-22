@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/api/**"
+applyTo: 'packages/api/**'
 ---
 
 # API Package Guidelines
@@ -16,13 +16,11 @@ The `@rb9k/api` package provides the backend API server for Resume Builder 9000,
 ## REST API Design
 
 1. **Endpoint Structure**
-
    - `/api/ingest/resume` - POST - Upload and parse resume
    - `/api/ingest/jd` - POST - Submit job description
    - `/api/tailor` - POST - Generate tailored resume
 
 2. **Status Codes**
-
    - 200: Successful GET/PUT
    - 201: Successful creation
    - 202: Accepted but processing
