@@ -28,24 +28,24 @@ catch {
 
 # Copy environment file
 if (Test-Path ".env.example") {
-    Write-Host "📄 Creating .env file from example..."
+    Write-Host "Creating .env file from example..."
     Copy-Item -Path ".env.example" -Destination ".env" -Force
 }
 
 # Install dependencies
-Write-Host "📦 Installing dependencies..."
+Write-Host "Installing dependencies..."
 npm install
 
 # Build packages
-Write-Host "🛠️ Building packages..."
+Write-Host "Building packages..."
 npm run build --workspaces
 
 # Run tests
-Write-Host "🧪 Running tests..."
+Write-Host "Running tests..."
 npm run test --workspaces
 
 # Set up Git hooks
-Write-Host "🪝 Setting up Git hooks..."
+Write-Host "Setting up Git hooks..."
 & "$PSScriptRoot\scripts\setup-hooks.ps1"
 
-Write-Host "✅ Setup complete! You can now run './dev.ps1' to start the development environment."
+Write-Host "Setup complete! You can now run './dev.ps1' to start the development environment."

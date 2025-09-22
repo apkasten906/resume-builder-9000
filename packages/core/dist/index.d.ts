@@ -1,7 +1,7 @@
 import { z } from 'zod';
 export declare const PersonalInfoSchema: z.ZodObject<{
     fullName: z.ZodString;
-    email: z.ZodString;
+    email: z.ZodEmail;
     phone: z.ZodOptional<z.ZodString>;
     location: z.ZodOptional<z.ZodString>;
     linkedIn: z.ZodOptional<z.ZodString>;
@@ -39,7 +39,7 @@ export type Skill = z.infer<typeof SkillSchema>;
 export declare const ResumeDataSchema: z.ZodObject<{
     personalInfo: z.ZodObject<{
         fullName: z.ZodString;
-        email: z.ZodString;
+        email: z.ZodEmail;
         phone: z.ZodOptional<z.ZodString>;
         location: z.ZodOptional<z.ZodString>;
         linkedIn: z.ZodOptional<z.ZodString>;
