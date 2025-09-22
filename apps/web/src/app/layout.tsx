@@ -6,11 +6,12 @@ export const metadata: Metadata = {
   description: 'Create tailored, ATS-friendly resumes',
 };
 
+import type { ReactElement, ReactNode } from 'react';
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
-}>) {
+  readonly children: ReactNode;
+}>): ReactElement {
   return (
     <html lang="en">
       <body>
@@ -26,8 +27,13 @@ export default function RootLayout({
                     </a>
                   </li>
                   <li>
-                    <a href="/build" className="hover:underline">
-                      Create Resume
+                    <a href="/compose" className="hover:underline">
+                      Compose
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/resume-upload" className="hover:underline">
+                      Resume Upload
                     </a>
                   </li>
                   <li>

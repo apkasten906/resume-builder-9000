@@ -1,6 +1,7 @@
 import React from 'react';
 
-const Custom404 = () => {
+import type { ReactElement } from 'react';
+const Custom404 = (): ReactElement => {
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
       <h1>404 - Page Not Found</h1>
