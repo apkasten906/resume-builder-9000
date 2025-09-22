@@ -10,13 +10,18 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     include: ['tests/**/*.{test,spec}.{js,ts,jsx,tsx}', 'src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
-    setupFiles: ['./tests/setup.ts'],
+    exclude: ['tests/e2e/**/*.ts'],
+    setupFiles: ['./tests/vitest.setup.ts'],
     coverage: {
       provider: 'v8', // or 'istanbul'
       reporter: ['text', 'html'],
     },
     deps: {
-      inline: ['@testing-library/jest-dom'],
+      optimizer: {
+        web: {
+          include: ['@testing-library/jest-dom'],
+        },
+      },
     },
   },
 });

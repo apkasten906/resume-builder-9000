@@ -2,7 +2,10 @@ import { ResumeData, JobDetails, Experience, Education, Skill } from '@rb9k/core
 import { ResumeGenerator } from '@rb9k/core/dist/resume.js';
 
 export class DefaultResumeGenerator implements ResumeGenerator {
-  async generateResume(resumeData: ResumeData, jobDetails: JobDetails): Promise<string> {
+  async generateResume(
+    resumeData: ResumeData,
+    _jobDetails: JobDetails
+  ): Promise<string | ResumeData> {
     await new Promise(resolve => setTimeout(resolve, 0)); // Simulate async operation
 
     const { personalInfo, experience, education, skills } = resumeData;

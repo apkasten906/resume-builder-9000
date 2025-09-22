@@ -7,13 +7,11 @@ This document outlines the branch protection rules that should be configured in 
 ### `main` branch
 
 - [x] Require pull request reviews before merging
-
   - [x] Required approving reviews: 1
   - [x] Dismiss stale pull request approvals when new commits are pushed
   - [x] Require review from Code Owners
 
 - [x] Require status checks to pass before merging
-
   - [x] Require branches to be up to date before merging
   - Required status checks:
     - [x] lint (Lint)
@@ -26,12 +24,10 @@ This document outlines the branch protection rules that should be configured in 
 ### `dev` branch
 
 - [x] Require pull request reviews before merging
-
   - [x] Required approving reviews: 1
   - [x] Dismiss stale pull request approvals when new commits are pushed
 
 - [x] Require status checks to pass before merging
-
   - [x] Require branches to be up to date before merging
   - Required status checks:
     - [x] lint (Lint)

@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "prebuild": "npm --workspace @rb9k/core run build",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint \"src/**/*.{js,cjs,mjs,ts,tsx}\" --config ../../.eslintrc.cjs",
@@ -21,13 +22,20 @@
     "dotenv": "^16.3.1",
     "express": "^5.1.0",
     "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "pdf-parse": "^1.1.1",
     "sqlite3": "^5.1.6",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "winston": "^3.17.0",
-    "zod": "^4.1.5"
+    "zod": "^4.1.5",
+    "zod-openapi": "^5.4.1",
+    "mammoth": "^1.4.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.14",
     "@types/express": "^4.17.17",
+    "@types/multer": "^2.0.0",
     "@types/node": "^20.6.0",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.43.0",

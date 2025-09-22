@@ -1,19 +1,19 @@
 import { randomUUID } from 'crypto';
 import BetterSQLite3 from 'better-sqlite3';
+
 import { logger } from './utils/logger.js';
 import { StoredResume, DatabaseRow } from './types/database.js';
 
-// Global database connection
-let db: BetterSQLite3.Database | null = null;
+// Explicitly declare the type for the database connection
+let db: InstanceType<typeof BetterSQLite3> | null = null;
 
-export function connectDatabase(): BetterSQLite3.Database {
+export function connectDatabase(): InstanceType<typeof BetterSQLite3> {
   if (db) {
     logger.debug('Using existing database connection');
     return db;
   }
 
   logger.info('Opening new database connection');
-  // Open the database
   db = new BetterSQLite3('./resume.db');
 
   // Create tables if they don't exist
@@ -29,6 +29,25 @@ export function connectDatabase(): BetterSQLite3.Database {
 
   logger.info('Database initialized successfully');
   return db;
+}
+
+export function getAllResumesFromDb(): StoredResume[] {
+  const database = connectDatabase();
+  logger.debug('Fetching all resumes from database');
+  try {
+    const stmt = database.prepare('SELECT * FROM resumes ORDER BY created_at DESC');
+    const results = stmt.all() as DatabaseRow[];
+    return results.map(result => ({
+      id: result.id,
+      content: result.content,
+      resumeData: JSON.parse(result.resume_data),
+      jobDetails: JSON.parse(result.job_details),
+      createdAt: result.created_at,
+    }));
+  } catch (error) {
+    logger.error('Error retrieving all resumes from database', { error });
+    throw error;
+  }
 }
 
 export function getResumeFromDb(id: string): StoredResume | null {

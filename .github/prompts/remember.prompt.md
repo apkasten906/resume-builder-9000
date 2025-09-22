@@ -20,10 +20,12 @@ The result: a **self-organizing, domain-driven knowledge base** that grows smart
 ## Domain Syntax
 
 Users can optionally specify target domains using:
+
 - `/remember >domain-name lesson content here` - explicitly targets a domain
 - `/remember lesson content here` - agent determines appropriate domain(s)
 
 Examples:
+
 - `/remember >shell-scripting now we've forgotten about using fish syntax too many times`
 - `/remember >clojure prefer passing maps over parameter lists`
 - `/remember always check terminal output encoding when seeing weird characters`
@@ -31,15 +33,19 @@ Examples:
 ## Memory File Structure
 
 ### Description Frontmatter
+
 Keep domain file descriptions general, focusing on the domain responsibility rather than implementation specifics.
 
 ### ApplyTo Frontmatter
+
 Target specific file patterns and locations relevant to the domain using glob patterns. Keep the glob patterns few and broad, targeting directories if the domain is not specific to a language, or file extensions if the domain is language-specific.
 
 ### Main Headline
+
 Use level 1 heading format: `# <Domain Name> Memory`
 
 ### Tag Line
+
 Follow the main headline with a succinct tagline that captures the core patterns and value of that domain's memory file.
 
 ### Learnings
@@ -71,11 +77,11 @@ Each distinct lesson has its own level 2 headline
    - Use positive reinforcement focusing on correct patterns
    - Brief explanations of WHY, when helpful
    - Capture:
-      - Coding style, preferences, and workflow
-      - Critical implementation paths
-      - Project-specific patterns
-      - Tool usage patterns
-      - Reusable problem-solving approaches
+     - Coding style, preferences, and workflow
+     - Critical implementation paths
+     - Project-specific patterns
+     - Tool usage patterns
+     - Reusable problem-solving approaches
 
 ## Quality Guidelines
 
@@ -90,6 +96,7 @@ Each distinct lesson has its own level 2 headline
 ## Update Triggers
 
 Common scenarios that warrant memory updates:
+
 - Repeatedly forgetting the same shortcuts or commands
 - Discovering effective workflows
 - Learning domain-specific best practices
