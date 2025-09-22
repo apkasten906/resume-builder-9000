@@ -20,7 +20,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
  * /api/resumes:
  *   post:
  *     summary: Upload and parse a resume file
- *     description: Accepts a resume file upload, parses it, and returns extracted data
+ *     description: Accepts a resume file upload, parses it, and returns extracted data. File validation checks both extension and magic bytes/MIME type for PDF and DOCX files, and extension only for TXT and MD files.
  *     requestBody:
  *       required: true
  *       content:
@@ -50,7 +50,9 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
  *                   items:
  *                     type: string
  *       400:
- *         description: Bad request
+ *         description: Bad request (e.g., missing file, unsupported file type, or file content does not match extension)
+ *       413:
+ *         description: File too large (max 5MB)
  *       500:
  *         description: Internal server error
  *       501:
@@ -59,6 +61,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
  *         description: Service unavailable
  */
 export const parseResumeHandler = upload.single('file');
+
 export const postResumeHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     // If JSON, handle API test (Vitest)
@@ -75,7 +78,7 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const validationResult = validateFile(file);
+    const validationResult = await validateFile(file);
     if (!validationResult.valid) {
       logger.warn('File validation failed', {
         error: validationResult.error,
@@ -139,6 +142,7 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
     return;
   }
 };
+// POST /api/resumes is the canonical endpoint for parsing resumes
 resumeRoutes.post('/', parseResumeHandler, postResumeHandler);
 
 /**

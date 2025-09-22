@@ -12,7 +12,6 @@ if ($Help) {
 }
 
 $ErrorActionPreference = "Stop"
-$rootDir = $PSScriptRoot
 
 Write-Host "Setting up Resume Builder 9000..."
 
