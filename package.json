@@ -7,7 +7,6 @@
     "packages/*"
   ],
   "scripts": {
-    "clean": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clean-and-rebuild.ps1",
     "build": "npm --workspaces run build",
     "clean": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clean-and-rebuild.ps1",
     "dev": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
