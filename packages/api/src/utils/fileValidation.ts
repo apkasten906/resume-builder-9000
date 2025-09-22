@@ -32,6 +32,15 @@ const ALLOWED_MIME_TYPES = [
  * Returns FileValidationResult with error and status if invalid.
  */
 export async function validateFile(file?: UploadedFile): Promise<FileValidationResult> {
+  // Debug: Log first 16 bytes of buffer for PDF/DOCX
+  if (
+    file &&
+    (file.originalname.toLowerCase().endsWith('.pdf') ||
+      file.originalname.toLowerCase().endsWith('.docx'))
+  ) {
+    // eslint-disable-next-line no-console
+    console.log('[DEBUG] Uploaded file bytes:', file.buffer?.subarray(0, 16));
+  }
   if (!file) {
     return { valid: false, error: 'No file uploaded', status: 400 };
   }

@@ -31,6 +31,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         launchOptions: {
+          headless: true,
           executablePath: process.env.DOCKER_E2E_TEST ? '/usr/bin/chromium' : undefined,
           args: process.env.DOCKER_E2E_TEST
             ? [
@@ -40,7 +41,7 @@ export default defineConfig({
                 '--disable-dev-shm-usage',
                 '--disable-setuid-sandbox',
               ]
-            : [],
+            : ['--headless'],
         },
       },
     },
@@ -48,6 +49,9 @@ export default defineConfig({
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
+        launchOptions: {
+          headless: true,
+        },
       },
     },
   ],
