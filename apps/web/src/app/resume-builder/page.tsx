@@ -18,7 +18,7 @@ export default function ResumeBuilderPage(): ReactElement {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent): void => {
     e.preventDefault();
     setSubmitted(true);
   };
