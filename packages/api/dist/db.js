@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import BetterSQLite3 from 'better-sqlite3';
 import { logger } from './utils/logger.js';
 // Global database connection
@@ -33,10 +34,18 @@ export function getResumeFromDb(id) {
             logger.info('Resume not found in database', { resumeId: id });
             return null;
         }
-        // Parse JSON data
-        const parsedResumeData = JSON.parse(result.resume_data);
+        // Parse JSON fields and construct StoredResume
+        const resumeData = JSON.parse(result.resume_data);
+        const jobDetails = JSON.parse(result.job_details);
+        const storedResume = {
+            id: result.id,
+            content: result.content,
+            resumeData,
+            jobDetails,
+            createdAt: result.created_at,
+        };
         logger.debug('Resume found in database', { resumeId: id });
-        return parsedResumeData;
+        return storedResume;
     }
     catch (error) {
         logger.error('Error retrieving resume from database', { error, resumeId: id });
@@ -60,5 +69,6 @@ export function insertResume(resumeData) {
     }
 }
 function generateUniqueId() {
-    return Date.now().toString(36) + Math.random().toString(36).substring(2);
+    // Uses Node.js crypto.randomUUID() for secure, collision-resistant IDs
+    return randomUUID();
 }

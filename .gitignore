@@ -9,6 +9,10 @@
 # TypeScript cache
 *.tsbuildinfo
 
+# Test artifacts and results
+test-results/
+**/test-results/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
