@@ -1,8 +1,27 @@
 ---
 mode: 'agent'
 description: 'Create an llms.txt file from scratch based on repository structure following the llms.txt specification at https://llmstxt.org/'
-tools: ['changes', 'codebase', 'editFiles', 'extensions', 'fetch', 'githubRepo', 'openSimpleBrowser', 'problems', 'runTasks', 'search', 'searchResults', 'terminalLastCommand', 'terminalSelection', 'testFailure', 'usages', 'vscodeAPI']
+tools:
+  [
+    'changes',
+    'codebase',
+    'editFiles',
+    'extensions',
+    'fetch',
+    'githubRepo',
+    'openSimpleBrowser',
+    'problems',
+    'runTasks',
+    'search',
+    'searchResults',
+    'terminalLastCommand',
+    'terminalSelection',
+    'testFailure',
+    'usages',
+    'vscodeAPI',
+  ]
 ---
+
 # Create LLMs.txt File from Repository Structure
 
 Create a new `llms.txt` file from scratch in the root of the repository following the official llms.txt specification at https://llmstxt.org/. This file provides high-level guidance to large language models (LLMs) on where to find relevant content for understanding the repository's purpose and specifications.
@@ -91,6 +110,7 @@ Organize files into logical H2 sections such as:
 #### File Selection Criteria
 
 Include files that:
+
 - Explain the repository's purpose and scope
 - Provide essential technical documentation
 - Show usage examples and patterns
@@ -98,6 +118,7 @@ Include files that:
 - Contain configuration and setup instructions
 
 Exclude files that:
+
 - Are purely implementation details
 - Contain redundant information
 - Are build artifacts or generated content
@@ -130,6 +151,7 @@ Exclude files that:
 5. Ensure all links are valid relative paths
 
 ### Step 4: Validation
+
 1. Verify compliance with https://llmstxt.org/ specification
 2. Check that all links are valid and accessible
 3. Ensure the file serves as an effective LLM navigation tool
@@ -200,6 +222,7 @@ Exclude files that:
 ## Success Criteria
 
 The created `llms.txt` file should:
+
 1. Enable LLMs to quickly understand the repository's purpose
 2. Provide clear navigation to essential documentation
 3. Follow the official llms.txt specification exactly

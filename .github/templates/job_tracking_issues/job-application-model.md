@@ -11,6 +11,7 @@ assignees: ''
 As a user, I want to create and store job application records so that I can track my job search activities in one place.
 
 **Acceptance Criteria (Gherkin):**
+
 ```gherkin
 Given I apply for a new position
 When I save the job application
@@ -18,10 +19,10 @@ Then the system should store the job title, company, date applied, status, propo
 ```
 
 **Definition of Done:**
+
 - Data model exists with all required fields.
 - Can create/read/update/delete applications via API.
 - Database schema migrations included.
-
 
 ---
 

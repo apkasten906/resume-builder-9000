@@ -11,6 +11,7 @@ assignees: ''
 As a user, I want to track proposed salary, my desired salary, and any offer received so I can compare jobs against my goals.
 
 **Acceptance Criteria:**
+
 ```gherkin
 Given I record a new job application
 When I enter proposed salary, my desired salary, and later their offer
@@ -18,10 +19,10 @@ Then the system stores and displays the values in the application record
 ```
 
 **Definition of Done:**
+
 - Salary fields (proposed, desired, offered) in the model.
 - All values visible in job application details.
 - Proper validation (numeric + currency format).
-
 
 ---
 

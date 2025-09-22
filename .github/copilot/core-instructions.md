@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/core/**"
+applyTo: 'packages/core/**'
 ---
 
 # Core Package Guidelines
@@ -37,7 +37,7 @@ The `@rb9k/core` package contains the central business logic for Resume Builder 
 
 ```typescript
 // Import flags at the top of the file
-import { flags } from "../flags";
+import { flags } from '../flags';
 
 // Use conditionals to determine behavior
 export function analyzeText(text: string): AnalysisResult {

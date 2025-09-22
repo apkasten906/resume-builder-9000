@@ -11,6 +11,7 @@ assignees: ''
 As a user, I want to track the current status of my application (Applied, Interviewing, Offer, Rejected, Accepted) so I can manage my job search pipeline.
 
 **Acceptance Criteria:**
+
 ```gherkin
 Given I view an application
 When I update its status
@@ -18,10 +19,10 @@ Then the new status is stored and displayed in the application detail view
 ```
 
 **Definition of Done:**
+
 - Predefined status list implemented.
 - Status can be updated through API and UI.
 - History of changes is tracked (optional stretch).
-
 
 ---
 

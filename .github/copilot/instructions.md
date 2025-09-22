@@ -81,19 +81,14 @@ export default function ResumeForm({ initialData }: { initialData: FormData }) {
 
 ```typescript
 // ✅ Good
-router.post(
-  "/resume",
-  upload.single("resume"),
-  validateResume,
-  async (req, res) => {
-    try {
-      const result = await resumeService.parse(req.file);
-      res.status(201).json(result);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
+router.post('/resume', upload.single('resume'), validateResume, async (req, res) => {
+  try {
+    const result = await resumeService.parse(req.file);
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
-);
+});
 ```
 
 ### Testing
@@ -105,13 +100,13 @@ router.post(
 
 ```typescript
 // ✅ Good
-test("relevance score prioritizes must-have skills", () => {
+test('relevance score prioritizes must-have skills', () => {
   // Arrange
   const achievement = {
-    raw_text: "Built CI/CD pipeline with Jenkins",
-    skills: ["ci-cd", "jenkins"],
+    raw_text: 'Built CI/CD pipeline with Jenkins',
+    skills: ['ci-cd', 'jenkins'],
   };
-  const jobProfile = { must_haves: ["ci-cd"], nice_to_haves: ["docker"] };
+  const jobProfile = { must_haves: ['ci-cd'], nice_to_haves: ['docker'] };
 
   // Act
   const score = calculateRelevance(achievement, jobProfile);
@@ -140,7 +135,7 @@ When working with features that might use AI:
 
 ```typescript
 // ✅ Good
-import { flags } from "@rb9k/core";
+import { flags } from '@rb9k/core';
 
 export async function rewriteBullet(bullet: string, style: Style) {
   if (flags.allowExternalLLM) {
