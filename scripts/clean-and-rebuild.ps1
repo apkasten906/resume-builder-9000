@@ -21,7 +21,14 @@ foreach ($ws in $workspaces) {
 }
 
 Write-Host "Reinstalling dependencies..."
+
+# Install root dependencies
 npm install
+
+# Ensure workspace symlinks in apps/web
+Push-Location "apps/web"
+npm install
+Pop-Location
 
 Write-Host "Rebuilding all packages..."
 npm run build
