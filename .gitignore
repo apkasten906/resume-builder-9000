@@ -6,6 +6,10 @@
 # Environment files
 /.env
 
+# Build output
+**/dist/
+**/.next/
+
 # TypeScript cache
 *.tsbuildinfo
 

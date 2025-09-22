@@ -88,6 +88,11 @@ export const SkillSchema = z.object({
 
 export type Skill = z.infer<typeof SkillSchema>;
 
+// Type aliases for array element types to reduce verbose type annotations
+export type ExperienceItem = Experience;
+export type EducationItem = Education;
+export type SkillItem = Skill;
+
 export const ResumeDataSchema = z.object({
   personalInfo: PersonalInfoSchema,
   summary: z.string().optional(),

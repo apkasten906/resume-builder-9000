@@ -1,4 +1,4 @@
-import { ResumeData, JobDetails } from '@rb9k/core';
+import { ResumeData, JobDetails, Experience, Education, Skill } from '@rb9k/core';
 import { ResumeGenerator } from '@rb9k/core/dist/resume.js';
 
 export class DefaultResumeGenerator implements ResumeGenerator {
@@ -43,7 +43,7 @@ export class DefaultResumeGenerator implements ResumeGenerator {
           <h2>Work Experience</h2>
           ${experience
             .map(
-              job => `
+              (job: Experience) => `
             <div class="job">
               <div class="job-header">
                 <h3>${job.title} at ${job.company}</h3>
@@ -60,7 +60,7 @@ export class DefaultResumeGenerator implements ResumeGenerator {
           <h2>Education</h2>
           ${education
             .map(
-              edu => `
+              (edu: Education) => `
             <div class="education">
               <h3>${edu.degree} at ${edu.institution}</h3>
               <span>${edu.graduationDate || 'N/A'}</span>
@@ -73,7 +73,7 @@ export class DefaultResumeGenerator implements ResumeGenerator {
         <div class="section">
           <h2>Skills</h2>
           <div class="skills">
-            ${skills?.map(skill => `<span class="skill">${skill.name || 'Unknown Skill'}</span>`).join('') || ''}
+            ${skills?.map((skill: Skill) => `<span class="skill">${skill.name || 'Unknown Skill'}</span>`).join('') || ''}
           </div>
         </div>
       </body>
