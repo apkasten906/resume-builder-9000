@@ -10,7 +10,8 @@
     "lint": "eslint . --config ../../.eslintrc.cjs",
     "test": "vitest run --config ./vitest.config.mjs",
     "test:watch": "vitest --config ./vitest.config.mjs",
-    "update-deps": "npx npm-check-updates -u && npm install"
+    "update-deps": "npx npm-check-updates -u && npm install",
+    "postinstall": "npm run build --workspace=@rb9k/core"
   },
   "vitest": {
     "environment": "jsdom",
