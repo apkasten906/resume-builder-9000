@@ -1,20 +1,21 @@
 import { randomUUID } from 'crypto';
-import BetterSQLite3 from 'better-sqlite3';
+import Database from 'better-sqlite3';
 
 import { logger } from './utils/logger.js';
 import { StoredResume, DatabaseRow } from './types/database.js';
 
-// Explicitly declare the type for the database connection
-let db: InstanceType<typeof BetterSQLite3> | null = null;
+// Type alias for a better-sqlite3 database instance
+type SQLiteDatabase = InstanceType<typeof Database>;
+let db: SQLiteDatabase | null = null;
 
-export function connectDatabase(): InstanceType<typeof BetterSQLite3> {
+export function connectDatabase(): SQLiteDatabase {
   if (db) {
     logger.debug('Using existing database connection');
     return db;
   }
 
   logger.info('Opening new database connection');
-  db = new BetterSQLite3('./resume.db');
+  db = new Database('./resume.db');
 
   // Create tables if they don't exist
   db.exec(`

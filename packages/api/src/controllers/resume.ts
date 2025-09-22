@@ -7,6 +7,7 @@ import { validateFile } from '../utils/fileValidation.js';
 import { parseFileText } from '../services/fileParser.js';
 import { getResumeById } from '../services/resumeService.js';
 import { handleJsonResume } from './testResume.js';
+import { isTestEnvironment } from '../utils/testUtils.js';
 
 // Express router for resume endpoints
 const resumeRoutes = Router();
@@ -93,12 +94,7 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
       devE2eTest: process.env.DEV_E2E_TEST,
     });
 
-    // Only stub for E2E/test, not all non-production
-    if (
-      process.env.NODE_ENV === 'test' ||
-      process.env.PLAYWRIGHT_TEST === 'true' ||
-      process.env.DEV_E2E_TEST === 'true'
-    ) {
+    if (isTestEnvironment()) {
       logger.info('E2E/test mode triggered for resume upload');
       res.status(201).json({
         summary: 'Summary: Experienced software engineer with 5+ years in web development.',
