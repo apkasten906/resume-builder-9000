@@ -39,7 +39,7 @@ export class DefaultResumeGenerator implements ResumeGenerator {
 
         <div class="section">
           <h2>Professional Summary</h2>
-          <p>${resumeData.summary || 'Experienced professional seeking the ' + jobDetails.title + ' position.'}</p>
+          <p>${resumeData.summary || 'Experienced professional seeking the ' + _jobDetails.title + ' position.'}</p>
         </div>
 
         <div class="section">
