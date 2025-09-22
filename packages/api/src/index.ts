@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
-import { resumeRoutes, parseResumeHandler, postResumeHandler } from './controllers/resume.js';
+import { resumeRoutes } from './controllers/resume.js';
 import { connectDatabase } from './db.js';
 import { logger, httpLogger, errorLogger } from './utils/logger.js';
 import { openApiSpec } from './utils/openapi.js';
@@ -24,8 +24,7 @@ app.use(express.json());
 // Redirect root to Swagger UI
 app.get('/', (req, res) => res.redirect('/api/docs'));
 app.use('/api/resumes', resumeRoutes);
-// Only mount POST /api/resumes/parse for contract, not full router
-app.post('/api/resumes/parse', parseResumeHandler, postResumeHandler);
+// POST /api/resumes is the canonical endpoint for parsing resumes
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

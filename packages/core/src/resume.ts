@@ -1,4 +1,4 @@
-import { ResumeData, JobDetails } from './index.js';
+import { ResumeData, JobDetails, resumeDataToMarkdown } from './index.js';
 
 export interface ResumeGenerator {
   /**
@@ -29,12 +29,10 @@ export class ResumeService {
   }
 
   async createResume(resumeData: ResumeData, jobDetails: JobDetails): Promise<string | Buffer> {
-    const resumeContent = await this.generator.generateResume(resumeData, jobDetails);
+    let resumeContent = await this.generator.generateResume(resumeData, jobDetails);
+    // If structured data, serialize to Markdown for downstream formatting or return
     if (typeof resumeContent !== 'string') {
-      // If structured data is returned, you must handle it in the caller or convert to string/HTML here
-      throw new Error(
-        'ResumeService expects generator to return a string. Received structured data.'
-      );
+      resumeContent = resumeDataToMarkdown(resumeContent);
     }
     if (this.formatter) {
       return this.formatter.format(resumeContent);
