@@ -8,8 +8,14 @@ function mockReq(token?: string) {
 function mockRes() {
   const res: any = {};
   res.statusCode = 200;
-  res.status = (c: number) => { res.statusCode = c; return res; };
-  res.json = (b: any) => { res.body = b; return res; };
+  res.status = (c: number) => {
+    res.statusCode = c;
+    return res;
+  };
+  res.json = (b: any) => {
+    res.body = b;
+    return res;
+  };
   return res;
 }
 
@@ -18,7 +24,9 @@ describe('requireAuth', () => {
     const req = mockReq();
     const res = mockRes();
     let nextCalled = false;
-    await requireAuth(req, res, () => { nextCalled = true; });
+    await requireAuth(req, res, () => {
+      nextCalled = true;
+    });
     expect(res.statusCode).toBe(401);
     expect(nextCalled).toBe(false);
   });
@@ -28,7 +36,9 @@ describe('requireAuth', () => {
     const req = mockReq(login!.token);
     const res = mockRes();
     let nextCalled = false;
-    await requireAuth(req, res, () => { nextCalled = true; });
+    await requireAuth(req, res, () => {
+      nextCalled = true;
+    });
     expect(nextCalled).toBe(true);
   });
 });

@@ -373,3 +373,99 @@
 {"level":"info","message":"Opening new database connection","timestamp":"2025-09-23 05:42:08"}
 {"level":"info","message":"Database initialized successfully","timestamp":"2025-09-23 05:42:08"}
 {"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-23 05:42:08"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-23 11:32:49"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-23 11:32:49"}
+{"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-23 11:32:49"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-23 11:46:11"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-23 11:46:11"}
+{"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-23 11:46:11"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 37.278 ms","timestamp":"2025-09-23 11:48:14"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 7.247 ms","timestamp":"2025-09-23 11:48:14"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 2.494 ms","timestamp":"2025-09-23 11:48:14"}
+{"level":"http","message":"::1 GET /applications 401 24 - 2.465 ms","timestamp":"2025-09-23 11:48:14"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.425 ms","timestamp":"2025-09-23 11:48:14"}
+{"level":"http","message":"::1 GET /applications 401 24 - 8.810 ms","timestamp":"2025-09-23 11:48:15"}
+{"level":"http","message":"::1 POST /applications 401 24 - 1.010 ms","timestamp":"2025-09-23 11:48:15"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.640 ms","timestamp":"2025-09-23 11:48:15"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 18.357 ms","timestamp":"2025-09-23 11:48:15"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 2.087 ms","timestamp":"2025-09-23 11:48:15"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.258 ms","timestamp":"2025-09-23 11:48:15"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.709 ms","timestamp":"2025-09-23 11:48:18"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.419 ms","timestamp":"2025-09-23 11:48:18"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.279 ms","timestamp":"2025-09-23 11:48:19"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.270 ms","timestamp":"2025-09-23 11:48:19"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.538 ms","timestamp":"2025-09-23 11:48:20"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.681 ms","timestamp":"2025-09-23 11:48:23"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.282 ms","timestamp":"2025-09-23 11:48:23"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.664 ms","timestamp":"2025-09-23 11:48:24"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.661 ms","timestamp":"2025-09-23 11:48:25"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.344 ms","timestamp":"2025-09-23 11:48:25"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.709 ms","timestamp":"2025-09-23 11:48:26"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.623 ms","timestamp":"2025-09-23 11:48:27"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 1.860 ms","timestamp":"2025-09-23 11:48:32"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.614 ms","timestamp":"2025-09-23 11:48:34"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.248 ms","timestamp":"2025-09-23 11:48:34"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 1.743 ms","timestamp":"2025-09-23 11:48:36"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.279 ms","timestamp":"2025-09-23 11:48:37"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.252 ms","timestamp":"2025-09-23 11:48:37"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.244 ms","timestamp":"2025-09-23 11:48:38"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.365 ms","timestamp":"2025-09-23 11:49:23"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.448 ms","timestamp":"2025-09-23 11:49:23"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.215 ms","timestamp":"2025-09-23 11:49:23"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.316 ms","timestamp":"2025-09-23 11:49:23"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 1.004 ms","timestamp":"2025-09-23 11:49:24"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.313 ms","timestamp":"2025-09-23 11:49:24"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.247 ms","timestamp":"2025-09-23 11:49:25"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.200 ms","timestamp":"2025-09-23 11:49:25"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.351 ms","timestamp":"2025-09-23 11:49:26"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.165 ms","timestamp":"2025-09-23 11:49:26"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.318 ms","timestamp":"2025-09-23 11:49:26"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 0.839 ms","timestamp":"2025-09-23 11:49:28"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.532 ms","timestamp":"2025-09-23 11:49:29"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.359 ms","timestamp":"2025-09-23 11:49:29"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.176 ms","timestamp":"2025-09-23 11:49:29"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.473 ms","timestamp":"2025-09-23 11:49:30"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 0.907 ms","timestamp":"2025-09-23 11:49:33"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.213 ms","timestamp":"2025-09-23 11:49:34"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.281 ms","timestamp":"2025-09-23 11:49:34"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.267 ms","timestamp":"2025-09-23 11:49:34"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.423 ms","timestamp":"2025-09-23 11:49:35"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.197 ms","timestamp":"2025-09-23 11:49:35"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.673 ms","timestamp":"2025-09-23 11:49:39"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.230 ms","timestamp":"2025-09-23 11:49:42"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.197 ms","timestamp":"2025-09-23 11:49:42"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.172 ms","timestamp":"2025-09-23 11:49:43"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.828 ms","timestamp":"2025-09-23 11:49:46"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 0.672 ms","timestamp":"2025-09-23 11:49:46"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.203 ms","timestamp":"2025-09-23 11:49:48"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.201 ms","timestamp":"2025-09-23 11:49:48"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 22.660 ms","timestamp":"2025-09-23 12:31:41"}
+{"level":"http","message":"::1 GET /applications 401 24 - 1.993 ms","timestamp":"2025-09-23 12:31:41"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.969 ms","timestamp":"2025-09-23 12:31:41"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.793 ms","timestamp":"2025-09-23 12:31:41"}
+{"level":"http","message":"::1 POST /applications 401 24 - 2.239 ms","timestamp":"2025-09-23 12:31:41"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.512 ms","timestamp":"2025-09-23 12:31:41"}
+{"level":"http","message":"::1 GET /applications 401 24 - 1.117 ms","timestamp":"2025-09-23 12:31:41"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 19.518 ms","timestamp":"2025-09-23 12:31:44"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 3.445 ms","timestamp":"2025-09-23 12:31:45"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 6.011 ms","timestamp":"2025-09-23 12:31:45"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 1.082 ms","timestamp":"2025-09-23 12:31:46"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.384 ms","timestamp":"2025-09-23 12:31:51"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.286 ms","timestamp":"2025-09-23 12:31:51"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.198 ms","timestamp":"2025-09-23 12:31:52"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.271 ms","timestamp":"2025-09-23 12:31:52"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.366 ms","timestamp":"2025-09-23 12:31:53"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.230 ms","timestamp":"2025-09-23 12:31:53"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.219 ms","timestamp":"2025-09-23 12:31:54"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.319 ms","timestamp":"2025-09-23 12:31:54"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.237 ms","timestamp":"2025-09-23 12:31:57"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.430 ms","timestamp":"2025-09-23 12:31:57"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.862 ms","timestamp":"2025-09-23 12:31:58"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.431 ms","timestamp":"2025-09-23 12:32:02"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 0.919 ms","timestamp":"2025-09-23 12:32:03"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.766 ms","timestamp":"2025-09-23 12:32:04"}
+{"level":"http","message":"::1 GET /applications 401 24 - 1.901 ms","timestamp":"2025-09-23 12:32:04"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.387 ms","timestamp":"2025-09-23 12:32:05"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 1.495 ms","timestamp":"2025-09-23 12:32:11"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.318 ms","timestamp":"2025-09-23 12:32:13"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.203 ms","timestamp":"2025-09-23 12:32:13"}

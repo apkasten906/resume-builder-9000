@@ -5,12 +5,32 @@ const nextConfig = {
    * @returns {Promise<import('next').Rewrite[]>}
    */
   async rewrites() {
-    // Use localhost for dev, allow override for Docker or CI
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    // Explicit route proxies for backend API endpoints
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
     return [
       {
-        source: '/api/:path*',
-        destination: apiUrl + '/:path*',
+        source: '/api/jd/parse',
+        destination: `${apiBase}/jd/parse`,
+      },
+      {
+        source: '/api/tailor',
+        destination: `${apiBase}/tailor`,
+      },
+      {
+        source: '/api/applications',
+        destination: `${apiBase}/applications`,
+      },
+      {
+        source: '/api/applications/:id/stage',
+        destination: `${apiBase}/applications/:id/stage`,
+      },
+      {
+        source: '/api/applications/:id/attachments',
+        destination: `${apiBase}/applications/:id/attachments`,
+      },
+      {
+        source: '/api/resume/download',
+        destination: `${apiBase}/resume/download`,
       },
     ];
   },
