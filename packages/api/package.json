@@ -16,11 +16,14 @@
   },
   "dependencies": {
     "@rb9k/core": "*",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.4.2",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "pdf-parse": "^1.1.1",
@@ -29,8 +32,7 @@
     "swagger-ui-express": "^5.0.0",
     "winston": "^3.17.0",
     "zod": "^4.1.5",
-    "zod-openapi": "^5.4.1",
-    "mammoth": "^1.4.2"
+    "zod-openapi": "^5.4.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.14",
