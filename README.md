@@ -18,7 +18,17 @@ Run the following commands to set up the project:
    npm install
    ```
 
-2. Start the development server (for local development):
+2. **API always runs on port 4000.** Ensure your `.env` or `.env.local` file contains:
+
+   ```env
+   # API Configuration
+   PORT=4000
+   NEXT_PUBLIC_API_BASE=http://localhost:4000
+   ```
+
+   > **Note:** The frontend expects the API to be available at `http://localhost:4000` via the `NEXT_PUBLIC_API_BASE` environment variable. Update this in all environments as needed.
+
+3. Start the development server (for local development):
 
    ```bash
    npm run dev
@@ -26,7 +36,7 @@ Run the following commands to set up the project:
 
    > **Note:** You do not need to build before running the dev server. The dev server handles hot reloading and TypeScript transpilation automatically.
 
-3. Build the project (for production):
+4. Build the project (for production):
 
    ```bash
    npm run build
@@ -34,7 +44,7 @@ Run the following commands to set up the project:
 
    > **Note:** Only run this step if you are preparing for production deployment. In production, you would typically run the built output with a separate command (e.g., `npm start`).
 
-4. Run tests:
+5. Run tests:
 
    ```bash
    npm test
