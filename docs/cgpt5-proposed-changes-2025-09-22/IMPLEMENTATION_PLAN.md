@@ -3,6 +3,7 @@
 This plan follows the project's **Architectural Layers** and **Vertical Slice** guidance (see `docs/Architecture/*`). Each story includes: goal, scope, architecture impact, acceptance criteria (Gherkin), tests, and rollout plan (feature-flagged where appropriate).
 
 ## Index
+
 - #5 Job Description Intake
 - #6 Tailoring Engine
 - #7 Resume Output and Download UI
@@ -18,6 +19,7 @@ This plan follows the project's **Architectural Layers** and **Vertical Slice** 
 - #24 Build-time Environmental Flags
 
 ---
+
 ### #10 User Login & Identity Management
 
 ```gherkin
@@ -48,7 +50,6 @@ Feature: Authentication with token-based sessions
 
 ```
 
-
 ### #11 UX Guidelines
 
 ```gherkin
@@ -67,7 +68,6 @@ Feature: Project-wide UX Guidelines
     Then it has keyboard focus states, ARIA labels where needed, and meets color contrast AA
 
 ```
-
 
 ### #5 Job Description Intake
 
@@ -91,7 +91,6 @@ Feature: Job Description Intake
 
 ```
 
-
 ### #6 Tailoring Engine
 
 ```gherkin
@@ -114,7 +113,6 @@ Feature: Tailoring Engine
 
 ```
 
-
 ### #7 Resume Output and Download UI
 
 ```gherkin
@@ -134,7 +132,6 @@ Feature: Resume Preview & Download
 
 ```
 
-
 ### #8 Red Flags UI
 
 ```gherkin
@@ -149,7 +146,6 @@ Feature: Red Flags
     Then I see Red Flag badges with explanations
 
 ```
-
 
 ### #14 Application Dashboard / List View
 
@@ -169,7 +165,6 @@ Feature: Applications Dashboard
 
 ```
 
-
 ### #15 Application Status Tracking
 
 ```gherkin
@@ -185,7 +180,6 @@ Feature: Status Tracking
 
 ```
 
-
 ### #16 Job Application Model
 
 ```gherkin
@@ -199,7 +193,6 @@ Feature: Application Model
     Then the DB has tables applications, attachments, statuses
 
 ```
-
 
 ### #17 Attachments per Application
 
@@ -216,7 +209,6 @@ Feature: Attachments
 
 ```
 
-
 ### #18 Salary Tracking
 
 ```gherkin
@@ -230,7 +222,6 @@ Feature: Salary Tracking
     Then I can set currency, base, bonus, equity, notes
 
 ```
-
 
 ### #22 Feature Toggling (Stub)
 
@@ -246,7 +237,6 @@ Feature: Feature Flags
 
 ```
 
-
 ### #24 Build-time Environmental Flags
 
 ```gherkin
@@ -260,4 +250,3 @@ Feature: Build Flags
     Then the web app reads them via process.env.NEXT_PUBLIC_*
 
 ```
-

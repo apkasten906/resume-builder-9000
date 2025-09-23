@@ -1,9 +1,11 @@
 # Import Order Fix Example
 
 ## Issue from Review
+
 "The function `getAllResumesFromDb` is defined before the necessary imports. This violates JavaScript/TypeScript module structure where imports should come first."
 
 ## Current Structure (Problematic)
+
 ```typescript
 export function getAllResumesFromDb(): StoredResume[] {
   const database = connectDatabase();
@@ -18,6 +20,7 @@ import { StoredResume, DatabaseRow } from './types/database.js';
 ```
 
 ## Fixed Structure
+
 ```typescript
 // All imports must come first
 import { randomUUID } from 'crypto';
@@ -52,26 +55,21 @@ export function connectDatabase(): BetterSQLite3.Database {
 ```
 
 ## Key Points
+
 1. **All imports at the top**: Essential for proper module structure
 2. **Group imports logically**: Node.js built-ins, external packages, internal modules
 3. **Consistent ordering**: Maintains readability and prevents circular dependency issues
 4. **ESLint integration**: Can be automated with import/order rules
 
 ## ESLint Rule Configuration
+
 ```json
 {
   "rules": {
     "import/order": [
       "error",
       {
-        "groups": [
-          "builtin",
-          "external", 
-          "internal",
-          "parent",
-          "sibling",
-          "index"
-        ],
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
         "newlines-between": "always"
       }
     ]

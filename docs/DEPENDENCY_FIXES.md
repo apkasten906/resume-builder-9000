@@ -5,18 +5,22 @@ This document outlines the dependency fixes needed to address the Copilot review
 ## Issues to Address
 
 ### 1. Playwright Packages in Wrong Section
+
 **Issue**: Playwright packages are in `dependencies` but should be in `devDependencies`
 **Files**: `apps/web/package.json`
 **Action**: Move these packages to devDependencies:
+
 - `@playwright/test`
 - `playwright`
 
 ### 2. React in Wrong Section
+
 **Issue**: React is in `devDependencies` but should be in `dependencies` for production
 **Files**: `apps/web/package.json`
 **Action**: Move `react` and `react-dom` to dependencies section
 
 ### 3. Express Version Conflicts
+
 **Issue**: Root package.json has Express 4.x while packages/api has Express 5.x
 **Files**: `package.json`, `packages/api/package.json`
 **Action**: Standardize on Express version (likely 5.x) or remove from root if not needed

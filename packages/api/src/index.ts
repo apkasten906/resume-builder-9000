@@ -1,12 +1,16 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
+
+import applicationsRoutes from './routes/applications.js';
+import { parseJD } from './controllers/jd.js';
+import { tailorBullets } from './controllers/tailor.js';
+import { downloadResume } from './controllers/resumeDownload.js';
 import { resumeRoutes, parseResumeHandler, postResumeHandler } from './controllers/resume.js';
 import { connectDatabase } from './db.js';
 import { logger, httpLogger, errorLogger } from './utils/logger.js';
 import { openApiSpec } from './utils/openapi.js';
 import cors from 'cors';
-// Mount auth routes
 import authRoutes from './routes/auth.js';
 
 // Load environment variables
@@ -22,23 +26,20 @@ app.use(cors());
 app.use(express.json());
 app.use('/auth', authRoutes);
 
-// Routes
+// Mount new API routes (per ROUTES_WIRING.md)
+app.use('/applications', applicationsRoutes);
+app.post('/jd/parse', parseJD);
+app.post('/tailor', tailorBullets);
+app.post('/resume/download', downloadResume);
 
-// Redirect root to Swagger UI
+// Existing routes
 app.get('/', (req, res) => res.redirect('/api/docs'));
 app.use('/api/resumes', resumeRoutes);
-// Only mount POST /api/resumes/parse for contract, not full router
 app.post('/api/resumes/parse', parseResumeHandler, postResumeHandler);
-
-// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
-
-// Swagger documentation (using zod-openapi spec)
-// Serve OpenAPI spec as JSON
 app.get('/api/docs/openapi.json', (req, res) => res.json(openApiSpec));
-// Configure Swagger UI to use the spec URL
 app.use(
   '/api/docs',
   swaggerUi.serve,

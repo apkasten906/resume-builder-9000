@@ -19,6 +19,7 @@
     ]
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
     "@rb9k/core": "*",
     "@tailwindcss/typography": "^0.5.16",
     "class-variance-authority": "^0.7.1",
@@ -30,9 +31,8 @@
     "tailwindcss": "^4.1.13"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
-    "playwright": "^1.55.0",
     "@next/eslint-plugin-next": "^15.5.3",
+    "@playwright/test": "^1.55.0",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
     "@types/node": "24.3.1",
@@ -46,6 +46,7 @@
     "eslint": "^8.57.0",
     "jsdom": "^26.1.0",
     "next": "^14.2.32",
+    "playwright": "^1.55.0",
     "typescript": "5.9.2",
     "vitest": "^3.2.4"
   },
