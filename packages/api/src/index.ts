@@ -6,6 +6,8 @@ import { connectDatabase } from './db.js';
 import { logger, httpLogger, errorLogger } from './utils/logger.js';
 import { openApiSpec } from './utils/openapi.js';
 import cors from 'cors';
+// Mount auth routes
+import authRoutes from './routes/auth.js';
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +20,7 @@ const port = process.env.PORT || 4000;
 app.use(httpLogger); // HTTP request logging
 app.use(cors());
 app.use(express.json());
+app.use('/auth', authRoutes);
 
 // Routes
 
