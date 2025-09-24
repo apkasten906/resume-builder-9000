@@ -10,10 +10,15 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, helperText, error, ...props }, ref) => {
-    const id = React.useId();
+    const generatedId = React.useId();
+    const id = props.id || generatedId;
     return (
-      <label className="block">
-        {label && <span className="block text-sm mb-1">{label}</span>}
+      <div className="block">
+        {label ? (
+          <label htmlFor={id} className="block text-sm mb-1">
+            {label}
+          </label>
+        ) : null}
         <textarea
           id={id}
           className={cn(
@@ -30,7 +35,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             {error}
           </div>
         )}
-      </label>
+      </div>
     );
   }
 );

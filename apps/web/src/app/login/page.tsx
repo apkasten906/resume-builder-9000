@@ -1,6 +1,8 @@
 // apps/web/src/app/login/page.tsx
 'use client';
+
 import { useState, ReactElement } from 'react';
+import { Input } from '@/components/ui/Input';
 
 export default function LoginPage(): ReactElement {
   const [email, setEmail] = useState('user@example.com');
@@ -27,23 +29,22 @@ export default function LoginPage(): ReactElement {
     <div className="max-w-md mx-auto p-8">
       <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
       <form onSubmit={onSubmit} className="space-y-4">
-        <label className="block">
-          <span className="text-sm">Email</span>
-          <input
-            className="w-full border rounded p-2"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-          />
-        </label>
-        <label className="block">
-          <span className="text-sm">Password</span>
-          <input
-            type="password"
-            className="w-full border rounded p-2"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          />
-        </label>
+        <Input
+          label="Email"
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          autoComplete="username"
+          required
+        />
+        <Input
+          label="Password"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          autoComplete="current-password"
+          required
+        />
         {error && (
           <div className="text-red-600" role="alert">
             {error}
