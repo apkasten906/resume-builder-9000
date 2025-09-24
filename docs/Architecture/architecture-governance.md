@@ -98,4 +98,3 @@ Architecture governance ensures that the architectural integrity of the `resume-
 
 - **Type Safety & API Contracts:** see `typing-and-api-contracts.md` for explicit return types, strict compiler settings, and lint enforcement.
 - **Naming & Ubiquitous Language (DDD):** see `naming-and-ubiquitous-language.md` for domain-driven naming, allowed acronyms, and folder/file patterns.
-

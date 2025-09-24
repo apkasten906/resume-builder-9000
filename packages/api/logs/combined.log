@@ -469,3 +469,33 @@
 {"level":"http","message":"::1 POST /auth/login 200 11 - 1.495 ms","timestamp":"2025-09-23 12:32:11"}
 {"level":"http","message":"::1 GET /applications 401 24 - 0.318 ms","timestamp":"2025-09-23 12:32:13"}
 {"level":"http","message":"::1 GET /applications 401 24 - 0.203 ms","timestamp":"2025-09-23 12:32:13"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-24 13:32:46"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-24 13:32:46"}
+{"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-24 13:32:46"}
+{"level":"http","message":"::1 GET /applications 401 24 - 7.368 ms","timestamp":"2025-09-24 13:36:25"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.707 ms","timestamp":"2025-09-24 13:36:25"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 31.847 ms","timestamp":"2025-09-24 13:36:25"}
+{"level":"http","message":"::1 POST /applications 401 24 - 1.011 ms","timestamp":"2025-09-24 13:36:25"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.262 ms","timestamp":"2025-09-24 13:36:26"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.257 ms","timestamp":"2025-09-24 13:36:26"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.577 ms","timestamp":"2025-09-24 13:36:26"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 3.089 ms","timestamp":"2025-09-24 13:36:27"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.543 ms","timestamp":"2025-09-24 13:36:27"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.454 ms","timestamp":"2025-09-24 13:36:33"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.258 ms","timestamp":"2025-09-24 13:36:38"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.212 ms","timestamp":"2025-09-24 13:36:38"}
+{"level":"http","message":"::1 POST /applications 401 24 - 0.529 ms","timestamp":"2025-09-24 13:36:39"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.315 ms","timestamp":"2025-09-24 13:36:43"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.160 ms","timestamp":"2025-09-24 13:36:43"}
+{"level":"http","message":"::1 POST /applications 401 24 - 3.758 ms","timestamp":"2025-09-24 13:36:45"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.344 ms","timestamp":"2025-09-24 13:36:46"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.921 ms","timestamp":"2025-09-24 13:36:48"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-24 13:43:36"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-24 13:43:36"}
+{"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-24 13:43:36"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-24 13:46:06"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-24 13:46:06"}
+{"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-24 13:46:06"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-24 13:48:03"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-24 13:48:03"}
+{"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-24 13:48:03"}

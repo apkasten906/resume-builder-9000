@@ -1,14 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Configuration for Playwright tests
- *
- * When running in Docker:
- * - baseURL points to the frontend container
- *
- * When running locally:
- * - baseURL points to localhost:3000
- */
 export default defineConfig({
   testDir: './',
   timeout: 30000,
@@ -22,13 +13,6 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-  },
-  webServer: {
-    command:
-      'concurrently "npm run dev --workspace=packages/api" "npm run dev --workspace=apps/web"',
-    url: 'http://localhost:3000',
-    timeout: 120 * 1000,
-    reuseExistingServer: true,
   },
   projects: [
     {
