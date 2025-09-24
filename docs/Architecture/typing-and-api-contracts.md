@@ -3,12 +3,14 @@
 We use **explicit, end-to-end typing** across the monorepo. All exported functions **must** declare explicit return types.
 
 ## Requirements
+
 - **Explicit return types** for all exported functions, public class methods, route handlers, and React components.
 - Prefer **type-only imports/exports** for domain types: `import type { Application } from '@rb9k/core'`.
 - Validate edge I/O with **zod** (or equivalent) and derive types with `z.infer`.
 - Domain shapes come from `@rb9k/core` (no ad-hoc shapes near controllers/UI).
 
 ## Examples
+
 ```ts
 // API controller (Express)
 import type { Request, Response } from 'express';
@@ -54,7 +56,9 @@ export default function ApplicationsPage(): JSX.Element {
 ```
 
 ## Compiler settings
+
 `tsconfig` (workspace-inherited):
+
 - `"strict": true`
 - `"noImplicitAny": true`
 - `"noImplicitReturns": true`
@@ -62,6 +66,7 @@ export default function ApplicationsPage(): JSX.Element {
 - `"noUncheckedIndexedAccess": true`
 
 ## Lint rules
+
 - `@typescript-eslint/explicit-function-return-type`: **error**
 - `@typescript-eslint/explicit-module-boundary-types`: **error**
 - `@typescript-eslint/consistent-type-imports`: **error**
