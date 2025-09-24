@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test-setup';
 const WEB_BASE = process.env['WEB_BASE'] || 'http://localhost:3000';
 
 test('Applications add and list', async ({ page }) => {

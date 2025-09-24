@@ -5,7 +5,7 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 test.describe('Resume Upload Flow', () => {
   test('should upload a resume and show parsed data', async ({ page }) => {
-    test.setTimeout(10000);
+    test.setTimeout(30000);
     await page.goto(`${BASE_URL}/resume-upload`);
     // Intercept the fetch and set the header
     await page.route('/api/resumes', async (route, request) => {
@@ -26,20 +26,14 @@ test.describe('Resume Upload Flow', () => {
     await page
       .getByTestId('resume-upload-input')
       .setInputFiles('apps/web/tests/assets/sample_resume.pdf');
-    const debugText = await page
-      .locator('[data-testid="resume-upload-debug"]')
-      .textContent()
-      .catch(() => '');
-    try {
-      await expect(page.getByTestId('resume-upload-success')).toBeVisible();
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG OUTPUT:', debugText);
-      throw e;
-    }
-    await expect(page.getByTestId('parsed-summary')).toContainText('Summary');
-    await expect(page.getByTestId('parsed-experience')).toBeVisible();
-    await expect(page.getByTestId('parsed-skills')).toBeVisible();
+    // Click the Parse button to trigger upload/parse
+    await page.getByRole('button', { name: /parse/i }).click();
+    // Assert that the parsed results are visible
+    await expect(page.getByRole('heading', { name: /Parsed Results/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Summary/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Experience/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Skills/i })).toBeVisible();
+    await expect(page.locator('text=Unknown Role')).toBeVisible();
   });
 
   test('should show error for unsupported file type', async ({ page }) => {

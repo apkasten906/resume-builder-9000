@@ -508,3 +508,70 @@
 {"level":"info","message":"Opening new database connection","timestamp":"2025-09-24 14:25:11"}
 {"level":"info","message":"Database initialized successfully","timestamp":"2025-09-24 14:25:11"}
 {"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-24 14:25:11"}
+{"level":"http","message":"::1 GET /applications 401 24 - 37.063 ms","timestamp":"2025-09-24 14:40:51"}
+{"level":"http","message":"::1 GET /applications 401 24 - 0.688 ms","timestamp":"2025-09-24 14:40:51"}
+{"level":"http","message":"::1 POST /auth/login 200 11 - 135.180 ms","timestamp":"2025-09-24 15:00:23"}
+{"level":"http","message":"::1 GET / 302 38 - 31.407 ms","timestamp":"2025-09-24 15:10:48"}
+{"level":"http","message":"::1 GET /api/docs 301 158 - 11.156 ms","timestamp":"2025-09-24 15:10:48"}
+{"level":"http","message":"::1 GET /api/docs/ 200 3106 - 9.119 ms","timestamp":"2025-09-24 15:10:48"}
+{"level":"http","message":"::1 GET /api/docs/swagger-ui-init.js 200 1467 - 1.100 ms","timestamp":"2025-09-24 15:10:48"}
+{"level":"http","message":"::1 GET /api/docs/swagger-ui.css 200 155212 - 22.201 ms","timestamp":"2025-09-24 15:10:48"}
+{"level":"http","message":"::1 GET /api/docs/swagger-ui-standalone-preset.js 200 250335 - 17.133 ms","timestamp":"2025-09-24 15:10:48"}
+{"level":"http","message":"::1 GET /api/docs/swagger-ui-bundle.js 200 1507218 - 13.242 ms","timestamp":"2025-09-24 15:10:48"}
+{"level":"http","message":"::1 GET /api/docs/openapi.json 200 7390 - 2.761 ms","timestamp":"2025-09-24 15:10:48"}
+{"level":"info","message":"Opening new database connection","timestamp":"2025-09-24 16:04:55"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-09-24 16:04:55"}
+{"level":"info","message":"API server running on http://localhost:4000","timestamp":"2025-09-24 16:04:55"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 16.969 ms","timestamp":"2025-09-24 16:06:26"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 1.462 ms","timestamp":"2025-09-24 16:06:28"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.641 ms","timestamp":"2025-09-24 16:06:28"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.363 ms","timestamp":"2025-09-24 16:06:33"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.439 ms","timestamp":"2025-09-24 16:06:38"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.382 ms","timestamp":"2025-09-24 16:06:39"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.518 ms","timestamp":"2025-09-24 16:08:28"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 3.348 ms","timestamp":"2025-09-24 16:08:28"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.894 ms","timestamp":"2025-09-24 16:08:33"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.994 ms","timestamp":"2025-09-24 16:08:44"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 1.733 ms","timestamp":"2025-09-24 16:12:02"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.320 ms","timestamp":"2025-09-24 16:12:02"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 1.599 ms","timestamp":"2025-09-24 16:12:08"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 6.414 ms","timestamp":"2025-09-24 16:12:12"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.579 ms","timestamp":"2025-09-24 16:13:38"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 2.621 ms","timestamp":"2025-09-24 16:13:41"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 2.100 ms","timestamp":"2025-09-24 16:13:41"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.499 ms","timestamp":"2025-09-24 16:13:43"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.575 ms","timestamp":"2025-09-24 16:15:17"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.812 ms","timestamp":"2025-09-24 16:15:18"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.645 ms","timestamp":"2025-09-24 16:15:23"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.529 ms","timestamp":"2025-09-24 16:15:25"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.301 ms","timestamp":"2025-09-24 16:17:13"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.557 ms","timestamp":"2025-09-24 16:17:13"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.645 ms","timestamp":"2025-09-24 16:17:17"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.535 ms","timestamp":"2025-09-24 16:17:21"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 1.200 ms","timestamp":"2025-09-24 16:18:52"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.446 ms","timestamp":"2025-09-24 16:18:52"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 1.019 ms","timestamp":"2025-09-24 16:18:54"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.591 ms","timestamp":"2025-09-24 16:19:02"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.767 ms","timestamp":"2025-09-24 16:21:27"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 1.057 ms","timestamp":"2025-09-24 16:21:27"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 1.541 ms","timestamp":"2025-09-24 16:21:31"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 3.068 ms","timestamp":"2025-09-24 16:21:36"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 1.013 ms","timestamp":"2025-09-24 16:24:28"}
+{"level":"http","message":"::1 POST /jd/parse 200 307 - 1.407 ms","timestamp":"2025-09-24 16:28:53"}
+{"level":"http","message":"::1 POST /jd/parse 200 307 - 0.688 ms","timestamp":"2025-09-24 16:29:21"}
+{"level":"http","message":"::1 POST /jd/parse 200 307 - 0.541 ms","timestamp":"2025-09-24 16:29:51"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 2.542 ms","timestamp":"2025-09-24 16:30:26"}
+{"level":"http","message":"::1 POST /jd/parse 200 307 - 1.006 ms","timestamp":"2025-09-24 16:30:26"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.341 ms","timestamp":"2025-09-24 16:30:27"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.608 ms","timestamp":"2025-09-24 16:30:38"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.480 ms","timestamp":"2025-09-24 16:30:39"}
+{"level":"http","message":"::1 POST /jd/parse 200 307 - 5.482 ms","timestamp":"2025-09-24 16:30:39"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 2.901 ms","timestamp":"2025-09-24 16:31:46"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 0.315 ms","timestamp":"2025-09-24 16:31:47"}
+{"level":"http","message":"::1 POST /jd/parse 200 307 - 0.576 ms","timestamp":"2025-09-24 16:31:47"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 0.781 ms","timestamp":"2025-09-24 16:31:51"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.428 ms","timestamp":"2025-09-24 16:31:55"}
+{"level":"http","message":"::1 POST /jd/parse 200 307 - 1.038 ms","timestamp":"2025-09-24 16:31:59"}
+{"level":"http","message":"::1 POST /tailor 200 317 - 1.531 ms","timestamp":"2025-09-24 16:33:17"}
+{"level":"http","message":"::1 POST /jd/parse 200 204 - 2.030 ms","timestamp":"2025-09-24 16:33:17"}
+{"level":"http","message":"::1 POST /jd/parse 200 307 - 4.534 ms","timestamp":"2025-09-24 16:33:18"}

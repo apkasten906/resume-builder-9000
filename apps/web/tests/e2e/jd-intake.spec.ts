@@ -11,5 +11,7 @@ test('JD Intake parses text', async ({ page }) => {
   await page.getByRole('button', { name: 'Parse' }).click();
   await expect(page.locator('text=Parsed JD')).toBeVisible();
   await expect(page.locator('text=Senior Fullstack Engineer')).toBeVisible();
-  await expect(page.locator('text=ExampleCorp')).toBeVisible();
+  // Target the parsed company name in the correct section (font-semibold class in Company section)
+  const companySection = page.locator('div:has-text("Company") + div.font-semibold');
+  await expect(companySection).toHaveText('ExampleCorp');
 });
