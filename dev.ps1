@@ -68,6 +68,19 @@ if (-not $ApiOnly -and -not $WebOnly) {
   }
 }
 
+
+# Kill any existing dev servers on ports 3000 and 4000 (API and Web)
+Write-Host "Ensuring no stale dev servers are running..."
+Get-Process | Where-Object { $_.ProcessName -match 'node' } | ForEach-Object {
+  try {
+    $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine
+    if ($cmdLine -match 'npm run dev' -and ($cmdLine -match 'packages\\api' -or $cmdLine -match 'apps\\web')) {
+      Write-Host "Killing stale dev server process: $($_.Id) $cmdLine"
+      Stop-Process -Id $_.Id -Force
+    }
+  } catch {}
+}
+
 # Start development servers
 if (-not $WebOnly) {
   Start-Process -NoNewWindow powershell -ArgumentList "-Command cd $PSScriptRoot\packages\api; npm run dev"
