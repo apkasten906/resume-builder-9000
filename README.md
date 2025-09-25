@@ -112,6 +112,10 @@ npm run test:all
 npm run test:all
 ```
 
+### Testing Architecture
+
+For a detailed explanation of our testing strategies, boundaries, and tools, see the [Testing Architecture documentation](./docs/Architecture/testing-architecture.md).
+
 ## Contributing
 
 Feel free to submit issues and pull requests. We welcome contributions from the community!
