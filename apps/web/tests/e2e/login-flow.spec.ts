@@ -9,6 +9,6 @@ test.describe('Login flow', () => {
     await page.getByLabel('Password').fill('ValidPassword1!');
     await page.getByRole('button', { name: 'Sign in' }).click();
     await page.waitForURL(`${WEB_BASE}/applications`);
-    await expect(page.locator('h1')).toHaveText(/Applications/i);
+    await expect(page.locator('h3')).toHaveText(/Applications/i);
   });
 });

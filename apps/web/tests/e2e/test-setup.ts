@@ -4,7 +4,7 @@ const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 base.beforeEach(async ({ page }) => {
   await page.goto(`${WEB_BASE}/login`);
   // Debug: take screenshot and log HTML before filling fields
-  await page.screenshot({ path: 'login-page-debug.png', fullPage: true });
+  await page.screenshot({ path: '../../test-results/login-page-debug.png', fullPage: true });
   const html = await page.content();
   // eslint-disable-next-line no-console
   console.log('LOGIN PAGE HTML:', html);
