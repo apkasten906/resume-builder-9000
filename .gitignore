@@ -16,6 +16,9 @@ yarn-error.log*
 apps/web/.next/
 apps/web/test-results/
 test-results/
+**/test-results/
+playwright-report/
+**/playwright-report/
 apps/web/out/
 apps/web/.vercel/
 packages/api/logs/combined.log
