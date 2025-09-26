@@ -13,6 +13,7 @@ export default defineConfig({
   testDir: './',
   timeout: 30000,
   retries: 1,
+  outputDir: '../../test-results',
   use: {
     baseURL:
       process.env.BASE_URL ||

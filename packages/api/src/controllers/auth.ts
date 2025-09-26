@@ -6,7 +6,8 @@ export async function login(req: Request, res: Response): Promise<Response> {
   const result = await authService.login(email, password);
   if (!result) return res.status(401).json({ error: 'Invalid credentials' });
   res.cookie('session', result.token, { httpOnly: true, sameSite: 'lax', secure: false });
-  return res.json({ ok: true });
+  // Include token in response body for Next.js API route
+  return res.json({ ok: true, token: result.token });
 }
 
 export async function me(req: Request, res: Response): Promise<Response> {
