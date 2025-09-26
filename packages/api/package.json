@@ -11,6 +11,9 @@
     "start": "node dist/index.js",
     "lint": "eslint \"src/**/*.{js,cjs,mjs,ts,tsx}\" --config ../../.eslintrc.cjs",
     "test": "vitest run --config ./vitest.config.mjs",
+    "test:verbose": "cross-env TEST_VERBOSE_LOGGING=true vitest run --config ./vitest.config.mjs",
+    "test:file": "vitest run --config ./vitest.config.mjs",
+    "test:file:verbose": "cross-env TEST_VERBOSE_LOGGING=true vitest run --config ./vitest.config.mjs",
     "test:watch": "vitest --config ./vitest.config.mjs",
     "update-deps": "npx npm-check-updates -u && npm install"
   },
@@ -42,6 +45,7 @@
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "globals": "^13.24.0",
     "supertest": "^6.3.4",

@@ -1,6 +1,12 @@
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect, vi, beforeAll } from 'vitest';
 import supertest from 'supertest';
 import { default as app } from '../src/index.js';
+import { disableTestLogging, enableTestLogging } from './utils/test-logger.js';
+
+// Disable verbose logging for all tests by default
+beforeAll(() => {
+  disableTestLogging();
+});
 
 // Mock the database connection
 vi.mock('../src/db', () => ({
@@ -39,6 +45,8 @@ vi.mock('../src/utils/logger', () => ({
   },
   httpLogger: vi.fn((req, res, next) => next()),
   errorLogger: vi.fn((err, req, res, next) => next()),
+  enableVerboseLogging: vi.fn(),
+  disableVerboseLogging: vi.fn(),
 }));
 
 describe('API Routes', () => {
@@ -48,6 +56,18 @@ describe('API Routes', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('status', 'ok');
     expect(response.body).toHaveProperty('timestamp');
+  });
+
+  // Example of a test with verbose logging enabled
+  test('GET /api/health with verbose logging', async () => {
+    // Enable verbose logging for just this test
+    enableTestLogging();
+    try {
+      const response = await supertest(app).get('/api/health');
+      expect(response.status).toBe(200);
+    } finally {
+      disableTestLogging();
+    }
   });
 
   // Test getting a resume by ID
