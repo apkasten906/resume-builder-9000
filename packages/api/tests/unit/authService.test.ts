@@ -1,5 +1,28 @@
-import { describe, it, expect } from 'vitest';
-import { authService } from '../../src/services/authService';
+import { describe, it, expect, vi } from 'vitest';
+import { authService } from '../../src/services/authService.js';
+
+// Mock better-sqlite3 and bcryptjs
+vi.mock('better-sqlite3', () => {
+  return {
+    default: vi.fn(() => ({
+      prepare: vi.fn(() => ({
+        get: (email: string) => {
+          if (email === 'user@example.com') {
+            return { id: 1, email, password_hash: 'hashed' };
+          }
+          return undefined;
+        },
+      })),
+      close: vi.fn(),
+    })),
+  };
+});
+vi.mock('bcryptjs', () => ({
+  __esModule: true,
+  default: {
+    compare: vi.fn((pw, hash) => pw === 'ValidPassword1!' && hash === 'hashed'),
+  },
+}));
 
 describe('authService', () => {
   it('returns token for valid credentials', async () => {
