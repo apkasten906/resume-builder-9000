@@ -3,6 +3,10 @@ import morgan from 'morgan';
 import { Request, Response } from 'express';
 import { TransformableInfo } from 'logform';
 
+// Flag to control verbose logging during tests
+let isVerboseLoggingEnabled = process.env.TEST_VERBOSE_LOGGING === 'true';
+const isTestEnvironment = process.env.NODE_ENV === 'test';
+
 // Define log levels
 const levels = {
   error: 0,
@@ -25,7 +29,12 @@ const colors = {
 winston.addColors(colors);
 
 // Determine log level based on environment
-const level = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+let level = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+
+// In test environment, silence logging unless verbose mode is enabled
+if (isTestEnvironment && !isVerboseLoggingEnabled) {
+  level = 'error'; // Only show errors by default in tests
+}
 
 // Create format for console output
 const consoleFormat = winston.format.combine(
@@ -76,20 +85,54 @@ const httpLogger = morgan(
     // Log to winston
     stream: {
       write: (message: string) => {
-        logger.http(message.trim());
+        // Skip HTTP logging in test environment unless verbose mode is enabled
+        if (!isTestEnvironment || isVerboseLoggingEnabled) {
+          logger.http(message.trim());
+        }
       },
     },
+    // Skip logging completely in test environment unless verbose mode is enabled
+    skip: () => isTestEnvironment && !isVerboseLoggingEnabled,
   }
 );
 
 // Create a custom error handler middleware
 const errorLogger = (err: Error, req: Request, res: Response, next: () => void): void => {
-  logger.error(`Error occurred: ${err.message}`, {
-    url: req.originalUrl,
-    method: req.method,
-    stack: err.stack,
-  });
+  // In test environment, only log errors if verbose mode is enabled
+  if (!isTestEnvironment || isVerboseLoggingEnabled) {
+    logger.error(`Error occurred: ${err.message}`, {
+      url: req.originalUrl,
+      method: req.method,
+      stack: err.stack,
+    });
+  }
   next();
 };
 
-export { logger, httpLogger, errorLogger };
+/**
+ * Enables verbose logging during tests
+ */
+function enableVerboseLogging(): void {
+  isVerboseLoggingEnabled = true;
+  if (isTestEnvironment) {
+    // Update transports log level for existing logger
+    logger.transports.forEach(transport => {
+      transport.level = 'debug';
+    });
+  }
+}
+
+/**
+ * Disables verbose logging during tests
+ */
+function disableVerboseLogging(): void {
+  isVerboseLoggingEnabled = false;
+  if (isTestEnvironment) {
+    // Update transports log level for existing logger
+    logger.transports.forEach(transport => {
+      transport.level = 'error';
+    });
+  }
+}
+
+export { logger, httpLogger, errorLogger, enableVerboseLogging, disableVerboseLogging };
