@@ -11,6 +11,7 @@
     "lint": "eslint src --config ../../.eslintrc.cjs",
     "test": "vitest run --config ./vitest.config.mjs",
     "test:watch": "vitest --config ./vitest.config.mjs",
+    "test:coverage": "vitest run --coverage --config ./vitest.config.mjs",
     "update-deps": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {

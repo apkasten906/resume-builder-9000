@@ -8,5 +8,16 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov', 'json'],
+      exclude: ['**/node_modules/**', '**/tests/**', '**/dist/**'],
+      thresholds: {
+        statements: 85,
+        branches: 80,
+        functions: 85,
+        lines: 85,
+      },
+    },
   },
 });

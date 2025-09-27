@@ -13,8 +13,15 @@ export default defineConfig({
     exclude: ['tests/e2e/**/*.ts'],
     setupFiles: ['./tests/vitest.setup.ts'],
     coverage: {
-      provider: 'v8', // or 'istanbul'
-      reporter: ['text', 'html'],
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov', 'json'],
+      exclude: ['**/node_modules/**', '**/tests/e2e/**', '**/dist/**', '**/.next/**'],
+      thresholds: {
+        statements: 75,
+        branches: 70,
+        functions: 75,
+        lines: 75,
+      },
     },
     deps: {
       optimizer: {
