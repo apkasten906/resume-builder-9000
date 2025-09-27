@@ -1,4 +1,4 @@
-﻿// apps/web/tests/e2e/standalone-login.spec.ts
+// apps/web/tests/e2e/standalone-login.spec.ts
 import { test } from '@playwright/test';
 
 // Force port 3000 since we know that's where the server is running
@@ -9,7 +9,7 @@ const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000'; // Note: using
 test('standalone login test', async ({ page }) => {
   // Go to the login page
   console.log('Navigating to login page...');
-  await page.goto(${WEB_BASE}/login);
+  await page.goto(`${WEB_BASE}/login`);
 
   // Take a screenshot to debug
   await page.screenshot({ path: '../../test-results/standalone-login-before.png', fullPage: true });
@@ -20,7 +20,7 @@ test('standalone login test', async ({ page }) => {
   console.log('Page HTML excerpt:', htmlContent.substring(0, 500) + '...');
 
   // Check if we're getting a 404 page
-  const is404 = (await page.locator('text=\"404\"').count()) > 0;
+  const is404 = (await page.locator('text="404"').count()) > 0;
   if (is404) {
     console.error('ERROR: Got a 404 page instead of login page!');
     return;

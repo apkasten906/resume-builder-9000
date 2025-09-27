@@ -13,6 +13,7 @@
     "dev:ci": "concurrently \"npm run dev --workspace=packages/api\" \"npm run dev --workspace=apps/web\"",
     "test": "npm --workspaces run test",
     "test:watch": "npm --workspaces run test:watch",
+    "test:coverage": "npm --workspaces run test:coverage",
     "vitest": "vitest --workspace",
     "vitest:ui": "vitest --workspace --ui",
     "lint": "npm --workspaces run lint",
