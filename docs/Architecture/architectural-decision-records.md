@@ -12,6 +12,7 @@ This index lists all ADRs for the Resume Builder 9000 project. Each ADR is store
 - [ADR 4: Next.js and Node.js Versions](../adr/0004-nextjs-node-versions.md)
 - [ADR 5: Enforce Strict TypeScript Types and Type Safety](../adr/0005-strict-typescript.md)
 - [ADR 6: ESLint Custom Rule Plugin in Monorepo](../adr/0006-eslint-monorepo-plugin.md)
+- [ADR 7: TypeScript Testing Architecture](../adr/0007-typescript-testing.md)
 
 ## Future ADRs
 
