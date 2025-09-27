@@ -5,7 +5,7 @@ import { applicationsRepo, type NewApplication } from '../../src/repositories/ap
 vi.mock('../../src/db.js', () => {
   return {
     connectDatabase: vi.fn().mockImplementation(() => ({
-      prepare: vi.fn().mockImplementation((query) => {
+      prepare: vi.fn().mockImplementation(query => {
         // Different mock behaviors for different queries
         if (query.includes('INSERT INTO applications')) {
           return {
@@ -55,7 +55,7 @@ vi.mock('../../src/db.js', () => {
           all: vi.fn(),
         };
       }),
-      transaction: vi.fn().mockImplementation((fn) => fn),
+      transaction: vi.fn().mockImplementation(fn => fn),
     })),
   };
 });
@@ -135,17 +135,17 @@ describe('Applications Repository', () => {
 
       // When mocking, we need to provide the expected mock behavior
       // In the real implementation, stage would default to 'Prospect'
-      const result = { 
-        ...minimalApp, 
-        id: 'test-uuid', 
-        stage: 'Prospect' as const, 
-        lastUpdated: mockDate.toISOString(), 
-        createdAt: mockDate.toISOString() 
+      const result = {
+        ...minimalApp,
+        id: 'test-uuid',
+        stage: 'Prospect' as const,
+        lastUpdated: mockDate.toISOString(),
+        createdAt: mockDate.toISOString(),
       };
-      
+
       // Mock the return of the create method
       vi.spyOn(applicationsRepo, 'create').mockReturnValue(result);
-      
+
       const actualResult = applicationsRepo.create(minimalApp);
 
       // Verify defaults are applied

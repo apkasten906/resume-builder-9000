@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 describe('Applications Repository Integration Tests', () => {
   // Define db without explicit type to avoid TypeScript issues with better-sqlite3
   let db;
-  
+
   // Set up environment variables to use in-memory database for all tests
   beforeEach(() => {
     // Use in-memory database for speed and isolation
@@ -118,7 +118,7 @@ describe('Applications Repository Integration Tests', () => {
       const rows = db
         .prepare('SELECT * FROM applications ORDER BY datetime(last_updated) DESC')
         .all() as Record<string, unknown>[];
-      return rows.map((r) => ({
+      return rows.map(r => ({
         id: r.id,
         company: r.company,
         role: r.role,
@@ -139,7 +139,9 @@ describe('Applications Repository Integration Tests', () => {
 
     updateStage(appId: string, toStage: string, note?: string) {
       const tx = db.transaction(() => {
-        const fromStageRow = db.prepare('SELECT stage FROM applications WHERE id = ?').get(appId) as { stage: string } | undefined;
+        const fromStageRow = db
+          .prepare('SELECT stage FROM applications WHERE id = ?')
+          .get(appId) as { stage: string } | undefined;
         const fromStage = fromStageRow?.stage ?? null;
         db.prepare('UPDATE applications SET stage=?, last_updated=? WHERE id=?').run(
           toStage,
@@ -153,16 +155,18 @@ describe('Applications Repository Integration Tests', () => {
       tx();
     },
 
-    addAttachment(
-      appId: string,
-      type: string,
-      filename?: string,
-      mimeType?: string,
-      url?: string
-    ) {
+    addAttachment(appId: string, type: string, filename?: string, mimeType?: string, url?: string) {
       db.prepare(
         'INSERT INTO attachments (id, application_id, type, filename, mime_type, url, created_at) VALUES (?,?,?,?,?,?,?)'
-      ).run(randomUUID(), appId, type, filename ?? null, mimeType ?? null, url ?? null, new Date().toISOString());
+      ).run(
+        randomUUID(),
+        appId,
+        type,
+        filename ?? null,
+        mimeType ?? null,
+        url ?? null,
+        new Date().toISOString()
+      );
     },
   };
 
@@ -192,24 +196,24 @@ describe('Applications Repository Integration Tests', () => {
 
       // List and verify
       const apps = applicationsRepoImpl.list();
-      
+
       // We should have 2 applications
       expect(apps).toHaveLength(2);
-      
+
       // We know we have two applications
       expect(apps).toHaveLength(2);
-      
+
       // Instead of relying on order, let's find each application by company name
       const googleApp = apps.find(app => app.company === 'Google');
       const msApp = apps.find(app => app.company === 'Microsoft');
-      
+
       // Verify Google application
       expect(googleApp).toBeDefined();
       expect(googleApp!.role).toBe('Software Engineer');
       expect(googleApp!.location).toBe('Mountain View, CA');
       expect(googleApp!.stage).toBe('Applied');
       expect(googleApp!.salary?.base).toBe(150000);
-      
+
       // Verify Microsoft application
       expect(msApp).toBeDefined();
       expect(msApp!.role).toBe('Frontend Developer');
@@ -231,11 +235,15 @@ describe('Applications Repository Integration Tests', () => {
       applicationsRepoImpl.updateStage(app.id, 'Interview', 'Scheduled for next week');
 
       // Verify the stage was updated
-      const updatedApp = db.prepare('SELECT * FROM applications WHERE id = ?').get(app.id) as Record<string, unknown>;
+      const updatedApp = db
+        .prepare('SELECT * FROM applications WHERE id = ?')
+        .get(app.id) as Record<string, unknown>;
       expect(updatedApp.stage).toBe('Interview');
 
       // Verify the history was recorded
-      const history = db.prepare('SELECT * FROM application_status_history WHERE application_id = ?').all(app.id) as Record<string, unknown>[];
+      const history = db
+        .prepare('SELECT * FROM application_status_history WHERE application_id = ?')
+        .all(app.id) as Record<string, unknown>[];
       expect(history).toHaveLength(1);
       expect(history[0].from_stage).toBe('Applied');
       expect(history[0].to_stage).toBe('Interview');
@@ -261,7 +269,9 @@ describe('Applications Repository Integration Tests', () => {
       );
 
       // Verify the attachment was added
-      const attachments = db.prepare('SELECT * FROM attachments WHERE application_id = ?').all(app.id) as Record<string, unknown>[];
+      const attachments = db
+        .prepare('SELECT * FROM attachments WHERE application_id = ?')
+        .all(app.id) as Record<string, unknown>[];
       expect(attachments).toHaveLength(1);
       expect(attachments[0].type).toBe('resume');
       expect(attachments[0].filename).toBe('resume.pdf');
@@ -282,9 +292,11 @@ describe('Applications Repository Integration Tests', () => {
       applicationsRepoImpl.addAttachment(app.id, 'other', 'portfolio.pdf');
 
       // Verify all attachments were added
-      const attachments = db.prepare('SELECT * FROM attachments WHERE application_id = ?').all(app.id) as Record<string, unknown>[];
+      const attachments = db
+        .prepare('SELECT * FROM attachments WHERE application_id = ?')
+        .all(app.id) as Record<string, unknown>[];
       expect(attachments).toHaveLength(3);
-      
+
       // Check we have all three types
       const types = attachments.map(a => a.type);
       expect(types).toContain('resume');

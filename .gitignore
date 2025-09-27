@@ -57,3 +57,7 @@ coverage/
 # Misc log files
 *.log
 packages/api/logs/combined.log
+
+# Database files
+resume.db
+*.db-journal

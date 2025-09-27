@@ -9,11 +9,11 @@ function createMockResumeData(): ResumeData {
   return {
     personalInfo: {
       fullName: 'Test User',
-      email: 'test@example.com'
+      email: 'test@example.com',
     },
     summary: 'Test summary',
     experience: [],
-    education: []
+    education: [],
   };
 }
 
@@ -21,7 +21,7 @@ function createMockJobDetails(): JobDetails {
   return {
     title: 'Test Job',
     company: 'Test Company',
-    description: 'Test job description'
+    description: 'Test job description',
   };
 }
 
@@ -33,7 +33,9 @@ interface MockDatabase {
 
 // Helper function for creating error-throwing function to avoid deep nesting
 function createErrorThrowingFn(errorMessage: string) {
-  return () => { throw new Error(errorMessage); };
+  return () => {
+    throw new Error(errorMessage);
+  };
 }
 vi.mock('better-sqlite3', () => {
   return {
@@ -250,7 +252,7 @@ describe('Resume Database Operations', () => {
         }),
         exec: vi.fn(),
       };
-      
+
       // Store original mock
       const originalMock = vi.importActual('better-sqlite3');
 
@@ -258,18 +260,18 @@ describe('Resume Database Operations', () => {
       const createErrorMock = () => ({
         default: vi.fn().mockReturnValue(mockDb),
       });
-      
+
       // Apply the mock
       vi.doMock('better-sqlite3', createErrorMock);
-      
+
       // Reset modules and re-import
       vi.resetModules();
       const dbModule = await import('../../src/db.js');
       const { getResumeFromDb: getResume } = dbModule;
-      
+
       // Expect function to throw error
       expect(() => getResume('test-resume-id-1')).toThrow('Database error');
-      
+
       // Clean up
       vi.doMock('better-sqlite3', () => originalMock);
     });
@@ -298,42 +300,42 @@ describe('Resume Database Operations', () => {
         jobDetails: createMockJobDetails(),
         createdAt: mockDate.toISOString(),
       };
-      
+
       // Create a mock run function that throws an error
       const mockRun = vi.fn().mockImplementation(() => {
         throw new Error('Insert error');
       });
-      
+
       // Create a mock prepare function that returns an object with the mock run function
       const mockPrepare = vi.fn().mockReturnValue({
         run: mockRun,
       });
-      
+
       // Create the mock database
       const mockDb: MockDatabase = {
         prepare: mockPrepare,
         exec: vi.fn(),
       };
-      
+
       // Store original mock
       const originalMock = vi.importActual('better-sqlite3');
-      
+
       // Create a function to return our mock
       const createErrorMock = () => ({
         default: vi.fn().mockReturnValue(mockDb),
       });
-      
+
       // Apply the mock
       vi.doMock('better-sqlite3', createErrorMock);
-      
+
       // Reset modules and re-import
       vi.resetModules();
       const dbModule = await import('../../src/db.js');
       const { insertResume: insert } = dbModule;
-      
+
       // Expect function to throw error
       expect(() => insert(testResumeData)).toThrow('Insert error');
-      
+
       // Clean up
       vi.doMock('better-sqlite3', () => originalMock);
     });
