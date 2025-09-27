@@ -1,9 +1,9 @@
 // packages/api/src/repositories/applicationsRepo.ts
-import Database from 'better-sqlite3';
 import { randomUUID } from 'crypto';
+import { connectDatabase } from '../db.js';
 
-const DB_PATH = process.env.DB_PATH || 'resume.db';
-const db = new Database(DB_PATH);
+// Get the database connection
+const db = connectDatabase();
 
 export type Stage = 'Prospect' | 'Applied' | 'Interview' | 'Offer' | 'Rejected' | 'Accepted';
 export type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';

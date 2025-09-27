@@ -70,6 +70,13 @@ The domain model is structured to represent the core entities and their relation
 - **Normalization**:
   - Data is normalized to reduce redundancy and improve consistency.
 
+## Database Implementation Details
+
+For detailed information about the database implementation, refer to these dedicated documents:
+
+- [Database Configuration](./database-config.md) - Details about database location, paths, and environment variables
+- [Database Connection Pattern](./database-connection-pattern.md) - Information about the centralized connection pattern used throughout the application
+
 ## Future Enhancements
 
 - **Database Indexing**:

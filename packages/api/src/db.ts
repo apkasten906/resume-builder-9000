@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
+import path from 'path';
 
 import { logger } from './utils/logger.js';
 import { StoredResume, DatabaseRow } from './types/database.js';
@@ -8,14 +9,18 @@ import { StoredResume, DatabaseRow } from './types/database.js';
 type SQLiteDatabase = InstanceType<typeof Database>;
 let db: SQLiteDatabase | null = null;
 
+// Database should be in the packages/api directory
+// DB_PATH can be used to override the default location
+const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
+
 export function connectDatabase(): SQLiteDatabase {
   if (db) {
     logger.debug('Using existing database connection');
     return db;
   }
 
-  logger.info('Opening new database connection');
-  db = new Database('./resume.db');
+  logger.info(`Opening new database connection to ${DB_PATH}`);
+  db = new Database(DB_PATH);
 
   // Create tables if they don't exist
   db.exec(`

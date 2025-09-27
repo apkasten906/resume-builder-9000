@@ -13,6 +13,7 @@ vi.mock('better-sqlite3', () => {
           return undefined;
         },
       })),
+      exec: vi.fn(), // Add missing exec method
       close: vi.fn(),
     })),
   };
