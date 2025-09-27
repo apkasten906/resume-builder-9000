@@ -1,16 +1,14 @@
 // packages/api/src/services/authService.ts
 import jwt from 'jsonwebtoken';
 import type { Request } from 'express';
-import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
-import path from 'path';
+import { connectDatabase } from '../db.js';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
-const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
 
 export const authService = {
   async login(email: string, password: string): Promise<{ token: string } | null> {
-    const db = new Database(DB_PATH, { readonly: true });
+    const db = connectDatabase();
     const user = db
       .prepare('SELECT id, email, password_hash FROM users WHERE email = ?')
       .get(email);
