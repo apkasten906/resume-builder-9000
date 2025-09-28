@@ -8,21 +8,28 @@ const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
 export const authService = {
   async login(email: string, password: string): Promise<{ token: string } | null> {
+    // Get database connection from shared pool
     const db = connectDatabase();
 
-    try {
-      const user = db
-        .prepare('SELECT id, email, password_hash FROM users WHERE email = ?')
-        .get(email);
+    // Use prepared statement for security (prevent SQL injection)
+    const user = db
+      .prepare('SELECT id, email, password_hash FROM users WHERE email = ?')
+      .get(email);
 
-      if (!user) return null;
-      const valid = await bcrypt.compare(password, user.password_hash);
-      if (!valid) return null;
-      const token = jwt.sign({ sub: user.id, email: user.email }, SECRET, { expiresIn: '7d' });
-      return { token };
-    } finally {
-      db.close();
+    if (!user) {
+      return null; // User not found
     }
+
+    // Verify password with bcrypt
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return null; // Password doesn't match
+    }
+
+    // Generate JWT token with user info
+    const token = jwt.sign({ sub: user.id, email: user.email }, SECRET, { expiresIn: '7d' });
+
+    return { token };
   },
   async getUserFromRequest(
     req: Request

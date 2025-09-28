@@ -34,7 +34,10 @@ export function connectDatabase(): SQLiteDatabase {
   // Get DB path from environment or use default
   const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
   logger.info(`Opening new database connection to ${dbPath}`);
-  db = new Database(dbPath);
+  db = new Database(dbPath, {
+    verbose: process.env.NODE_ENV === 'development' ? logger.debug : undefined,
+    fileMustExist: false,
+  });
 
   // Create tables if they don't exist
   db.exec(`
