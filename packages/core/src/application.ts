@@ -17,3 +17,23 @@ export interface Application {
   };
   attachments?: { resumeUrl?: string; coverLetterUrl?: string };
 }
+
+/**
+ * Creates a new Application object with required fields
+ * @param data Partial application data
+ * @returns A complete Application object
+ */
+export function createApplication(
+  data: Partial<Application> & Pick<Application, 'company' | 'role'>
+): Application {
+  return {
+    id: data.id || `app-${Date.now()}`,
+    company: data.company,
+    role: data.role,
+    stage: data.stage || 'Prospect',
+    lastUpdated: data.lastUpdated || new Date().toISOString(),
+    location: data.location,
+    salary: data.salary,
+    attachments: data.attachments,
+  };
+}

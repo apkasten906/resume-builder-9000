@@ -13,6 +13,10 @@ This document outlines the testing strategies, boundaries, and tools used in the
 - **Integration Testing**:
   - Verifies interactions between multiple components.
   - Ensures that modules work together as expected.
+  - For database integrations:
+    - Use isolated test databases (in-memory or dedicated files)
+    - Properly manage database connections between tests
+    - Clean up test data after each test
 
 - **End-to-End (E2E) Testing**:
   - Simulates real-world user scenarios.
@@ -52,6 +56,45 @@ This document outlines the testing strategies, boundaries, and tools used in the
 - Use mocking to isolate units of code during testing.
 - Ensure tests are deterministic and do not rely on external factors.
 - Regularly review and update test cases to reflect changes in the codebase.
+
+## Database Integration Testing
+
+### Key Principles
+
+- **Isolation**: Each test should run against its own isolated database instance
+- **Cleanup**: Reset database state between tests to prevent test interference
+- **Reproducibility**: Tests should produce the same results regardless of execution order
+
+### Implementation Patterns
+
+1. **Connection Management**:
+   - Use the `connectDatabase()` and `closeDatabase()` functions from `db.ts`
+   - Close connections after each test to ensure proper isolation
+   - Create unique database paths (e.g., with timestamps) to prevent interference
+
+2. **Test Database Options**:
+   - In-memory databases (`:memory:`) for speed and simplicity
+   - File-based test databases for tests requiring persistence
+   - Set via environment variable: `process.env.DB_PATH = testDbPath;`
+
+3. **Test Lifecycle Hooks**:
+
+   ```typescript
+   // In your test file
+   beforeEach(() => {
+     // Set up a fresh test database
+     closeDatabase();
+     process.env.DB_PATH = uniqueTestPath;
+     // Initialize schema...
+   });
+
+   afterEach(() => {
+     // Clean up
+     closeDatabase();
+     delete process.env.DB_PATH;
+     // Delete test database file if needed...
+   });
+   ```
 
 ## TypeScript Testing Strategy
 

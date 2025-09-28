@@ -68,6 +68,30 @@ describe('Resume Schema Validation', () => {
         expect(result.error.issues.some(issue => issue.path.includes('github'))).toBe(true);
       }
     });
+
+    it('should accept empty URL fields', () => {
+      const emptyUrls = {
+        fullName: 'John Doe',
+        email: 'john@example.com',
+        linkedIn: '',
+        website: '',
+        github: '',
+      };
+
+      const result = PersonalInfoSchema.safeParse(emptyUrls);
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept undefined URL fields', () => {
+      const undefinedUrls = {
+        fullName: 'John Doe',
+        email: 'john@example.com',
+        // No URL fields defined
+      };
+
+      const result = PersonalInfoSchema.safeParse(undefinedUrls);
+      expect(result.success).toBe(true);
+    });
   });
 
   describe('ExperienceSchema', () => {
@@ -81,7 +105,7 @@ describe('Resume Schema Validation', () => {
         current: false,
         responsibilities: ['Developed features', 'Fixed bugs'],
         results: ['Increased performance by 30%'],
-        roleRelevance: { 'javascript': 0.9, 'react': 0.8 },
+        roleRelevance: { javascript: 0.9, react: 0.8 },
       };
 
       const result = ExperienceSchema.safeParse(validExperience);
@@ -101,7 +125,9 @@ describe('Resume Schema Validation', () => {
         expect(result.error.issues.some(issue => issue.path.includes('title'))).toBe(true);
         expect(result.error.issues.some(issue => issue.path.includes('company'))).toBe(true);
         expect(result.error.issues.some(issue => issue.path.includes('startDate'))).toBe(true);
-        expect(result.error.issues.some(issue => issue.path.includes('responsibilities'))).toBe(true);
+        expect(result.error.issues.some(issue => issue.path.includes('responsibilities'))).toBe(
+          true
+        );
       }
     });
   });
@@ -124,18 +150,18 @@ describe('Resume Schema Validation', () => {
             current: false,
             responsibilities: ['Led development team', 'Implemented new features'],
             results: ['Increased team productivity by 20%'],
-          }
+          },
         ],
         education: [
           {
             degree: 'B.S. Computer Science',
             institution: 'University of Technology',
             graduationDate: '2019-05-15',
-          }
+          },
         ],
         skills: [
           { name: 'JavaScript', level: 5, category: 'Programming' },
-          { name: 'React', level: 4, category: 'Framework' }
+          { name: 'React', level: 4, category: 'Framework' },
         ],
         certifications: ['AWS Certified Developer'],
         projects: ['E-commerce platform', 'Mobile app for fitness tracking'],
@@ -187,6 +213,28 @@ describe('Resume Schema Validation', () => {
       if (!result.success) {
         expect(result.error.issues.some(issue => issue.path.includes('url'))).toBe(true);
       }
+    });
+
+    it('should accept empty job URL field', () => {
+      const emptyUrl = {
+        title: 'Frontend Developer',
+        description: 'Job description',
+        url: '',
+      };
+
+      const result = JobDetailsSchema.safeParse(emptyUrl);
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept undefined job URL field', () => {
+      const undefinedUrl = {
+        title: 'Frontend Developer',
+        description: 'Job description',
+        // No URL field defined
+      };
+
+      const result = JobDetailsSchema.safeParse(undefinedUrl);
+      expect(result.success).toBe(true);
     });
   });
 });

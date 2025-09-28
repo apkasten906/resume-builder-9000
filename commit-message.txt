@@ -1,0 +1,26 @@
+# fix(api): improve database integration test isolation
+
+## Problem
+Integration tests were failing due to poor database isolation between test runs, with
+tests using the real database instead of isolated test databases. This caused tests to
+interfere with each other and produced inconsistent results.
+
+## Solution
+- Modified `connectDatabase()` to dynamically read DB_PATH for each connection
+- Added new `closeDatabase()` function for proper cleanup between tests
+- Updated database connection management in integration tests
+- Used unique file paths for test databases to ensure test isolation
+- Added comprehensive documentation for database integration testing patterns
+
+## Additional Changes
+- Updated architectural documentation to reflect new best practices
+- Enhanced testing checklist to mark completed tasks
+- Added detailed examples of proper test setup/teardown patterns
+
+## Testing
+- All integration tests now pass consistently
+- Verified proper cleanup of test database files
+- Ensured tests are properly isolated from each other
+
+This addresses the long-standing issue of flaky integration tests and provides a clear
+pattern for future database integration testing.

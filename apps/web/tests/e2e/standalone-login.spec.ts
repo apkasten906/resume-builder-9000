@@ -1,59 +1,119 @@
 ﻿// apps/web/tests/e2e/standalone-login.spec.ts
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
-// Force port 3000 since we know that's where the server is running
-process.env.WEB_BASE = 'http://localhost:3000';
+// Define the base URLs
+const WEB_BASE = 'http://localhost:3000';
 
-const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000'; // Note: using 3000 since that's where the server is running
+// Test credentials
+const TEST_USER = {
+  email: 'user@example.com',
+  password: 'ValidPassword1!',
+};
 
-test('standalone login test', async ({ page }) => {
-  // Go to the login page
-  console.log('Navigating to login page...');
-  await page.goto(${WEB_BASE}/login);
+test('UI-based login test', async ({ page }) => {
+  console.log('Starting UI-based login test...');
 
-  // Take a screenshot to debug
-  await page.screenshot({ path: '../../test-results/standalone-login-before.png', fullPage: true });
-  console.log('Current URL:', page.url());
+  try {
+    // 1. Go to the login page
+    console.log('Navigating to login page...');
+    await page.goto(`${WEB_BASE}/login`, { waitUntil: 'domcontentloaded' });
 
-  // Log the HTML to see what's on the page
-  const htmlContent = await page.content();
-  console.log('Page HTML excerpt:', htmlContent.substring(0, 500) + '...');
+    // Take screenshot for debugging
+    await page.screenshot({ path: './test-results/login-page.png', fullPage: true });
 
-  // Check if we're getting a 404 page
-  const is404 = (await page.locator('text=\"404\"').count()) > 0;
-  if (is404) {
-    console.error('ERROR: Got a 404 page instead of login page!');
-    return;
+    // 2. Fill out the login form
+    console.log('Filling login form...');
+
+    // Debug the page HTML
+    const content = await page.content();
+    console.log('Page HTML excerpt:', content.substring(0, 500) + '...');
+
+    // Wait for any sign of a form
+    await page
+      .waitForSelector('form, input, button', { timeout: 10000 })
+      .catch(() => console.error('Could not find any form elements on the page'));
+
+    // Get all inputs on the page for debugging
+    const inputCount = await page.locator('input').count();
+    console.log(`Found ${inputCount} input fields on the page`);
+
+    for (let i = 0; i < inputCount; i++) {
+      const input = page.locator('input').nth(i);
+      const type = await input.getAttribute('type');
+      const name = await input.getAttribute('name');
+      console.log(`Input ${i}: type=${type}, name=${name}`);
+    }
+
+    // Use more reliable selectors with lower timeout to avoid hanging
+    try {
+      const emailInput = page
+        .locator('input[name="email"], input[type="email"], input[placeholder*="email" i]')
+        .first();
+      await emailInput.waitFor({ timeout: 5000 });
+      await emailInput.fill(TEST_USER.email);
+    } catch (e) {
+      console.error('Failed to fill email field:', e);
+    }
+
+    try {
+      const passwordInput = page
+        .locator('input[name="password"], input[type="password"], input[placeholder*="password" i]')
+        .first();
+      await passwordInput.waitFor({ timeout: 5000 });
+      await passwordInput.fill(TEST_USER.password);
+    } catch (e) {
+      console.error('Failed to fill password field:', e);
+    }
+
+    // 3. Submit the form
+    console.log('Submitting login form...');
+    try {
+      const submitButton = page
+        .locator(
+          'button[type="submit"], input[type="submit"], button:has-text("Sign in"), button:has-text("Login")'
+        )
+        .first();
+      await submitButton.waitFor({ timeout: 5000 });
+      await submitButton.click();
+    } catch (e) {
+      console.error('Failed to click submit button:', e);
+      // Try using Enter key on the password field as a fallback
+      try {
+        await page.locator('input[type="password"]').press('Enter');
+      } catch (e2) {
+        console.error('Failed to press Enter on password field:', e2);
+      }
+    }
+
+    // Wait for navigation to complete
+    await page.waitForTimeout(2000);
+
+    // 4. Check if we're logged in (redirected to applications page)
+    const currentUrl = page.url();
+    console.log('After login URL:', currentUrl);
+
+    // 5. Take a screenshot of where we ended up
+    await page.screenshot({ path: './test-results/after-login.png', fullPage: true });
+
+    // 6. Check for session cookie
+    const cookies = await page.context().cookies();
+    const sessionCookie = cookies.find(cookie => cookie.name === 'session');
+    console.log('Session cookie:', sessionCookie ? 'Found' : 'Not found');
+
+    // 7. Run assertions
+    expect(sessionCookie).toBeDefined();
+
+    // Either we should be on applications page or dashboard
+    expect(currentUrl).not.toContain('/login');
+
+    // 8. If we're on applications page, verify some content
+    if (currentUrl.includes('/applications')) {
+      await expect(page.getByRole('heading', { name: /applications/i })).toBeVisible();
+    }
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Test error:', err.message);
+    await page.screenshot({ path: './test-results/login-error.png', fullPage: true });
+    throw error;
   }
-
-  // Try to find and fill the login form
-  const emailInput = page.getByLabel('Email');
-  const emailExists = (await emailInput.count()) > 0;
-  console.log('Email input found:', emailExists);
-
-  if (!emailExists) {
-    console.error('Could not find Email input field!');
-    return;
-  }
-
-  // Fill login form
-  await emailInput.fill('user@example.com');
-  await page.getByLabel('Password').fill('ValidPassword1!');
-
-  // Click login button
-  await page.getByRole('button', { name: 'Sign in' }).click();
-
-  // Take another screenshot after clicking login
-  await page.screenshot({ path: '../../test-results/standalone-login-after.png', fullPage: true });
-
-  // Check cookies
-  const cookies = await page.context().cookies();
-  console.log('Cookies after login attempt:', cookies);
-
-  // Check current URL
-  console.log('Final URL after login attempt:', page.url());
-
-  // Check if we were redirected to applications page
-  const redirectedToApp = page.url().includes('/applications');
-  console.log('Redirected to applications:', redirectedToApp);
 });

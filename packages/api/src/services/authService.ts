@@ -9,15 +9,20 @@ const SECRET = process.env.JWT_SECRET || 'dev-secret';
 export const authService = {
   async login(email: string, password: string): Promise<{ token: string } | null> {
     const db = connectDatabase();
-    const user = db
-      .prepare('SELECT id, email, password_hash FROM users WHERE email = ?')
-      .get(email);
-    db.close();
-    if (!user) return null;
-    const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) return null;
-    const token = jwt.sign({ sub: user.id, email: user.email }, SECRET, { expiresIn: '7d' });
-    return { token };
+
+    try {
+      const user = db
+        .prepare('SELECT id, email, password_hash FROM users WHERE email = ?')
+        .get(email);
+
+      if (!user) return null;
+      const valid = await bcrypt.compare(password, user.password_hash);
+      if (!valid) return null;
+      const token = jwt.sign({ sub: user.id, email: user.email }, SECRET, { expiresIn: '7d' });
+      return { token };
+    } finally {
+      db.close();
+    }
   },
   async getUserFromRequest(
     req: Request
