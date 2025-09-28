@@ -7,6 +7,8 @@ Welcome to the Resume Builder 9000! This project is designed to help you create 
 - Frontend: Next.js with Tailwind CSS
 - Backend: Node.js with Express and SQLite
 - Shared business logic in TypeScript
+- Secure authentication with JWT tokens and HTTP-only cookies
+- ATS-optimized resume generation
 
 ## Getting Started
 
@@ -24,9 +26,10 @@ Run the following commands to set up the project:
    # API Configuration
    PORT=4000
    NEXT_PUBLIC_API_BASE=http://localhost:4000
+   JWT_SECRET=your-secret-key-here
    ```
 
-   > **Note:** The frontend expects the API to be available at `http://localhost:4000` via the `NEXT_PUBLIC_API_BASE` environment variable. Update this in all environments as needed.
+   > **Note:** The frontend expects the API to be available at `http://localhost:4000` via the `NEXT_PUBLIC_API_BASE` environment variable. Update this in all environments as needed. The JWT_SECRET is used for secure authentication.
 
 3. Start the development server (for local development):
 
@@ -48,6 +51,14 @@ Run the following commands to set up the project:
 
    ```bash
    npm test
+   ```
+
+6. Default test user (for development):
+
+   ```text
+   Email: user@example.com
+   Password: ValidPassword1!
+   ```
    ```
 
 ## Running the Environment
