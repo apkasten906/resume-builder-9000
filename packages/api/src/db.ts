@@ -5,22 +5,36 @@ import path from 'path';
 import { logger } from './utils/logger.js';
 import { StoredResume, DatabaseRow } from './types/database.js';
 
-// Type alias for a better-sqlite3 database instance
+/**
+ * Type alias for a better-sqlite3 database instance
+ */
 type SQLiteDatabase = InstanceType<typeof Database>;
+
+/**
+ * Global database connection singleton
+ * This is kept as module-level state to avoid multiple connections
+ */
 let db: SQLiteDatabase | null = null;
 
-// Database should be in the packages/api directory
-// DB_PATH can be used to override the default location
-const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
-
+/**
+ * Connect to the SQLite database
+ *
+ * The database path is determined from process.env.DB_PATH or defaults to 'resume.db' in the current directory.
+ * This function reads the environment variable dynamically on each call to support test isolation.
+ * Multiple calls to this function will reuse the existing connection unless closeDatabase() was called.
+ *
+ * @returns A connected SQLite database instance
+ */
 export function connectDatabase(): SQLiteDatabase {
   if (db) {
     logger.debug('Using existing database connection');
     return db;
   }
 
-  logger.info(`Opening new database connection to ${DB_PATH}`);
-  db = new Database(DB_PATH);
+  // Get DB path from environment or use default
+  const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
+  logger.info(`Opening new database connection to ${dbPath}`);
+  db = new Database(dbPath);
 
   // Create tables if they don't exist
   db.exec(`
@@ -116,7 +130,27 @@ export function insertResume(resumeData: Omit<StoredResume, 'id'>): string {
   }
 }
 
+/**
+ * Generate a unique UUID for database records
+ *
+ * @returns A random UUID string
+ */
 function generateUniqueId(): string {
   // Uses Node.js crypto.randomUUID() for secure, collision-resistant IDs
   return randomUUID();
+}
+
+/**
+ * Close the database connection
+ *
+ * This function properly closes the current database connection and resets the internal state.
+ * This is particularly useful for tests to ensure proper isolation between test runs.
+ * After calling this, the next call to connectDatabase() will create a new connection.
+ */
+export function closeDatabase(): void {
+  if (db) {
+    logger.debug('Closing database connection');
+    db.close();
+    db = null;
+  }
 }

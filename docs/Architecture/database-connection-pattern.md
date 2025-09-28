@@ -10,27 +10,44 @@ All database connections should be made through the centralized connection patte
 
 ### Key Components
 
-1. **Centralized DB_PATH Definition**:
+1. **Dynamic Database Path Resolution**:
 
    ```typescript
    // In db.ts
-   const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
-   ```
-
-2. **Connection Factory**:
-
-   ```typescript
-   // In db.ts
+   // DB_PATH is determined dynamically for better test isolation
    export function connectDatabase(): SQLiteDatabase {
      if (db) {
        logger.debug('Using existing database connection');
        return db;
      }
 
-     logger.info(`Opening new database connection to ${DB_PATH}`);
-     db = new Database(DB_PATH);
-     // Initialize tables...
+     // Get DB path from environment or use default
+     const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
+     logger.info(`Opening new database connection to ${dbPath}`);
+     db = new Database(dbPath);
+     // ...
+   }
+   ```
+
+2. **Connection Management**:
+
+   ```typescript
+   // In db.ts
+   // Module-level connection variable
+   let db: SQLiteDatabase | null = null;
+
+   export function connectDatabase(): SQLiteDatabase {
+     // ... connection logic as shown above
      return db;
+   }
+
+   // Explicit connection closing (useful for tests)
+   export function closeDatabase(): void {
+     if (db) {
+       logger.debug('Closing database connection');
+       db.close();
+       db = null;
+     }
    }
    ```
 
@@ -99,8 +116,41 @@ export const myRepository = {
 
 ## Testing Considerations
 
-For testing:
+For integration testing with the database:
 
-1. Use an in-memory database or a test-specific database file
-2. Set the `DB_PATH` environment variable to point to your test database
-3. Clear data between tests to ensure isolation
+1. **Database Isolation Options**:
+   - Use an in-memory database (`:memory:`) for fast tests that don't need persistence
+   - Use a test-specific file database with a unique path for tests requiring persistence
+
+2. **Test Setup Best Practices**:
+   - Set the `DB_PATH` environment variable to point to your test database before each test
+   - Call `closeDatabase()` after each test to ensure a fresh connection on the next test
+   - Use unique filenames (e.g., with timestamps) to prevent test interference
+
+3. **Example Integration Test Setup**:
+
+   ```typescript
+   import { connectDatabase, closeDatabase } from '../../src/db.js';
+   import path from 'path';
+
+   describe('Database Integration Tests', () => {
+     // Generate a unique test database path for test isolation
+     const testDbPath = path.join(__dirname, `test-db-${Date.now()}.db`);
+
+     beforeEach(() => {
+       // Close any existing connection and set up a fresh test database
+       closeDatabase();
+       process.env.DB_PATH = testDbPath;
+       // Initialize the test database...
+     });
+
+     afterEach(() => {
+       // Clean up after each test
+       closeDatabase();
+       delete process.env.DB_PATH;
+       // Delete the test database file if needed...
+     });
+
+     // Test cases...
+   });
+   ```
