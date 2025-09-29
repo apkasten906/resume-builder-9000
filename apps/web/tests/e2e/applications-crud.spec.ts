@@ -6,7 +6,7 @@ const API_BASE = process.env['API_BASE'] || 'http://localhost:4000';
 test.skip('Applications add and list', async ({ page }) => {
   // Skipped for now - needs further investigation with the API functionality
   // Authentication works but there are issues with creating/displaying applications
-  
+
   // Create an application directly with the API
   try {
     console.log('Creating application via API');
@@ -19,10 +19,10 @@ test.skip('Applications add and list', async ({ page }) => {
     if (!sessionToken) {
       console.log('No session token found, using fallback');
     }
-    
+
     // Use the session token from the cookie, or fall back to hardcoded token
-    const testToken = 
-      sessionToken || 
+    const testToken =
+      sessionToken ||
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTkwODUyNzcsImV4cCI6MTc1OTY5MDA3N30.CX1f-7D9mZg1nGrvyQkKgCTB1lQn8mVT_tTA-jfWtZQ';
 
     // Try the regular applications endpoint with auth
@@ -45,7 +45,7 @@ test.skip('Applications add and list', async ({ page }) => {
     } else {
       const responseText = await apiResponse.text();
       console.log('Failed to create application via API:', responseText);
-      
+
       // If API auth is still failing, we'll just use the UI approach
       console.log('Falling back to UI approach for creating applications');
     }

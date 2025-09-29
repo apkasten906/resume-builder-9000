@@ -19,6 +19,7 @@ The tests use a two-tiered authentication approach:
 ### Credentials
 
 Tests use the following hardcoded credentials:
+
 - Email: `user@example.com`
 - Password: `ValidPassword1!`
 
@@ -26,11 +27,13 @@ Tests use the following hardcoded credentials:
 
 ### 1. Authentication Failures
 
-**Symptoms**: 
+**Symptoms**:
+
 - "Invalid credentials" error from API
 - No session cookie after login attempt
 
 **Solutions**:
+
 - Check that the test user exists in the database
 - Verify the user's password is correct
 - Look for CORS issues preventing cookie setting
@@ -39,10 +42,12 @@ Tests use the following hardcoded credentials:
 ### 2. Navigation Timeouts
 
 **Symptoms**:
+
 - "Navigation timeout exceeded" errors
 - Flaky tests that sometimes pass
 
 **Solutions**:
+
 - Avoid `page.waitForNavigation()` - use element-based waiting instead
 - Increase timeout values when needed
 - Use `page.waitForLoadState('networkidle')` for stable pages
@@ -51,10 +56,12 @@ Tests use the following hardcoded credentials:
 ### 3. Application Creation Issues
 
 **Symptoms**:
+
 - Tests add applications but they don't appear in the list
 - Table elements are empty after adding items
 
 **Solutions**:
+
 - Check database connection in test environment
 - Verify API endpoints for application CRUD operations
 - Check if the frontend is refreshing data correctly

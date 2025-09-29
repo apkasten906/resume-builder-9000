@@ -15,18 +15,21 @@ Fix issues occuring with the playwright tests.
 ## Task Tracking
 
 ### Phase 1: Examine failing tests
+
 - [x] Analyze test failures
 - [x] Identify authentication issues
 - [x] Check navigation handling
 - [x] Look for timing problems
 
 ### Phase 2: Fix Authentication Issues
+
 - [x] Enhance test-setup.ts to improve login handling
 - [x] Add fallback from API to UI login
 - [x] Add better session cookie detection
 - [x] Add detailed logging for failures
 
 ### Phase 3: Improve Navigation Handling
+
 - [x] Replace problematic waitForNavigation calls
 - [x] Add element-based waiting
 - [x] Add waitForLoadState for network stability
