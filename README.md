@@ -107,17 +107,43 @@ We use **Playwright** for integration and E2E testing. To run these tests:
 npm run test:e2e
 ```
 
+You can also use our dedicated script for running Playwright tests with more options:
+
+**Windows PowerShell:**
+
+```powershell
+# Run tests with standard logging
+./scripts/run-playwright-tests.ps1
+
+# Run tests with verbose logging
+./scripts/run-playwright-tests.ps1 -Verbose
+
+# Run specific test file with HTML reporter
+./scripts/run-playwright-tests.ps1 -TestFile "standalone-login.spec.ts" -Reporter
+
+# Run in headed mode (shows browser)
+./scripts/run-playwright-tests.ps1 -Headed
+```
+
+**Linux/Mac Bash:**
+
+```bash
+# Run tests with standard logging
+bash ./scripts/run-playwright-tests.sh
+
+# Run tests with verbose logging
+bash ./scripts/run-playwright-tests.sh --verbose
+
+# Run specific test file with HTML reporter
+bash ./scripts/run-playwright-tests.sh --test-file "standalone-login.spec.ts" --reporter
+
+# Run in headed mode (shows browser)
+bash ./scripts/run-playwright-tests.sh --headed
+```
+
 ### Combined Testing Script
 
 To run both Vitest and Playwright tests sequentially:
-
-#### Windows
-
-```powershell
-npm run test:all
-```
-
-#### Linux/Mac
 
 ```bash
 npm run test:all
