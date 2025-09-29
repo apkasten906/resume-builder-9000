@@ -16,8 +16,9 @@ async function loginViaApi(page: Page): Promise<void> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        // Try with known working credentials
         email: 'user@example.com',
-        password: 'password123',
+        password: 'ValidPassword1!',
       }),
     });
 
@@ -83,6 +84,7 @@ async function loginViaApi(page: Page): Promise<void> {
 base.beforeEach(async ({ page }) => {
   // Take a direct API approach to login instead of using the UI
   try {
+    // First try the API login approach
     await loginViaApi(page);
 
     // Debug: log cookies after login
@@ -92,24 +94,47 @@ base.beforeEach(async ({ page }) => {
 
     // Verify that we have a session cookie
     const sessionCookie = cookies.find(cookie => cookie.name === 'session');
+    
     if (!sessionCookie) {
-      // Instead of failing, try to set the cookie again
-      console.warn('No session cookie found after login. Setting fallback cookie.');
+      // If API login failed, try UI login as a last resort
+      console.warn('No session cookie found after login. Trying UI login...');
+      
+      // Navigate to login page
+      await page.goto(`${WEB_BASE}/login`, { waitUntil: 'networkidle' });
+      
+      // Fill login form
+      await page.fill('input[name="email"]', 'user@example.com');
+      await page.fill('input[name="password"]', 'ValidPassword1!');
+      
+      // Submit form
+      await page.click('button[type="submit"]');
+      
+      // Wait for navigation
+      await page.waitForTimeout(2000);
+      
+      // Check cookies again
+      const cookiesAfterUiLogin = await page.context().cookies();
+      const sessionCookieAfterUi = cookiesAfterUiLogin.find(cookie => cookie.name === 'session');
+      
+      if (!sessionCookieAfterUi) {
+        // If UI login also failed, use hardcoded token as last resort
+        console.warn('UI login failed too. Setting fallback cookie.');
+        
+        const testToken =
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTkwODUyNzcsImV4cCI6MTc1OTY5MDA3N30.CX1f-7D9mZg1nGrvyQkKgCTB1lQn8mVT_tTA-jfWtZQ';
 
-      const testToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTkwODUyNzcsImV4cCI6MTc1OTY5MDA3N30.CX1f-7D9mZg1nGrvyQkKgCTB1lQn8mVT_tTA-jfWtZQ';
-
-      await page.context().addCookies([
-        {
-          name: 'session',
-          value: testToken,
-          domain: new URL(WEB_BASE).hostname,
-          path: '/',
-          httpOnly: true,
-          sameSite: 'None',
-          secure: false, // For local testing
-        },
-      ]);
+        await page.context().addCookies([
+          {
+            name: 'session',
+            value: testToken,
+            domain: new URL(WEB_BASE).hostname,
+            path: '/',
+            httpOnly: true,
+            sameSite: 'None',
+            secure: false, // For local testing
+          },
+        ]);
+      }
     }
   } catch (e: unknown) {
     // eslint-disable-next-line no-console
