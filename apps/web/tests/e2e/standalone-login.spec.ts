@@ -1,5 +1,6 @@
 ﻿// apps/web/tests/e2e/standalone-login.spec.ts
 import { test, expect } from '@playwright/test';
+import { testLogger } from './utils/test-logger';
 
 // Define the base URLs
 const WEB_BASE = 'http://localhost:3000';
@@ -11,37 +12,37 @@ const TEST_USER = {
 };
 
 test('UI-based login test', async ({ page }) => {
-  console.log('Starting UI-based login test...');
+  testLogger.log('Starting UI-based login test...');
 
   try {
     // 1. Go to the login page
-    console.log('Navigating to login page...');
+    testLogger.log('Navigating to login page...');
     await page.goto(`${WEB_BASE}/login`, { waitUntil: 'domcontentloaded' });
 
     // Take screenshot for debugging
     await page.screenshot({ path: './test-results/login-page.png', fullPage: true });
 
     // 2. Fill out the login form
-    console.log('Filling login form...');
+    testLogger.log('Filling login form...');
 
     // Debug the page HTML
     const content = await page.content();
-    console.log('Page HTML excerpt:', content.substring(0, 500) + '...');
+    testLogger.log('Page HTML excerpt:', content.substring(0, 500) + '...');
 
     // Wait for any sign of a form
     await page
       .waitForSelector('form, input, button', { timeout: 10000 })
-      .catch(() => console.error('Could not find any form elements on the page'));
+      .catch(() => testLogger.error('Could not find any form elements on the page'));
 
     // Get all inputs on the page for debugging
     const inputCount = await page.locator('input').count();
-    console.log(`Found ${inputCount} input fields on the page`);
+    testLogger.log(`Found ${inputCount} input fields on the page`);
 
     for (let i = 0; i < inputCount; i++) {
       const input = page.locator('input').nth(i);
       const type = await input.getAttribute('type');
       const name = await input.getAttribute('name');
-      console.log(`Input ${i}: type=${type}, name=${name}`);
+      testLogger.log(`Input ${i}: type=${type}, name=${name}`);
     }
 
     // Use more reliable selectors with lower timeout to avoid hanging
@@ -52,7 +53,7 @@ test('UI-based login test', async ({ page }) => {
       await emailInput.waitFor({ timeout: 5000 });
       await emailInput.fill(TEST_USER.email);
     } catch (e) {
-      console.error('Failed to fill email field:', e);
+      testLogger.error('Failed to fill email field:', e);
     }
 
     try {
@@ -62,11 +63,11 @@ test('UI-based login test', async ({ page }) => {
       await passwordInput.waitFor({ timeout: 5000 });
       await passwordInput.fill(TEST_USER.password);
     } catch (e) {
-      console.error('Failed to fill password field:', e);
+      testLogger.error('Failed to fill password field:', e);
     }
 
     // 3. Submit the form
-    console.log('Submitting login form...');
+    testLogger.log('Submitting login form...');
     try {
       const submitButton = page
         .locator(
@@ -76,12 +77,12 @@ test('UI-based login test', async ({ page }) => {
       await submitButton.waitFor({ timeout: 5000 });
       await submitButton.click();
     } catch (e) {
-      console.error('Failed to click submit button:', e);
+      testLogger.error('Failed to click submit button:', e);
       // Try using Enter key on the password field as a fallback
       try {
         await page.locator('input[type="password"]').press('Enter');
       } catch (e2) {
-        console.error('Failed to press Enter on password field:', e2);
+        testLogger.error('Failed to press Enter on password field:', e2);
       }
     }
 
@@ -90,7 +91,7 @@ test('UI-based login test', async ({ page }) => {
 
     // 4. Check if we're logged in (redirected to applications page)
     const currentUrl = page.url();
-    console.log('After login URL:', currentUrl);
+    testLogger.log('After login URL:', currentUrl);
 
     // 5. Take a screenshot of where we ended up
     await page.screenshot({ path: './test-results/after-login.png', fullPage: true });
@@ -98,7 +99,7 @@ test('UI-based login test', async ({ page }) => {
     // 6. Check for session cookie
     const cookies = await page.context().cookies();
     const sessionCookie = cookies.find(cookie => cookie.name === 'session');
-    console.log('Session cookie:', sessionCookie ? 'Found' : 'Not found');
+    testLogger.log('Session cookie:', sessionCookie ? 'Found' : 'Not found');
 
     // 7. Run assertions
     expect(sessionCookie).toBeDefined();
@@ -112,7 +113,7 @@ test('UI-based login test', async ({ page }) => {
     }
   } catch (error: unknown) {
     const err = error as Error;
-    console.error('Test error:', err.message);
+    testLogger.error('Test error:', err.message);
     await page.screenshot({ path: './test-results/login-error.png', fullPage: true });
     throw error;
   }

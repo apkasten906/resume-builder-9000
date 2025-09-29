@@ -1,12 +1,12 @@
 import { test as base, expect, Page } from '@playwright/test';
+import { testLogger } from './utils/test-logger';
 
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 const API_BASE = process.env.API_BASE || 'http://localhost:4000';
 
 // Create a programmatic login function that always uses Bearer token authentication
 async function loginViaApi(page: Page): Promise<string> {
-  // eslint-disable-next-line no-console
-  console.log('Getting Bearer token for testing...');
+  testLogger.log('Getting Bearer token for testing...');
 
   let token: string;
 
@@ -27,15 +27,15 @@ async function loginViaApi(page: Page): Promise<string> {
     if (apiResponse.ok) {
       const data = await apiResponse.json();
       token = data.token;
-      console.log('Successfully obtained fresh Bearer token');
+      testLogger.log('Successfully obtained fresh Bearer token');
     } else {
       // Fallback to hardcoded token if API login fails
-      console.warn('API login failed, using fallback hardcoded token');
+      testLogger.warn('API login failed, using fallback hardcoded token');
       token =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTkwODUyNzcsImV4cCI6MTc1OTY5MDA3N30.CX1f-7D9mZg1nGrvyQkKgCTB1lQn8mVT_tTA-jfWtZQ';
     }
   } catch (error) {
-    console.error('Error during API login:', error);
+    testLogger.error('Error during API login:', error);
     // Fallback to hardcoded token if API login fails
     token =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTkwODUyNzcsImV4cCI6MTc1OTY5MDA3N30.CX1f-7D9mZg1nGrvyQkKgCTB1lQn8mVT_tTA-jfWtZQ';
@@ -74,8 +74,7 @@ base.beforeEach(async ({ page }) => {
     const token = await loginViaApi(page);
 
     // Debug: log auth setup
-    // eslint-disable-next-line no-console
-    console.log('Bearer token auth setup complete');
+    testLogger.log('Bearer token auth setup complete');
 
     // Set up request interception to add Bearer token to all API requests
     await page.route('**/*', async (route, request) => {
@@ -92,14 +91,12 @@ base.beforeEach(async ({ page }) => {
     // Navigate to applications page to verify authentication
     await page.goto(`${WEB_BASE}/applications`, { waitUntil: 'domcontentloaded' });
 
-    // eslint-disable-next-line no-console
-    console.log('Navigated to applications page');
+    testLogger.log('Navigated to applications page');
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error('Login failed:', e instanceof Error ? e.message : String(e));
+    testLogger.error('Login failed:', e instanceof Error ? e.message : String(e));
 
     // Continue with the test instead of failing
-    console.log('Continuing with test despite login failure...');
+    testLogger.warn('Continuing with test despite login failure...');
   }
 });
 
