@@ -118,7 +118,7 @@ try {
   # Install dependencies
   Write-Host "Installing dependencies..." -ForegroundColor Cyan
   $installOutput = npm i 2>&1
-  
+
   # Check if installation succeeded
   if ($LASTEXITCODE -ne 0) {
     throw "Failed to install dependencies. Exit code: $LASTEXITCODE"
@@ -132,7 +132,7 @@ try {
       $criticalCount = $Matches[1]
       Write-Host "Number of critical vulnerabilities: $criticalCount" -ForegroundColor Red
     }
-    
+
     # Ask user if they want to continue despite vulnerabilities
     $continueAnyway = Read-Host "Critical vulnerabilities detected. Continue anyway? (y/n)"
     if ($continueAnyway -ne "y") {
@@ -144,32 +144,32 @@ try {
   if ($installOutput -match "Failed to load SWC binary") {
     Write-Host "WARNING: SWC binary loading issues detected. This may affect Next.js performance." -ForegroundColor Yellow
     Write-Host "You may need to configure Next.js to use Babel instead of SWC." -ForegroundColor Yellow
-    
+
     # Configure Next.js to use Babel instead of SWC
     Write-Host "Configuring Next.js to use Babel instead of SWC..." -ForegroundColor Cyan
-    
+
     if (Test-Path ".\apps\web\next.config.js") {
       $nextConfig = Get-Content -Path ".\apps\web\next.config.js" -Raw
-      
+
       if (-not ($nextConfig -match "swcMinify: false")) {
         $nextConfig = $nextConfig -replace "const nextConfig = \{", "const nextConfig = {`n  swcMinify: false,`n  experimental: {`n    forceSwcTransforms: false,`n  },"
         Set-Content -Path ".\apps\web\next.config.js" -Value $nextConfig
       }
     }
-    
+
     # Set environment variable to disable SWC
     $env:NEXT_DISABLE_SWC = "1"
     Write-Host "Next.js configured to use Babel instead of SWC." -ForegroundColor Green
   }
-  
+
   # Build packages
   Write-Host "Building core packages..." -ForegroundColor Cyan
   npm run build --workspace=packages/core
   if ($LASTEXITCODE -ne 0) { throw "Failed to build core package" }
-  
+
   npm run build --workspace=packages/api
   if ($LASTEXITCODE -ne 0) { throw "Failed to build API package" }
-  
+
   Write-Host "Building web package..." -ForegroundColor Cyan
   npm run build --workspace=apps/web
   if ($LASTEXITCODE -ne 0) { throw "Failed to build web package" }
@@ -206,32 +206,32 @@ try {
   if (-not $WebOnly) {
     Write-Host "Starting API server..." -ForegroundColor Cyan
     $apiProcess = Start-Process -NoNewWindow -PassThru powershell -ArgumentList "-Command cd $PSScriptRoot\packages\api; npm run dev"
-    
+
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
-    
+
     $apiHealth = Test-ServiceHealth -Url "http://localhost:4000" -ServiceName "API server" -RequireSuccess:$true
     if (-not $apiHealth) {
       throw "API server failed to start"
     }
-    
+
     Write-Host "API server started on http://localhost:4000" -ForegroundColor Green
   }
 
   if (-not $ApiOnly) {
     Write-Host "Starting Web frontend..." -ForegroundColor Cyan
     $webProcess = Start-Process -NoNewWindow -PassThru powershell -ArgumentList "-Command cd $PSScriptRoot\apps\web; npm run dev"
-    
+
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
-    
+
     $webHealth = Test-ServiceHealth -Url "http://localhost:3000" -ServiceName "Web frontend"
     if (-not $webHealth -and -not $ApiOnly) {
       if (-not $ApiOnly) {
         Write-Host "Continuing with development despite Web frontend issues" -ForegroundColor Yellow
       }
     }
-    
+
     Write-Host "Web frontend started on http://localhost:3000" -ForegroundColor Green
   }
 
@@ -241,32 +241,32 @@ try {
   # Monitor processes to detect crashes
   while ($true) {
     $allRunning = $true
-    
+
     if ($apiProcess -and -not $WebOnly) {
       if ($apiProcess.HasExited) {
         Write-Host "[ERROR] API server has stopped unexpectedly" -ForegroundColor Red
         $allRunning = $false
       }
     }
-    
+
     if ($webProcess -and -not $ApiOnly) {
       if ($webProcess.HasExited) {
         Write-Host "[ERROR] Web frontend has stopped unexpectedly" -ForegroundColor Red
         $allRunning = $false
       }
     }
-    
+
     if (-not $allRunning) {
       throw "Development services stopped unexpectedly"
     }
-    
+
     Start-Sleep -Seconds 3
   }
 }
 catch {
   Write-Host "Error: $_" -ForegroundColor Red
   Write-Host $_.ScriptStackTrace -ForegroundColor DarkRed
-  
+
   # Log error to file
   $errorDetails = @"
 Error occurred at $(Get-Date)
@@ -275,10 +275,10 @@ Stack trace:
 $($_.ScriptStackTrace)
 "@
   Add-Content -Path "$PSScriptRoot\dev-error.log" -Value $errorDetails
-  
+
   # Stop all servers in case of error
   Stop-AllDevServers -Reason "Error occurred: $_"
-  
+
   # Return non-zero exit code
   exit 1
 }

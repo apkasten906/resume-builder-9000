@@ -1,21 +1,27 @@
-# docs: update documentation with authentication details and cleanup
+# feat(auth): standardize Bearer token authentication for e2e tests
 
 ## Problem
-After implementing authentication features, the documentation was outdated and temporary
-debugging files were left in the repository. Authentication flow details were missing from
-documentation.
+E2e tests were using inconsistent authentication methods with a mix of session cookies and Bearer tokens,
+causing unpredictable test results and failures in the CI/CD pipeline.
 
 ## Solution
-- Added new `authentication-system.md` document explaining JWT auth flow
-- Updated `app-workflow.md` with enhanced authentication diagram
-- Updated `README.md` with authentication configuration details
-- Removed temporary test files used during authentication debugging
-- Added default test user credentials to documentation
+- Updated test setup to use Bearer tokens consistently across all tests
+- Fixed authentication service implementation for tests with proper mocks
+- Added missing @testing-library/dom dependency for web tests
+- Modified test fixtures to expose tokens to test cases
+- Implemented route interception to add auth headers to requests
 
 ## Additional Changes
-- Fixed markdown linting issues in documentation
-- Enhanced application workflow diagram to show authentication steps
-- Updated environment variable documentation to include JWT_SECRET
+- Fixed API authentication middleware to properly handle Bearer tokens
+- Updated test documentation to explain authentication approach
+- Verified API endpoints work correctly with Bearer auth
+- Enhanced test framework for consistent token handling
+- Removed temporary testing files (login-analysis.ts, login-page.html)
+- Updated authentication-system.md to document Bearer token usage
+
+## Testing
+- Ran full e2e test suite to verify Bearer token authentication works
+- Verified login, API calls, and protected routes function correctly
 
 ## Testing
 - All integration tests now pass consistently

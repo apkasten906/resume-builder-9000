@@ -14,7 +14,8 @@ Resume Builder 9000 uses a JWT-based authentication system with HTTP-only cookie
 
 2. **Session Management**:
    - JWT tokens are stored as HTTP-only cookies (`session`) for frontend requests
-   - Backend API routes validate tokens via the `Authorization` header or cookies
+   - Backend API routes validate tokens via the `Authorization` header (Bearer token) or cookies
+   - Both Bearer token and cookie authentication are supported
    - Token expiry is set to 7 days
 
 3. **Protected Routes**:
@@ -58,6 +59,17 @@ Test user account:
 
 - Email: `user@example.com`
 - Password: `ValidPassword1!`
+
+### E2E Testing Authentication
+
+For end-to-end tests, Bearer token authentication is used as the primary method:
+
+1. Tests obtain a Bearer token via the `/auth/login` API endpoint
+2. Token is automatically applied to all API requests via request interception
+3. `testWithAuth` fixture exposes the token for tests that need explicit access
+4. UI form-based authentication is available as a fallback when needed
+
+Bearer tokens provide more reliable test execution than cookie-based authentication, especially in headless test environments.
 
 ## Troubleshooting
 
