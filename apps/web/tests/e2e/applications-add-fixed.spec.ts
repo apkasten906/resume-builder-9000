@@ -1,4 +1,5 @@
 import { testWithAuth, expect } from './test-setup';
+import { testLogger } from './utils/test-logger';
 
 // Import constants for URLs
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
@@ -9,11 +10,16 @@ const API_BASE = process.env.API_BASE || 'http://localhost:4000';
  * and verifies it appears in the applications list.
  */
 testWithAuth('Applications add and list with Bearer auth', async ({ page, request, authToken }) => {
-  console.log('Starting applications test with Bearer token');
+  testLogger.log('Starting applications test with Bearer token');
 
   // The authToken is already set up by the testWithAuth fixture
-  console.log('Using pre-authenticated token from test fixture');
+  testLogger.log('Using pre-authenticated token from test fixture');
   const token = authToken; // Using the token provided by the fixture
+  
+  // Store the token in localStorage as well for the application to find
+  await page.evaluate((token) => {
+    localStorage.setItem('authToken', token);
+  }, token);
 
   // Step 2: Create a test application directly via the API using Bearer auth
   const testAppName = `Test Company ${Date.now().toString().slice(-6)}`;

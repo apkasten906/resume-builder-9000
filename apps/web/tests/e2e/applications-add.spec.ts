@@ -1,17 +1,23 @@
-import { test, expect } from './test-setup';
+import { testWithAuth, expect } from './test-setup';
+import { testLogger } from './utils/test-logger';
 import Database from 'better-sqlite3';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
 
 // Import constants for URLs
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
+const API_BASE = process.env.API_BASE || 'http://localhost:4000';
 
 /**
- * This test fixes the issue with applications not appearing in the list
- * by directly inserting test data into the database, bypassing authentication issues.
+ * This test adds applications and verifies they appear in the list.
  */
-test('Applications add and list', async ({ page }) => {
-  console.log('Starting applications add and list test with direct database access');
+testWithAuth('Applications add and list', async ({ page, request, authToken }) => {
+  testLogger.log('Starting applications add and list test with API auth');
+  
+  // Store the token in localStorage as well for the application to find
+  await page.evaluate(token => {
+    localStorage.setItem('authToken', token);
+  }, authToken);
 
   // Get path to the database (in the project root)
   const projectRoot = path.resolve(__dirname, '../../../../../');
