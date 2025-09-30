@@ -174,15 +174,21 @@ try {
   npm run build --workspace=apps/web
   if ($LASTEXITCODE -ne 0) { throw "Failed to build web package" }
 
+
   # Run tests unless we're only running specific components
   if (-not $ApiOnly -and -not $WebOnly) {
     Write-Host "Running tests..." -ForegroundColor Cyan
-    try {
-      npm run test --if-present
-    } catch {
-      Write-Host "[WARNING] Some tests may have failed. See output above." -ForegroundColor Yellow
-      # Optionally log to a file
-      Add-Content -Path "$PSScriptRoot\dev-error.log" -Value "Test run failed at $(Get-Date)"
+    npm run test --if-present
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "[ERROR] Unit tests failed. Stopping script." -ForegroundColor Red
+      $errorDetails = @"
+Unit test failure at $(Get-Date)
+Script: dev.ps1
+Exit code: $LASTEXITCODE
+See console output above for details.
+"@
+      Add-Content -Path "$PSScriptRoot\dev-error.log" -Value $errorDetails
+      throw "Unit tests failed. See output above."
     }
   }
 
