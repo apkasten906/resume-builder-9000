@@ -1,8 +1,5 @@
 import { testWithAuth, expect } from './test-setup';
 import { testLogger } from './utils/test-logger';
-import Database from 'better-sqlite3';
-import * as path from 'path';
-import { randomUUID } from 'crypto';
 
 // Import constants for URLs
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
@@ -13,54 +10,42 @@ const API_BASE = process.env.API_BASE || 'http://localhost:4000';
  */
 testWithAuth('Applications add and list', async ({ page, request, authToken }) => {
   testLogger.log('Starting applications add and list test with API auth');
-  
+
   // Store the token in localStorage as well for the application to find
   await page.evaluate(token => {
     localStorage.setItem('authToken', token);
   }, authToken);
 
-  // Get path to the database (in the project root)
-  const projectRoot = path.resolve(__dirname, '../../../../../');
-  const dbPath = path.join(projectRoot, 'resume.db');
+  // Step 1: Create a test application via API using Bearer auth token
+  const initialAppName = `API Test Company ${Date.now().toString().slice(-6)}`;
+  const initialAppRole = `API Test Role ${Date.now().toString().slice(-4)}`;
 
-  // Connect directly to the application database
-  const db = new Database(dbPath, { verbose: console.log });
-  console.log(`Connected to database at ${dbPath}`);
+  testLogger.log(`Creating initial test application via API: ${initialAppName}`);
 
-  // Clean up any existing test applications for our test user
-  const userId = 1; // Assuming this is the ID of our test user
-  const cleanupResult = db.prepare('DELETE FROM applications WHERE userId = ?').run(userId);
-  console.log(`Cleaned up ${cleanupResult.changes} test applications`);
-
-  // Step 1: Create a test application DIRECTLY IN THE DATABASE
-  // This bypasses all authentication and API issues
-  const initialAppName = `DB Test Company ${Date.now().toString().slice(-6)}`;
-  const initialAppRole = `DB Test Role ${Date.now().toString().slice(-4)}`;
-  const id = randomUUID();
-  const now = new Date().toISOString();
-
-  console.log(`Creating initial test application in database: ${initialAppName}`);
   try {
-    // Insert directly into the applications table with all required fields
-    const result = db
-      .prepare(
-        `
-      INSERT INTO applications (
-        id, userId, company, role, stage, lastUpdated, createdAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `
-      )
-      .run(id, userId, initialAppName, initialAppRole, 'Prospect', now, now);
+    // Use the API to create an application (properly using auth token)
+    const createResponse = await request.post(`${API_BASE}/applications`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      data: {
+        company: initialAppName,
+        role: initialAppRole,
+      },
+    });
 
-    console.log(`Created test application with ID: ${id} (changes: ${result.changes})`);
+    if (!createResponse.ok()) {
+      const errorText = await createResponse.text();
+      console.error('Failed to create application:', errorText);
+      throw new Error(`Application creation failed with status ${createResponse.status()}`);
+    }
+
+    const createdApp = await createResponse.json();
+    console.log('Successfully created application:', createdApp);
   } catch (err) {
-    console.error('Error inserting test application:', err);
-    // Dump the table structure to help with debugging
-    console.log('Table structure:');
-    const tables = db
-      .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='applications'")
-      .all();
-    console.log(tables);
+    console.error('Error creating test application via API:', err);
+    throw err;
   }
 
   // Step 2: Navigate to applications page and verify the test app is there
@@ -70,8 +55,8 @@ testWithAuth('Applications add and list', async ({ page, request, authToken }) =
   // Take screenshot of initial state
   await page.screenshot({ path: `./test-results/applications-before-add.png` });
 
-  // Check if our direct DB application is visible in the UI
-  console.log('Checking if database application is visible in UI');
+  // Check if our API-created application is visible in the UI
+  testLogger.log('Checking if API-created application is visible in UI');
   await page.waitForTimeout(1000); // Give the page a moment to render
 
   // Log all table content for debugging
@@ -82,7 +67,7 @@ testWithAuth('Applications add and list', async ({ page, request, authToken }) =
       return cells.map(cell => cell.textContent?.trim());
     });
   });
-  console.log('Current table content:', tableContent);
+  testLogger.log('Current table content:', tableContent);
 
   try {
     // Check if our application is visible
@@ -90,18 +75,26 @@ testWithAuth('Applications add and list', async ({ page, request, authToken }) =
       timeout: 5000,
     });
 
-    console.log('Success! Database-created application is visible in the UI');
+    testLogger.log('Success! API-created application is visible in the UI');
   } catch (error) {
-    console.log('Application not found in UI. Checking database to verify it exists:');
-    const dbApps = db.prepare('SELECT * FROM applications WHERE userId = ?').all(userId);
-    console.log('Current applications in DB:', dbApps);
+    testLogger.error('API-created application not found in UI');
+
+    // Check API directly to see if the application was created
+    const listResponse = await request.get(`${API_BASE}/applications`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    const apiApps = await listResponse.json();
+    testLogger.log('Current applications from API:', apiApps);
     throw error; // Re-throw so test still fails
   }
 
   // Step 3: Create a second application via the UI form
   const uiAppName = `UI Acme ${Date.now().toString().slice(-6)}`;
   const uiAppRole = `UI Engineer ${Date.now().toString().slice(-4)}`;
-  console.log(`Adding second application via UI: ${uiAppName}`);
+  testLogger.log(`Adding second application via UI: ${uiAppName}`);
 
   // Fill in the form
   await page.getByLabel('Company').fill(uiAppName);
@@ -127,9 +120,9 @@ testWithAuth('Applications add and list', async ({ page, request, authToken }) =
       timeout: 5000,
     });
 
-    console.log('Success! UI-created application is also visible');
+    testLogger.log('Success! UI-created application is also visible');
   } catch (error) {
-    console.log('UI-created application not found. Final table content:');
+    testLogger.error('UI-created application not found. Final table content:');
     const finalTableContent = await page.evaluate(() => {
       const rows = Array.from(document.querySelectorAll('table tr'));
       return rows.map(row => {
@@ -137,12 +130,9 @@ testWithAuth('Applications add and list', async ({ page, request, authToken }) =
         return cells.map(cell => cell.textContent?.trim());
       });
     });
-    console.log(finalTableContent);
+    testLogger.log(finalTableContent);
     throw error;
   }
 
-  // Close the database connection
-  db.close();
-
-  console.log('Test complete - both DB and UI applications are visible!');
+  testLogger.log('Test complete - both API and UI applications are visible!');
 });
