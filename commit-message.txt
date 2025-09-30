@@ -1,23 +1,24 @@
-feat(ui): implement job intake page with file upload functionality
+docs(testing): consolidate and organize Playwright testing documentation
 
 ## Problem
-The job description intake page was incomplete:
-- Missing file upload functionality
-- No text parsing capabilities
-- User interface lacked tab navigation between input methods
-- Tests were skipped due to missing implementation
+- Redundant and outdated Playwright testing documentation across multiple files
+- Inconsistent guidelines for running tests
+- Missing documentation about conflicts between Playwright and Vitest
+- Test documentation scattered across different locations
 
 ## Solution
-1. Implemented job-intake/page.tsx with:
-   - Tab navigation between text paste and file upload options
-   - Drag and drop file upload with validation
-   - Text parsing for job requirements extraction
-   - Form validation and error handling
-   - Results display with requirements and keywords
+1. Consolidated testing documentation into docs/testing/ directory:
+   - Created comprehensive guidelines in playwright-guidelines.md
+   - Added README.md for navigation
+   - Documented best practices for avoiding Vitest/Playwright conflicts
 
-2. Created job-intake-utils.ts for:
-   - File validation (size limits, file types)
-   - Helper functions for UI components
+2. Updated references in main README.md to point to new location
+
+3. Removed redundant and deprecated files:
+   - Cleaned up old documentation files
+   - Removed leftover artifacts from previous test approaches
+
+4. Updated test checklist with latest improvements and next steps
 
 3. Fixed accessibility issues:
    - Replaced div elements with proper button elements

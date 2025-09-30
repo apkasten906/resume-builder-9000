@@ -82,14 +82,6 @@ To run the environment locally without Docker, use the following script:
 bash ./dev.sh
 ```
 
-### Docker Setup
-
-To run the project using Docker Compose, use the following command:
-
-```bash
-docker-compose up
-```
-
 > **Note:** For speed, it is recommended to use the local setup during development.
 
 ## Testing
@@ -109,6 +101,11 @@ We use **Playwright** for integration and E2E testing. To run these tests:
 ```bash
 npm run test:e2e
 ```
+
+> **Important**: Always use the npm script `test:e2e` instead of running Playwright directly with `npx playwright test`.  
+> Our project includes warning systems that remind you about this practice to ensure consistent test configuration and environment setup.
+> For Playwright CLI access, use `npm run playwright -- <command>` instead of `npx playwright <command>`.
+> See [Playwright Testing Guidelines](./docs/testing/playwright-guidelines.md) for more information.
 
 You can also use our dedicated script for running Playwright tests with more options:
 

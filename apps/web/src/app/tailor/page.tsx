@@ -15,7 +15,7 @@ const TailorPage: React.FC = () => {
     'Developed TypeScript interfaces to ensure type safety across the application',
     'Integrated CI/CD pipelines using GitHub Actions for automated testing and deployment',
   ];
-  
+
   const [threshold, setThreshold] = useState(60);
   const [bullets, setBullets] = useState<
     { id: string; text: string; score: number; keywords?: string[] }[]
@@ -37,13 +37,13 @@ const TailorPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bullets: sample, keywords }),
       });
-      
+
       if (!res.ok) {
         throw new Error('Failed to tailor resume');
       }
-      
+
       const data = await res.json();
-      
+
       // Add keywords to each bullet for better UI display
       const enhancedBullets = (data.items || []).map(
         (bullet: { id: string; text: string; score: number }) => ({
@@ -53,9 +53,9 @@ const TailorPage: React.FC = () => {
           ),
         })
       );
-      
+
       setBullets(enhancedBullets);
-      toast({ 
+      toast({
         title: 'Tailoring complete',
         description: 'Your resume has been tailored to match the job requirements.',
       });
@@ -97,17 +97,14 @@ const TailorPage: React.FC = () => {
             {b.keywords && b.keywords.length > 0 && (
               <div className="flex gap-2 mt-2 flex-wrap">
                 {b.keywords.map(keyword => (
-                  <Badge 
-                    key={`${b.id}-${keyword}`} 
-                    className="text-xs bg-gray-100"
-                  >
+                  <Badge key={`${b.id}-${keyword}`} className="text-xs bg-gray-100">
                     {keyword}
                   </Badge>
                 ))}
               </div>
             )}
           </div>
-          <div 
+          <div
             className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(b.score)}`}
           >
             {Math.round(b.score * 100)}%
@@ -132,7 +129,7 @@ const TailorPage: React.FC = () => {
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">Tailor Your Resume</h1>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>
@@ -160,11 +157,11 @@ const TailorPage: React.FC = () => {
                 Filter bullets by relevance score
               </div>
             </div>
-            
+
             <Button onClick={runTailor} disabled={isLoading} className="w-full">
               {isLoading ? 'Processing...' : 'Run Tailor'}
             </Button>
-            
+
             <div className="text-sm mt-4">
               <h3 className="font-medium mb-2">Current Keywords:</h3>
               <div className="flex flex-wrap gap-2">
@@ -176,7 +173,7 @@ const TailorPage: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-3">{renderBullets()}</div>
         </CardContent>
       </Card>

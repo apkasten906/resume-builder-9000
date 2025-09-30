@@ -1,25 +1,51 @@
-# Copilot Processing - Playwright Testing
+# Copilot Processing - Service Layer Tests
 
 ## User Request
 
-Fix issues occurring with the playwright tests and implement a consistent logging system that can control verbosity and provide helper functions for debugging page state.
+Add unit tests for the following service layer files:
+
+1. fileParser.ts
+2. resume-generator.ts
+3. resumeService.ts
+4. authService.ts
 
 ## Action Plan
 
-1. Examine the failing tests and identify root causes
-2. Fix authentication issues in the tests
-3. Create a test logger utility module
-   - ✅ Create file structure with appropriate exports
-   - ✅ Implement basic logging functions with verbosity control
-   - ✅ Add page state debugging helper
-4. Update core testing files to use the new logger
-   - ✅ Update test-setup.ts to use the logger
-   - ✅ Update standalone-login.spec.ts to use the logger
-   - ✅ Update jwt-token-check.spec.ts to use the logger
-5. Create CLI scripts for running tests with verbosity controls
-   - ✅ Create Windows PowerShell script
-   - ✅ Create Linux/Mac bash script
-   - ✅ Add appropriate command line options
+1. Analyze each service file to understand their functionality
+2. Create or update test files for each service
+3. Implement comprehensive test coverage for all services
+4. Fix any TypeScript issues that arise
+
+## Task Tracking
+
+### Phase 1: Analyze Services - COMPLETE
+
+- ✅ Identify fileParser.ts functionality (parsing different file types)
+- ✅ Identify resume-generator.ts functionality (generating resumes from data)
+- ✅ Identify resumeService.ts functionality (database operations for resumes)
+- ✅ Identify authService.ts functionality (authentication and user management)
+
+### Phase 2: Create/Update Test Files - COMPLETE
+
+- ✅ Create fileParser.test.ts
+- ✅ Fix resume-generator.test.ts type issues
+- ✅ Create resumeService.test.ts
+- ✅ Update authService.test.ts with more comprehensive tests
+
+### Phase 3: Implement Tests - COMPLETE
+
+- ✅ Implement tests for fileParser with mocks for PDF, DOCX, TXT, and MD parsing
+- ✅ Implement tests for resume-generator async generation
+- ✅ Implement tests for resumeService getResumeById and saveResume functions
+- ✅ Implement tests for authService login and getUserFromRequest functions
+
+### Phase 4: Fix TypeScript Issues - COMPLETE
+
+- ✅ Fix interface issues in resume-generator.test.ts
+- ✅ Fix vi.Mock type issues in resumeService.test.ts
+  - ✅ Create Linux/Mac bash script
+  - ✅ Add appropriate command line options
+
 6. Add documentation
    - ✅ Update README with new testing options
    - ✅ Create test logging documentation
