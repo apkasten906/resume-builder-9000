@@ -27,7 +27,7 @@ export function createApplication(
   data: Partial<Application> & Pick<Application, 'company' | 'role'>
 ): Application {
   return {
-    id: data.id || `app-${Date.now()}`,
+    id: data.id ?? `app-${Date.now()}`,
     company: data.company,
     role: data.role,
     stage: data.stage || 'Prospect',
