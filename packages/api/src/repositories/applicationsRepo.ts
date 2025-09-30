@@ -43,16 +43,16 @@ export const applicationsRepo = {
       id,
       company: app.company,
       role: app.role,
-      location: app.location ?? null,
+      location: app.location ?? undefined,
       stage,
       lastUpdated,
       createdAt,
-      jdText: app.jdText ?? null,
-      currency: salary.currency ?? null,
-      salary_base: salary.base ?? null,
-      salary_bonus: salary.bonus ?? null,
-      salary_equity: salary.equity ?? null,
-      salary_notes: salary.notes ?? null,
+      jdText: app.jdText ?? undefined,
+      currency: salary.currency ?? undefined,
+      salary_base: salary.base ?? undefined,
+      salary_bonus: salary.bonus ?? undefined,
+      salary_equity: salary.equity ?? undefined,
+      salary_notes: salary.notes ?? undefined,
     });
 
     return { id, lastUpdated, createdAt, ...app };
@@ -92,7 +92,7 @@ export const applicationsRepo = {
       );
       db.prepare(
         'INSERT INTO application_status_history (id, application_id, from_stage, to_stage, note) VALUES (?,?,?,?,?)'
-      ).run(randomUUID(), appId, fromStage, toStage, note ?? null);
+      ).run(randomUUID(), appId, fromStage, toStage, note ?? undefined);
     });
     tx();
   },
@@ -106,6 +106,13 @@ export const applicationsRepo = {
   ): void {
     db.prepare(
       'INSERT INTO attachments (id, application_id, type, filename, mime_type, url) VALUES (?,?,?,?,?,?)'
-    ).run(randomUUID(), appId, type, filename ?? null, mimeType ?? null, url ?? null);
+    ).run(
+      randomUUID(),
+      appId,
+      type,
+      filename ?? undefined,
+      mimeType ?? undefined,
+      url ?? undefined
+    );
   },
 };
