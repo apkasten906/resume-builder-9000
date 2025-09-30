@@ -30,17 +30,17 @@ const ApplicationsPage: React.FC = () => {
   async function load(): Promise<void> {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      
+
       // Include Authorization header if token exists
       if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
       }
-      
+
       const res = await fetch('/api/applications', { headers });
-      
+
       if (res.ok) {
         const data = await res.json();
         setRows(data.items || []);
@@ -48,7 +48,7 @@ const ApplicationsPage: React.FC = () => {
         const errorMessage = `Error ${res.status}: ${res.statusText}`;
         setError(errorMessage);
         console.error('Failed to load applications:', errorMessage);
-        toast({ 
+        toast({
           title: 'Failed to load applications',
           description: errorMessage,
         });
@@ -79,48 +79,48 @@ const ApplicationsPage: React.FC = () => {
     try {
       setIsLoading(true);
       const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      
+
       // Include Authorization header if token exists
       if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
       }
-      
+
       const res = await fetch('/api/applications', {
         method: 'POST',
         headers,
         body: JSON.stringify({ company, role }),
       });
-      
+
       if (!res.ok) {
         const errorText = await res.text();
         const errorMessage = `Error ${res.status}: ${errorText || res.statusText}`;
         toast({
           title: 'Failed to add application',
-          description: errorMessage
+          description: errorMessage,
         });
         return;
       }
-      
+
       // Success
       const savedCompany = company;
       const savedRole = role;
-      
+
       // Reset form
       setCompany('');
       setRole('');
-      
+
       // Reload the list
       await load();
-      
+
       toast({
         title: 'Application added',
-        description: `${savedCompany} — ${savedRole}`
+        description: `${savedCompany} — ${savedRole}`,
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       toast({
         title: 'Failed to add application',
-        description: errorMessage
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -136,7 +136,7 @@ const ApplicationsPage: React.FC = () => {
         </div>
       );
     }
-    
+
     if (error) {
       return (
         <div className="text-center py-8">
@@ -148,7 +148,7 @@ const ApplicationsPage: React.FC = () => {
         </div>
       );
     }
-    
+
     if (rows.length > 0) {
       return (
         <Table>
@@ -167,7 +167,7 @@ const ApplicationsPage: React.FC = () => {
         </Table>
       );
     }
-    
+
     return (
       <div className="text-center py-8 text-gray-500">
         No applications found. Add your first application above.

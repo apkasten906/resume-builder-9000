@@ -3,19 +3,19 @@ import { Page } from '@playwright/test';
 
 /**
  * Controls verbosity of console logging in Playwright tests
- * 
+ *
  * Usage:
  * - Set PLAYWRIGHT_VERBOSE=true to enable all logging
  * - Set PLAYWRIGHT_VERBOSE=false or leave unset to show only warnings and errors
- * 
+ *
  * Examples:
  * ```
  * // Windows PowerShell
  * $env:PLAYWRIGHT_VERBOSE="true"; npx playwright test
- * 
+ *
  * // Windows Command Prompt
  * set PLAYWRIGHT_VERBOSE=true && npx playwright test
- * 
+ *
  * // Linux/macOS
  * PLAYWRIGHT_VERBOSE=true npx playwright test
  * ```
@@ -69,14 +69,15 @@ export const testLogger = {
     console.log(`Debug (${note}):`);
     console.log(`- Current URL: ${page.url()}`);
     console.log(`- Page title: ${await page.title()}`);
-    
+
     // Check for authentication indicators
-    const sessionCookie = await page.context()
+    const sessionCookie = await page
+      .context()
       .cookies()
       .then(cookies => cookies.find(cookie => cookie.name === 'session'));
-    
+
     console.log(`- Authentication indicators: ${sessionCookie ? 'Found' : 'Not found'}`);
-    
+
     // Take a screenshot if debug directory exists
     try {
       await page.screenshot({ path: `./test-results/debug-${Date.now()}.png` });
