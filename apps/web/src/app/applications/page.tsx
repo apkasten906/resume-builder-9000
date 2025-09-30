@@ -14,15 +14,61 @@ const ApplicationsPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get the auth token from localStorage if available (for testing)
+  useEffect(() => {
+    // Attempt to retrieve auth token from localStorage (used by tests)
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      setAuthToken(token);
+    }
+  }, []);
 
   async function load(): Promise<void> {
-    const res = await fetch('/api/applications');
-    const data = await res.json();
-    setRows(data.items || []);
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      
+      // Include Authorization header if token exists
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      
+      const res = await fetch('/api/applications', { headers });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setRows(data.items || []);
+      } else {
+        const errorMessage = `Error ${res.status}: ${res.statusText}`;
+        setError(errorMessage);
+        console.error('Failed to load applications:', errorMessage);
+        toast({ 
+          title: 'Failed to load applications',
+          description: errorMessage,
+        });
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
+      console.error('Error loading applications:', err);
+      toast({
+        title: 'Failed to load applications',
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
+
   useEffect(() => {
     load();
-  }, []);
+  }, [authToken]); // Reload when authToken changes
 
   const filtered = useMemo(
     () => rows.filter(r => (r.company + r.role).toLowerCase().includes(query.toLowerCase())),
@@ -30,26 +76,113 @@ const ApplicationsPage: React.FC = () => {
   );
 
   async function add(): Promise<void> {
-    const res = await fetch('/api/applications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ company, role }),
-    });
-    if (!res.ok) {
-      toast({ title: 'Add failed' });
-      return;
+    try {
+      setIsLoading(true);
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      
+      // Include Authorization header if token exists
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ company, role }),
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        const errorMessage = `Error ${res.status}: ${errorText || res.statusText}`;
+        toast({
+          title: 'Failed to add application',
+          description: errorMessage
+        });
+        return;
+      }
+      
+      // Success
+      const savedCompany = company;
+      const savedRole = role;
+      
+      // Reset form
+      setCompany('');
+      setRole('');
+      
+      // Reload the list
+      await load();
+      
+      toast({
+        title: 'Application added',
+        description: `${savedCompany} — ${savedRole}`
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      toast({
+        title: 'Failed to add application',
+        description: errorMessage
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setCompany('');
-    setRole('');
-    await load();
-    toast({ title: 'Application added', description: `${company} — ${role}` });
   }
+
+  // Function to render the content based on state
+  const renderContent = (): React.ReactNode => {
+    if (isLoading) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Loading applications...</p>
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-red-500 font-semibold">Error loading applications</p>
+          <p className="text-gray-500 mt-2">{error}</p>
+          <Button className="mt-4" onClick={load}>
+            Try Again
+          </Button>
+        </div>
+      );
+    }
+    
+    if (rows.length > 0) {
+      return (
+        <Table>
+          {filtered.map(r => (
+            <TRow key={r.id}>
+              <TCell className="font-semibold">{r.company}</TCell>
+              <TCell>{r.role}</TCell>
+              <TCell>
+                <Badge>{r.stage}</Badge>
+              </TCell>
+              <TCell className="text-sm text-gray-600 dark:text-gray-300">
+                {new Date(r.lastUpdated).toLocaleString()}
+              </TCell>
+            </TRow>
+          ))}
+        </Table>
+      );
+    }
+    
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No applications found. Add your first application above.
+      </div>
+    );
+  };
 
   return (
     <div className="grid gap-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Applications</CardTitle>
+          <Button variant="secondary" size="sm" onClick={load}>
+            Refresh
+          </Button>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid md:grid-cols-3 gap-3">
@@ -67,20 +200,7 @@ const ApplicationsPage: React.FC = () => {
               </Button>
             </div>
           </div>
-          <Table>
-            {filtered.map(r => (
-              <TRow key={r.id}>
-                <TCell className="font-semibold">{r.company}</TCell>
-                <TCell>{r.role}</TCell>
-                <TCell>
-                  <Badge>{r.stage}</Badge>
-                </TCell>
-                <TCell className="text-sm text-gray-600 dark:text-gray-300">
-                  {new Date(r.lastUpdated).toLocaleString()}
-                </TCell>
-              </TRow>
-            ))}
-          </Table>
+          {renderContent()}
         </CardContent>
       </Card>
     </div>
