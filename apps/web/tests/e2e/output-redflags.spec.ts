@@ -4,7 +4,7 @@ import { testLogger } from './utils/test-logger';
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 
 test.describe('Output and Red Flags', () => {
-  test.skip('should generate output files and allow download', async ({ page }) => {
+  test('should generate output files and allow download', async ({ page }) => {
     try {
       testLogger.log('Starting output generation test');
       await page.goto(`${WEB_BASE}/output`);
@@ -21,8 +21,8 @@ test.describe('Output and Red Flags', () => {
       });
 
       // Check that download buttons are present
-      const downloadButtons = page.getByRole('button', { name: /download|save/i });
-      await expect(downloadButtons).toBeVisible();
+      const downloadButtons = page.getByRole('button', { name: 'Download' });
+      await expect(downloadButtons.first()).toBeVisible();
       await expect(downloadButtons).toHaveCount(2); // Expect PDF and DOCX formats
 
       testLogger.log('Output generation test completed successfully');
@@ -33,31 +33,28 @@ test.describe('Output and Red Flags', () => {
     }
   });
 
-  test.skip('should surface missing must-haves and page length issues', async ({ page }) => {
+  test('should surface missing must-haves and page length issues', async ({ page }) => {
     try {
       testLogger.log('Starting red flags test');
-      await page.goto(`${WEB_BASE}/validate`);
+      await page.goto(`${WEB_BASE}/output`);
 
       // Select a resume from dropdown
-      await page.locator('select[name="resumeId"]').selectOption({ index: 0 });
+      await page.locator('select#resumeSelect').selectOption({ index: 0 });
 
-      // Select a job from dropdown
-      await page.locator('select[name="jobId"]').selectOption({ index: 0 });
+      // Click generate button
+      await page.getByRole('button', { name: /generate resume/i }).click();
 
-      // Click validate button
-      await page.getByRole('button', { name: /validate|check|analyze/i }).click();
-
-      // Wait for validation to complete
-      await expect(page.getByText(/validation complete|analysis complete/i)).toBeVisible({
+      // Wait for generation to complete
+      await expect(page.getByText(/generation complete/i)).toBeVisible({
         timeout: 10000,
       });
 
       // Check that red flags section is visible
-      await expect(page.getByText(/red flags|warnings|issues/i)).toBeVisible();
+      await expect(page.getByText(/red flags/i)).toBeVisible();
 
       // Check for specific red flags
-      await expect(page.getByText(/missing must-have|required skill/i)).toBeVisible();
-      await expect(page.getByText(/page length|too long|exceeds/i)).toBeVisible();
+      await expect(page.getByText(/missing keywords/i)).toBeVisible();
+      await expect(page.getByText(/page/i).and(page.getByText(/pages/i))).toBeVisible();
 
       testLogger.log('Red flags test completed successfully');
     } catch (error) {
