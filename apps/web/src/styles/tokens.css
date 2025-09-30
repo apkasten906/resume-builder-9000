@@ -1,0 +1,138 @@
+/* -------------------------------
+   Design tokens (light / dark)
+   ------------------------------- */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  /* Extra semantic */
+  --success: 142.1 70.6% 45.3%;
+  --success-foreground: 144.9 80.4% 10%;
+
+  --warning: 45 93% 47%;
+  --warning-foreground: 26 83% 14%;
+
+  --info: 199 89% 48%;
+  --info-foreground: 210 40% 98%;
+
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 1rem;
+  --shadow-color: 222 20% 30%;
+}
+
+/* Dark mode overrides */
+:root[data-theme='dark'] {
+  --background: 224 71% 4%;
+  --foreground: 213 31% 91%;
+
+  --muted: 223 47% 11%;
+  --muted-foreground: 215.4 16.3% 56.9%;
+
+  --popover: 224 71% 4%;
+  --popover-foreground: 215 20.2% 65.1%;
+
+  --card: 224 71% 4%;
+  --card-foreground: 213 31% 91%;
+
+  --border: 216 34% 17%;
+  --input: 216 34% 17%;
+
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+
+  --secondary: 223 47% 11%;
+  --secondary-foreground: 210 40% 98%;
+
+  --accent: 216 34% 17%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --success: 142.1 70.6% 35%;
+  --success-foreground: 144.9 80.4% 92%;
+
+  --warning: 45 95% 35%;
+  --warning-foreground: 26 90% 92%;
+
+  --info: 199 89% 48%;
+  --info-foreground: 210 40% 98%;
+
+  --ring: 217.2 91.2% 59.8%;
+}
+
+/* -------------------------------
+   Brand overlay example (optional)
+   Apply on <html data-theme="brand-emerald"> to layer brand identity
+   over the current mode (light/dark).
+   ------------------------------- */
+:root[data-theme='brand-emerald'] {
+  --primary: 142 70% 45%;
+  --primary-foreground: 144.9 80.4% 10%;
+  --accent: 160 80% 40%;
+  --accent-foreground: 160 86% 8%;
+  --ring: 142 70% 45%;
+
+  /* optional: nudge semantic tokens toward brand */
+  --success: 142 70% 45%;
+  --success-foreground: 144.9 80.4% 10%;
+}
+
+/* -------------------------------
+   Base element defaults
+   ------------------------------- */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    hanging-punctuation: first last;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings:
+      'ss01' 1,
+      'cv02' 1;
+  }
+}
+
+/* -------------------------------
+   Utility helpers
+   ------------------------------- */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .shadow-soft {
+    box-shadow:
+      0 1px 2px hsl(var(--shadow-color) / 0.1),
+      0 8px 24px hsl(var(--shadow-color) / 0.08);
+  }
+  .shadow-float {
+    box-shadow: 0 6px 20px hsl(var(--shadow-color) / 0.16);
+  }
+}
