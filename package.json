@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "playwright": "npx playwright",
     "build": "npm --workspaces run build",
     "clean": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clean.ps1",
     "clean-and-rebuild": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clean-and-rebuild.ps1",
