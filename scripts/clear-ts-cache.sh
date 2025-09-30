@@ -2,45 +2,45 @@
 # Clear TypeScript Cache - Clears various TypeScript caches to resolve compilation issues
 
 # Default values
-CLEAR_NODE_MODULES=false
-CLEAR_VSCODE=false
-CLEAR_TSSERVER=false
-SHOW_HELP=false
-ALL=false
+ SHOULD_CLEAR_NODE_MODULES=false
+ SHOULD_CLEAR_VSCODE=false
+ SHOULD_CLEAR_TSSERVER=false
+ SHOULD_SHOW_HELP=false
+ SHOULD_CLEAR_ALL=false
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --all|-a)
-      ALL=true
+  SHOULD_CLEAR_ALL=true
       shift
       ;;
     --node-modules|-n)
-      CLEAR_NODE_MODULES=true
+  SHOULD_CLEAR_NODE_MODULES=true
       shift
       ;;
     --vscode|-v)
-      CLEAR_VSCODE=true
+  SHOULD_CLEAR_VSCODE=true
       shift
       ;;
     --tsserver|-t)
-      CLEAR_TSSERVER=true
+  SHOULD_CLEAR_TSSERVER=true
       shift
       ;;
     --help|-h)
-      SHOW_HELP=true
+  SHOULD_SHOW_HELP=true
       shift
       ;;
     *)
       echo "Unknown option: $1"
-      SHOW_HELP=true
+  SHOULD_SHOW_HELP=true
       shift
       ;;
   esac
 done
 
 # Show help if requested or no cache types specified
-if [ "$SHOW_HELP" = true ] || [ "$ALL" = false ] && [ "$CLEAR_NODE_MODULES" = false ] && [ "$CLEAR_VSCODE" = false ] && [ "$CLEAR_TSSERVER" = false ]; then
+if [ "$SHOULD_SHOW_HELP" = true ] || [ "$SHOULD_CLEAR_ALL" = false ] && [ "$SHOULD_CLEAR_NODE_MODULES" = false ] && [ "$SHOULD_CLEAR_VSCODE" = false ] && [ "$SHOULD_CLEAR_TSSERVER" = false ]; then
   echo "Clear TypeScript Cache"
   echo
   echo "USAGE:"
@@ -60,10 +60,10 @@ if [ "$SHOW_HELP" = true ] || [ "$ALL" = false ] && [ "$CLEAR_NODE_MODULES" = fa
 fi
 
 # Set options based on --all flag
-if [ "$ALL" = true ]; then
-  CLEAR_NODE_MODULES=true
-  CLEAR_VSCODE=true
-  CLEAR_TSSERVER=true
+if [ "$SHOULD_CLEAR_ALL" = true ]; then
+  SHOULD_CLEAR_NODE_MODULES=true
+  SHOULD_CLEAR_VSCODE=true
+  SHOULD_CLEAR_TSSERVER=true
 fi
 
 # Initialize counters
@@ -96,7 +96,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Clear Node modules cache if requested
-if [ "$CLEAR_NODE_MODULES" = true ]; then
+if [ "$SHOULD_CLEAR_NODE_MODULES" = true ]; then
   NODE_MODULE_CACHE_PATHS=(
     "$PROJECT_ROOT/node_modules/.cache"
     "$PROJECT_ROOT/apps/web/node_modules/.cache"
@@ -114,7 +114,7 @@ if [ "$CLEAR_NODE_MODULES" = true ]; then
 fi
 
 # Clear VS Code TypeScript cache if requested
-if [ "$CLEAR_VSCODE" = true ]; then
+if [ "$SHOULD_CLEAR_VSCODE" = true ]; then
   # VS Code cache locations are OS-dependent
   if [ "$(uname)" == "Darwin" ]; then
     # macOS
@@ -146,7 +146,7 @@ if [ "$CLEAR_VSCODE" = true ]; then
 fi
 
 # Clear TypeScript server cache if requested
-if [ "$CLEAR_TSSERVER" = true ]; then
+if [ "$SHOULD_CLEAR_TSSERVER" = true ]; then
   if [ "$(uname)" == "Darwin" ]; then
     # macOS
     TS_CACHE_PATHS=(
