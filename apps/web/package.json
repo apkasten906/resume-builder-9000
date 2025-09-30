@@ -22,10 +22,12 @@
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
     "@rb9k/core": "*",
+    "@tailwindcss/postcss": "^4.1.13",
     "@tailwindcss/typography": "^0.5.16",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.543.0",
+    "postcss": "^8.5.6",
     "react": "^18.3.1",
     "react-dom": "^18.2.0",
     "tailwind-merge": "^3.3.1",

@@ -9,29 +9,29 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, label, helperText, error, ...props }, ref) => {
+  ({ className, label, helperText, error, ...props }, ref): React.ReactElement => {
     const generatedId = React.useId();
     const id = props.id || generatedId;
+    const base = cn(
+      'w-full min-h-[120px] rounded-2xl border bg-background px-3 py-2',
+      'text-foreground placeholder:text-muted-foreground',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+      'border-input'
+    );
+    const err = 'border-destructive text-destructive focus-visible:ring-destructive';
     return (
       <div className="block">
-        {label ? (
-          <label htmlFor={id} className="block text-sm mb-1">
+        {label && (
+          <label htmlFor={id} className="mb-1 block text-sm font-medium text-foreground">
             {label}
           </label>
-        ) : null}
-        <textarea
-          id={id}
-          className={cn(
-            'w-full min-h-[120px] border rounded-2xl px-3 py-2 bg-white dark:bg-zinc-900',
-            error ? 'border-red-500' : 'border-gray-300',
-            className
-          )}
-          ref={ref}
-          {...props}
-        />
-        {!error && helperText && <div className="text-xs text-gray-500 mt-1">{helperText}</div>}
+        )}
+        <textarea id={id} className={cn(base, error && err, className)} ref={ref} {...props} />
+        {!error && helperText && (
+          <div className="mt-1 text-xs text-muted-foreground">{helperText}</div>
+        )}
         {error && (
-          <div className="text-xs text-red-600 mt-1" role="alert">
+          <div className="mt-1 text-xs text-destructive" role="alert">
             {error}
           </div>
         )}
