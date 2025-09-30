@@ -17,13 +17,13 @@ import { testLogger } from './utils/test-logger';
 test('My test', async ({ page }) => {
   // Informational logs - only shown when verbose mode is enabled
   testLogger.log('Starting test');
-  
+
   // Warnings - always shown
   testLogger.warn('Something unexpected happened');
-  
+
   // Errors - always shown
   testLogger.error('Failed to complete operation', error);
-  
+
   // Debug page state - screenshot, URL, title, auth status
   await testLogger.debugPageState(page, 'After login attempt');
 });

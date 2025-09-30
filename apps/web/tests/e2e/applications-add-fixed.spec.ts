@@ -15,9 +15,9 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
   // The authToken is already set up by the testWithAuth fixture
   testLogger.log('Using pre-authenticated token from test fixture');
   const token = authToken; // Using the token provided by the fixture
-  
+
   // Store the token in localStorage as well for the application to find
-  await page.evaluate((token) => {
+  await page.evaluate(token => {
     localStorage.setItem('authToken', token);
   }, token);
 
