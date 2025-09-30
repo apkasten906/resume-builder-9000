@@ -25,7 +25,10 @@
     "test:e2e:standalone": "npx playwright test --config=apps/web/tests/e2e/playwright.standalone.config.ts",
     "test:all": "npm run test:unit && npm run test:e2e",
     "postinstall": "patch-package",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "clear-ts-cache:win": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clear-ts-cache.ps1 -All",
+    "clear-ts-cache:unix": "bash ./scripts/clear-ts-cache.sh --all",
+    "clear-ts-cache": "powershell.exe -ExecutionPolicy Bypass -Command \"if ($IsWindows -or $env:OS -like '*Windows*') { npm run clear-ts-cache:win } else { npm run clear-ts-cache:unix }\""
   },
   "engines": {
     "node": ">=22.0.0",
