@@ -13,28 +13,6 @@
       "problemMatcher": []
     },
     {
-      "label": "Run Build Script",
-      "type": "shell",
-      "command": "powershell.exe -ExecutionPolicy Bypass -File ./build.ps1",
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "generate-readme",
-      "type": "shell",
-      "command": "node update-readme.js",
-      "problemMatcher": [],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "detail": "Generates the README.md file using update-readme.js script."
-    },
-    {
       "label": "lint",
       "type": "shell",
       "command": "npm run lint",
@@ -55,17 +33,6 @@
         "isDefault": true
       },
       "detail": "Formats the codebase using Prettier."
-    },
-    {
-      "label": "test",
-      "type": "shell",
-      "command": "npm test",
-      "problemMatcher": [],
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      },
-      "detail": "Runs the test suite using Vitest."
     },
     {
       "label": "test:watch",

@@ -1,4 +1,4 @@
-import type { ResumeData } from '@rb9k/core';
+import type { ResumeData, Experience, Education, Skill } from '@rb9k/core';
 import React from 'react';
 
 interface ResumePreviewProps {
@@ -58,7 +58,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resume }) => {
       {experience && experience.length > 0 && (
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Work Experience</h2>
-          {experience.map(job => (
+          {experience.map((job: Experience) => (
             <div key={`${job.company}-${job.title}-${job.startDate}`} className="mb-4">
               <div className="flex justify-between">
                 <h3 className="font-bold">
@@ -71,7 +71,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resume }) => {
               {job.location && <div className="text-gray-500">{job.location}</div>}
               {job.responsibilities && job.responsibilities.length > 0 && (
                 <ul className="list-disc pl-6 mt-1">
-                  {job.responsibilities.map(resp => (
+                  {job.responsibilities.map((resp: string) => (
                     <li key={resp}>{resp}</li>
                   ))}
                 </ul>
@@ -83,7 +83,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resume }) => {
       {education && education.length > 0 && (
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Education</h2>
-          {education.map(edu => (
+          {education.map((edu: Education) => (
             <div key={`${edu.institution}-${edu.degree}-${edu.graduationDate}`} className="mb-2">
               <div className="font-bold">
                 {edu.degree} at {edu.institution}
@@ -107,7 +107,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resume }) => {
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Skills</h2>
           <div className="flex flex-wrap gap-2">
-            {skills.map(skill => (
+            {skills.map((skill: Skill) => (
               <span
                 key={skill.name}
                 className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
@@ -123,7 +123,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resume }) => {
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Certifications</h2>
           <ul className="list-disc pl-6">
-            {certifications.map(cert => (
+            {certifications.map((cert: string) => (
               <li key={cert}>{cert}</li>
             ))}
           </ul>
@@ -133,7 +133,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resume }) => {
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Projects</h2>
           <ul className="list-disc pl-6">
-            {projects.map(proj => (
+            {projects.map((proj: string) => (
               <li key={proj}>{proj}</li>
             ))}
           </ul>
