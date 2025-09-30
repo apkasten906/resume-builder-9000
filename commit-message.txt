@@ -1,3 +1,11 @@
+<type>docs</type>
+<scope>adr,review</scope>
+<description>Add ADR for null vs undefined decision and mark Copilot review recommendations</description>
+<body>
+Created ADR 0008 documenting decision to use null for optional/missing values.
+Updated scripts and code to use descriptive variable names and nullish coalescing operator.
+Marked Copilot review recommendations as completed or deferred (tech debt).
+</body>
 docs(testing): consolidate and organize Playwright testing documentation
 
 ## Problem
