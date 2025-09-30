@@ -46,8 +46,7 @@ test.describe('Job Description Intake and Tailoring', () => {
       testLogger.log('Job description intake test completed successfully');
     } catch (error) {
       testLogger.error('Error in job description intake test:', error);
-      // Skip for now as UI implementation may still be in progress
-      test.skip(true, 'Job intake UI is not fully implemented yet');
+      throw error; // Fail the test properly instead of skipping
     }
   });
 
@@ -75,8 +74,7 @@ test.describe('Job Description Intake and Tailoring', () => {
       testLogger.log('Tailoring test completed successfully');
     } catch (error) {
       testLogger.error('Error in tailoring test:', error);
-      // Skip for now as UI implementation may still be in progress
-      test.skip(true, 'Tailoring UI is not fully implemented yet');
+      throw error; // Fail the test properly instead of skipping
     }
   });
 });

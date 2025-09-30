@@ -28,8 +28,7 @@ test.describe('Output and Red Flags', () => {
       testLogger.log('Output generation test completed successfully');
     } catch (error) {
       testLogger.error('Error in output generation test:', error);
-      // Instead of throwing, we'll mark the test as skipped until the UI is ready
-      test.skip(true, 'Output generation UI is not implemented yet');
+      throw error; // Fail the test properly instead of skipping
     }
   });
 
@@ -59,8 +58,7 @@ test.describe('Output and Red Flags', () => {
       testLogger.log('Red flags test completed successfully');
     } catch (error) {
       testLogger.error('Error in red flags test:', error);
-      // Instead of throwing, we'll mark the test as skipped until the UI is ready
-      test.skip(true, 'Red flags UI is not implemented yet');
+      throw error; // Fail the test properly instead of skipping
     }
   });
 });
