@@ -1,6 +1,4 @@
-# Playwright Testing Guide
-
-## Test Logging System
+# Playwright Test Logging System
 
 We've implemented a consistent logging system for Playwright E2E tests that offers the following benefits:
 
@@ -68,16 +66,12 @@ PLAYWRIGHT_VERBOSE=true npx playwright test
 3. `apps/web/tests/e2e/jwt-token-check.spec.ts`: Replaced console.log with testLogger
 4. `apps/web/tests/e2e/utils/test-logger.ts`: Enhanced documentation
 
-## Best Practices
-
-- Use `testLogger.log()` for routine information that's useful during debugging
-- Use `testLogger.warn()` for unexpected conditions that don't fail the test
-- Use `testLogger.error()` for critical issues that may cause test failure
-- Include the full error object when logging errors for stack traces
-- Call `testLogger.debugPageState()` at key points in the test flow for troubleshooting
-
 ## Next Steps
 
 - Consider adding additional helper methods to the testLogger for common debugging patterns
 - Implement integration with CI/CD pipelines by setting the environment variable
 - Standardize test failure screenshots with the logger system
+
+## Conclusion
+
+This logging system will help ensure our tests are more maintainable and easier to debug going forward.

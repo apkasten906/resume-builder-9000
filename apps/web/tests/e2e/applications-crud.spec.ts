@@ -10,7 +10,7 @@ testWithAuth('Applications add and list', async ({ page, authToken }) => {
   // Create an application directly with the API using the authToken
   try {
     testLogger.log('Creating test application via API');
-    
+
     // Create application with the API using the authenticated token
     const apiResponse = await fetch(`${API_BASE}/applications`, {
       method: 'POST',
@@ -39,38 +39,38 @@ testWithAuth('Applications add and list', async ({ page, authToken }) => {
   // Navigate directly to the applications page
   testLogger.log('Navigating to applications page');
   await page.goto(`${WEB_BASE}/applications`, { waitUntil: 'networkidle' });
-  
+
   // Take a screenshot of the applications page
   await page.screenshot({ path: 'test-results/applications-page.png', fullPage: true });
-  
+
   // Test cookie verification
   const cookies = await page.context().cookies();
   const sessionCookie = cookies.find(c => c.name === 'session');
   testLogger.log('Session cookie present:', !!sessionCookie);
-  
+
   // Save the HTML content for debugging
   await fs.promises.mkdir('test-results', { recursive: true });
   const applicationsPageContent = await page.content();
   await fs.promises.writeFile('test-results/applications-page.html', applicationsPageContent);
 
   testLogger.log('Current URL after navigation:', page.url());
-  
+
   // Skip UI form filling as the Add button is disabled in the UI
-  testLogger.log('Skipping UI form - Add button is disabled, focusing on API test instead');  // Wait a moment for the request to complete
+  testLogger.log('Skipping UI form - Add button is disabled, focusing on API test instead'); // Wait a moment for the request to complete
   await page.waitForTimeout(1000);
 
   // Create another application via API to ensure we have at least one item
   try {
     testLogger.log('Creating backup application via API');
-    
+
     const backupApiResponse = await fetch(`${API_BASE}/applications`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${authToken}`,
       },
-      body: JSON.stringify({ 
-        company: 'Backup Company', 
+      body: JSON.stringify({
+        company: 'Backup Company',
         role: 'Backup Role',
         description: 'Created as backup for test',
       }),
@@ -90,22 +90,31 @@ testWithAuth('Applications add and list', async ({ page, authToken }) => {
 
   // Wait for applications to be visible
   testLogger.log('Waiting for applications to be visible...');
-  
+
   await page.waitForTimeout(1000);
-  
+
   // Take a screenshot after reload
   await page.screenshot({ path: 'test-results/after-reload.png' });
-  
+
   // Verify that applications are displayed
   await expect(page.locator('table')).toBeVisible();
-  
+
   // Wait for either application to be visible in the table
   const applicationVisible = await Promise.any([
-    page.waitForSelector('text=Acme Corp', { timeout: 5000 }).then(() => true).catch(() => false),
-    page.waitForSelector('text=Acme2', { timeout: 5000 }).then(() => true).catch(() => false),
-    page.waitForSelector('text=Backup Company', { timeout: 5000 }).then(() => true).catch(() => false),
+    page
+      .waitForSelector('text=Acme Corp', { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false),
+    page
+      .waitForSelector('text=Acme2', { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false),
+    page
+      .waitForSelector('text=Backup Company', { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false),
   ]);
-  
+
   expect(applicationVisible).toBeTruthy();
   testLogger.log('Application visible in table:', applicationVisible);
 });

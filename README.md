@@ -59,6 +59,9 @@ Run the following commands to set up the project:
    Email: user@example.com
    Password: ValidPassword1!
    ```
+
+   ```
+
    ```
 
 ## Running the Environment
