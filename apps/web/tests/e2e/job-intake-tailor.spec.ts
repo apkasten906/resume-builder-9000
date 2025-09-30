@@ -4,7 +4,7 @@ import { testLogger } from './utils/test-logger';
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 
 test.describe('Job Description Intake and Tailoring', () => {
-  test.skip('should intake job description and show parsed requirements', async ({ page }) => {
+  test('should intake job description and show parsed requirements', async ({ page }) => {
     try {
       testLogger.log('Starting job description intake test');
       await page.goto(`${WEB_BASE}/job-intake`);
@@ -33,10 +33,10 @@ test.describe('Job Description Intake and Tailoring', () => {
       });
 
       // Look for requirements section
-      await expect(page.getByText(/requirements/i)).toBeVisible();
+      await expect(page.getByText(/must-have requirements/i)).toBeVisible();
 
       // Look for keywords section with badges
-      await expect(page.locator('.flex.gap-2.flex-wrap').first()).toBeVisible({
+      await expect(page.locator('.flex.flex-wrap.gap-2').first()).toBeVisible({
         timeout: 5000,
       });
 
@@ -51,7 +51,7 @@ test.describe('Job Description Intake and Tailoring', () => {
     }
   });
 
-  test.skip('should run tailoring and generate ATS-safe output', async ({ page }) => {
+  test('should run tailoring and generate ATS-safe output', async ({ page }) => {
     try {
       testLogger.log('Starting tailoring test');
       await page.goto(`${WEB_BASE}/tailor`);
