@@ -4,6 +4,8 @@
 
 This document summarizes the status of the Playwright end-to-end tests for the Resume Builder 9000 project. The tests have been fixed to address authentication issues, but some tests remain skipped due to application-specific functionality that needs further investigation.
 
+> **Note:** Always use the `test:e2e` script from package.json when running E2E tests. See [E2E Testing Guidelines](./e2e-testing-guidelines.md) for more details.
+
 ## Test Status
 
 - **Passing Tests**: 25
