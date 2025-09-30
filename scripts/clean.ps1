@@ -1,4 +1,5 @@
-scripts/clean-and-rebuild.ps1# Clean and Rebuild Script for Resume Builder 9000 Monorepo
+scripts/clean.ps1
+# Clean and Rebuild Script for Resume Builder 9000 Monorepo
 # Usage: powershell -ExecutionPolicy Bypass -File ./scripts/clean-and-rebuild.ps1
 
 

@@ -1,18 +1,14 @@
-
 👉 This is easiest: contributors just fill out the Markdown.
-
 ---
-
 ## ✅ Option 2: Use YAML Issue Forms (structured fields)
 
-File: `.github/ISSUE_TEMPLATE/vertical-slice.yml`
+### yaml
+name: 'Vertical Slice Story'
+description: 'End-to-end feature covering frontend, API, business logic, and database'
+title: '[Story] '
+labels: ['story', 'vertical-slice']
 
-```yaml
-name: "Vertical Slice Story"
-description: "End-to-end feature covering frontend, API, business logic, and database"
-title: "[Story] "
-labels: ["story", "vertical-slice"]
-
+#### body
 body:
   - type: textarea
     id: summary

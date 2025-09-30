@@ -1,8 +1,6 @@
 'use client';
 import * as React from 'react';
-
 import { Slot } from '@radix-ui/react-slot';
-
 import { cn } from '@/lib/cn';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -10,24 +8,28 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: 'default' | 'secondary' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
 }
-const variants: Record<string, string> = {
-  default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-600',
-  secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-400',
-  ghost: 'bg-transparent hover:bg-gray-100 text-gray-900 focus:ring-gray-300',
+
+const variants: Record<NonNullable<ButtonProps['variant']>, string> = {
+  default: 'bg-primary text-primary-foreground hover:opacity-90 focus-visible:ring-ring',
+  secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 focus-visible:ring-ring',
+  ghost: 'bg-transparent hover:bg-accent text-foreground focus-visible:ring-ring',
 };
-const sizes: Record<string, string> = {
+
+const sizes: Record<NonNullable<ButtonProps['size']>, string> = {
   sm: 'px-3 py-1.5 text-sm',
   md: 'px-4 py-2 text-base',
   lg: 'px-5 py-3 text-lg',
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', size = 'md', asChild = false, ...props }, ref) => {
+  ({ className, variant = 'default', size = 'md', asChild, ...props }, ref): React.ReactElement => {
     const Comp = asChild ? Slot : 'button';
     return (
       <Comp
         className={cn(
-          'inline-flex items-center justify-center rounded-2xl shadow focus:outline-none focus:ring-2 focus:ring-offset-2 transition disabled:opacity-50',
+          'inline-flex select-none items-center justify-center rounded-2xl shadow-soft',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background',
+          'disabled:opacity-50 disabled:pointer-events-none transition',
           variants[variant],
           sizes[size],
           className
