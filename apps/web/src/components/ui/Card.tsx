@@ -6,7 +6,12 @@ export function Card({
   children,
 }: React.PropsWithChildren<{ className?: string }>): React.ReactElement {
   return (
-    <div className={cn('rounded-2xl shadow p-4 bg-white dark:bg-zinc-900', className)}>
+    <div
+      className={cn(
+        'rounded-2xl border border-[hsl(var(--border))] bg-card text-card-foreground p-4 shadow-soft',
+        className
+      )}
+    >
       {children}
     </div>
   );
