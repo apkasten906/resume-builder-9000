@@ -2,10 +2,17 @@
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true,
+    },
+  },
   plugins: [
     '@typescript-eslint',
     '@next/next',
+    'react-hooks',
     // Use 'local-rules' for plugin name, not 'eslint-plugin-local-rules'
     'local-rules',
   ],
@@ -13,6 +20,7 @@ module.exports = {
     'eslint:recommended',
     'plugin:@next/next/recommended',
     'plugin:@typescript-eslint/recommended',
+    'plugin:react-hooks/recommended',
     'plugin:prettier/recommended',
   ],
   rules: {

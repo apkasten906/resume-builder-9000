@@ -75,6 +75,26 @@ PLAYWRIGHT_VERBOSE=true npx playwright test
 - Use `testLogger.error()` for critical issues that may cause test failure
 - Include the full error object when logging errors for stack traces
 - Call `testLogger.debugPageState()` at key points in the test flow for troubleshooting
+- Avoid using visual indicators like icons in log messages
+- Ensure all log messages are meaningful and provide actionable insights
+
+## Recent Updates
+
+### Removal of Icons from Log Messages
+
+- All log messages have been standardized to remove icons (e.g., ✅, ❌) for better readability and compatibility with CI/CD pipelines.
+- Use `testLogger` methods for all logging needs to ensure consistency.
+
+### Example Update
+
+```typescript
+// Before
+console.log('✅ Test passed');
+
+// After
+import { testLogger } from './utils/test-logger';
+testLogger.log('Test passed');
+```
 
 ## Next Steps
 

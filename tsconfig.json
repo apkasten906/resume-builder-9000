@@ -8,5 +8,19 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": []
+  "files": [],
+  "references": [
+    { "path": "./apps/web" },
+    { "path": "./packages/api" },
+    { "path": "./packages/core" }
+  ],
+  "exclude": [
+    "apps/*/node_modules",
+    "packages/*/node_modules",
+    "apps/*/dist",
+    "packages/*/dist",
+    "apps/*/.next",
+    "apps/*/coverage",
+    "packages/*/coverage"
+  ]
 }

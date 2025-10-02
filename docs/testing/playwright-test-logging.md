@@ -66,6 +66,23 @@ PLAYWRIGHT_VERBOSE=true npx playwright test
 3. `apps/web/tests/e2e/jwt-token-check.spec.ts`: Replaced console.log with testLogger
 4. `apps/web/tests/e2e/utils/test-logger.ts`: Enhanced documentation
 
+## Recent Updates
+
+### Removal of Icons from Log Messages
+
+- Icons (e.g., ✅, ❌) have been removed from all log messages to ensure clarity and compatibility with automated systems.
+- Use `testLogger` for all logging to maintain a consistent format.
+
+### Updated Logging Example
+
+```typescript
+// Before
+console.log('❌ Error occurred');
+
+// After
+testLogger.error('Error occurred');
+```
+
 ## Next Steps
 
 - Consider adding additional helper methods to the testLogger for common debugging patterns

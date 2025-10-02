@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, beforeEach, afterEach, expect, vi, Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import { mockSignedIn } from './vitest.setup';
 
 let userAuthenticated = true;
 
@@ -48,6 +49,16 @@ function TestLogoutComponent(): React.ReactElement {
 
 describe('AuthProvider logout flow', () => {
   it('logs out and updates authentication state', async () => {
+    (global.fetch as Mock).mockImplementationOnce((url: string) => {
+      if (url === '/api/auth/me') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ authenticated: true, user: { id: 1, name: 'Test User' } }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    });
+    mockSignedIn({ id: '1', name: 'Test User', email: 'test@example.com' });
     render(
       <AuthProvider>
         <TestLogoutComponent />

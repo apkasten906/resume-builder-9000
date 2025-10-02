@@ -2,8 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 // AuthButton toggles Sign In / Log Out based on authentication status
 function AuthButton(): React.ReactElement | null {

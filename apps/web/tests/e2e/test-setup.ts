@@ -3,102 +3,79 @@ import { testLogger } from './utils/test-logger';
 
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 const API_BASE = process.env.API_BASE || 'http://localhost:4000';
+const COOKIE_NAME = process.env.AUTH_SESSION_COOKIE_NAME || 'session'; // ← match your app
 
-// Create a programmatic login function that always uses Bearer token authentication
-async function loginViaApi(page: Page): Promise<string> {
-  testLogger.log('Getting Bearer token for testing...');
-
-  let token: string;
-
+async function getBearerToken(): Promise<string> {
   try {
-    // Attempt to log in via API to get a fresh token
-    const apiResponse = await fetch(`${API_BASE}/auth/login`, {
+    const r = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        // Try with known working credentials
-        email: 'user@example.com',
-        password: 'ValidPassword1!',
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'user@example.com', password: 'ValidPassword1!' }),
     });
-
-    if (apiResponse.ok) {
-      const data = await apiResponse.json();
-      token = data.token;
-      testLogger.log('Successfully obtained fresh Bearer token');
-    } else {
-      // Fallback to hardcoded token if API login fails
-      testLogger.warn('API login failed, using fallback hardcoded token');
-      token =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTkwODUyNzcsImV4cCI6MTc1OTY5MDA3N30.CX1f-7D9mZg1nGrvyQkKgCTB1lQn8mVT_tTA-jfWtZQ';
-    }
-  } catch (error) {
-    testLogger.error('Error during API login:', error);
-    // Fallback to hardcoded token if API login fails
-    token =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTkwODUyNzcsImV4cCI6MTc1OTY5MDA3N30.CX1f-7D9mZg1nGrvyQkKgCTB1lQn8mVT_tTA-jfWtZQ';
+    if (!r.ok) throw new Error(`login failed: ${r.status}`);
+    const data = (await r.json()) as { token: string };
+    return data.token;
+  } catch (err) {
+    testLogger.error('API login failed:', err instanceof Error ? err.message : String(err));
+    throw err;
   }
+}
 
-  // Set up a session cookie for auth
+/** Seed the auth cookie so /api/auth/me sees it on first render */
+async function seedAuthCookie(page: Page): Promise<string> {
+  const token = await getBearerToken();
+
+  // Use "url" instead of "domain" to avoid subtle domain/samesite issues on localhost/dev.
   await page.context().addCookies([
     {
-      name: 'session',
+      name: COOKIE_NAME,
       value: token,
-      domain: new URL(WEB_BASE).hostname,
+      url: WEB_BASE, // <- Playwright will infer domain/path correctly from this
       path: '/',
-      httpOnly: false, // Allow JavaScript access
+      httpOnly: false, // tests can read it; server will still get it in requests
       sameSite: 'Lax',
+      secure: WEB_BASE.startsWith('https'),
     },
   ]);
+
+  // Warm the session: hit /api/auth/me to ensure the server sees the cookie
+  const res = await page.goto(`${WEB_BASE}/api/auth/me`);
+  testLogger.log(`/api/auth/me warmup: ${res?.status()}`);
+  await page.goto(WEB_BASE, { waitUntil: 'domcontentloaded' });
 
   return token;
 }
 
-// Create a new test type that includes the auth token for tests that need it explicitly
-export type AuthFixtures = {
-  authToken: string;
-};
+export type AuthFixtures = { authToken: string };
 
 export const testWithAuth = base.extend<AuthFixtures>({
-  authToken: async ({ page }, use) => {
-    const token = await loginViaApi(page);
-    await use(token);
+  authToken: async ({ page }, run) => {
+    const token = await seedAuthCookie(page);
+    await run(token);
   },
 });
 
+// Global beforeEach: logged-in by default. If some specs need anonymous, they can clear cookie.
 base.beforeEach(async ({ page }) => {
   try {
-    // Get the Bearer token and store it for the test
-    const token = await loginViaApi(page);
-
-    // Debug: log auth setup
-    testLogger.log('Bearer token auth setup complete');
-
-    // Set up request interception to add Bearer token to all API requests
-    await page.route('**/*', async (route, request) => {
-      const headers = request.headers();
-
-      // Only add Authorization header for API requests to avoid CORS issues
-      if (request.url().includes(API_BASE)) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      await route.continue({ headers });
-    });
-
-    // Navigate to applications page to verify authentication
+    await seedAuthCookie(page);
+    testLogger.log('Auth cookie seeded; navigating to /applications');
     await page.goto(`${WEB_BASE}/applications`, { waitUntil: 'domcontentloaded' });
-
-    testLogger.log('Navigated to applications page');
   } catch (e) {
-    testLogger.error('Login failed:', e instanceof Error ? e.message : String(e));
-
-    // Continue with the test instead of failing
-    testLogger.warn('Continuing with test despite login failure...');
+    testLogger.error('Auth setup failed:', e instanceof Error ? e.message : String(e));
+    testLogger.warn('Continuing test without auth…');
   }
 });
 
 export const test = base;
 export { expect };
+
+/**
+ * Optional helpers for specs that want to flip states programmatically
+ */
+export async function logoutViaRoute(page: Page): Promise<void> {
+  const resp = await page.request.post(`${WEB_BASE}/api/auth/logout`);
+  testLogger.log(`/api/auth/logout -> ${resp.status()}`);
+  // Clear cookie on the browser context as well (belt & suspenders)
+  await page.context().clearCookies();
+}
