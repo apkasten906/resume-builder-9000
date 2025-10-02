@@ -23,10 +23,14 @@ Add a Home button and overview page to improve navigation and user experience.
   - If signed in:
     - Shows actionable insights/reminders at the top
     - Displays up to 10 most recent applications (each as a link to the future Application Details page), using the Table component
-    - Displays up to 10 most recent resume uploads (each as a link to the future Uploaded Resume Details page), using the Table component
-    - Both lists are shown in columns as before
-    - Insights/reminders are always shown above recent lists
-    - (copilot: Both application and resume upload links are placeholders until details pages are implemented)
+  - Displays up to 10 most recent resume uploads (each as a link to the future Uploaded Resume Details page), using the Table component
+  - Resume uploads table shows spinner while loading and error message if API fails
+  - Error message: "Apologies! We are having trouble retrieving your uploaded resumes right now." is shown in uploads table frame on failure
+  - Table is populated with up to 10 recent uploads after successful fetch
+  - All dashboard states (loading, error, success) are testable via Playwright e2e tests
+  - Both lists are shown in columns as before
+  - Insights/reminders are always shown above recent lists
+  - (copilot: Both application and resume upload links are placeholders until details pages are implemented)
   - If not signed in:
     - Home page presents a single prominent 'Get Started' call-to-action
     - When 'Get Started' is clicked, user is prompted: "Do you already have an account?" with options to Sign In or Register
