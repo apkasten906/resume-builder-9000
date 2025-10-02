@@ -6,6 +6,17 @@ import { connectDatabase } from '../db.js';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
+// In-memory blacklist for JWT tokens (for demo/dev only; use persistent store for prod)
+const jwtBlacklist = new Set<string>();
+
+export function blacklistToken(token: string): void {
+  jwtBlacklist.add(token);
+}
+
+export function isTokenBlacklisted(token: string): boolean {
+  return jwtBlacklist.has(token);
+}
+
 export const authService = {
   async login(email: string, password: string): Promise<{ token: string } | null> {
     // Get database connection from shared pool
@@ -37,6 +48,9 @@ export const authService = {
     const token = req.cookies?.session || req.headers.authorization?.split(' ')[1];
     if (!token) return null;
     try {
+      if (isTokenBlacklisted(token)) {
+        return null;
+      }
       const payload = jwt.verify(token, SECRET) as { sub: string; email: string };
       return { id: payload.sub, email: payload.email };
     } catch {

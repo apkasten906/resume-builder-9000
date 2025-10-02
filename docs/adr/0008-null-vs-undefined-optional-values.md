@@ -1,4 +1,3 @@
-
 # ADR 0008: Null vs Undefined for Optional and Missing Values
 
 ## Status

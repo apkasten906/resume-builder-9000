@@ -8,12 +8,15 @@ export const metadata = {
   description: 'Tailor resumes to jobs with ease',
 };
 
+import { AuthProvider } from '../context/AuthContext';
 const RootLayout: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <html lang="en">
       <body>
-        <AppShell>{children}</AppShell>
-        <Toaster />
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

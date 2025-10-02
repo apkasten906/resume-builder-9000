@@ -1,6 +1,10 @@
----
+# Mandatory TypeScript Return Types
+
+## All functions (including arrow and async functions) must have explicit return types. Never rely on type inference for exported or public functions. This is mandatory for all TypeScript code.
+
 description: 'Next.js + Tailwind development standards and instructions'
-applyTo: '**/*.tsx, **/*.ts, **/*.jsx, **/*.js, **/*.css'
+applyTo: '**/\*.tsx,**/_.ts,\*\*/_.jsx,**/\*.js,**/\*.css'
+
 ---
 
 # Next.js + Tailwind Development Instructions
