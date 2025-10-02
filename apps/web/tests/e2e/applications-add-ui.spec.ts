@@ -1,5 +1,6 @@
 import { test } from './test-setup';
 import { Page } from '@playwright/test';
+import { testLogger } from './utils/test-logger';
 
 // Import constants for URLs
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
@@ -8,14 +9,14 @@ const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
  * Helper function to log page state for debugging
  */
 async function debugPageState(page: Page, note: string): Promise<void> {
-  console.log(`Debug (${note}):`);
+  testLogger.log(`Debug (${note}):`);
 
   // Current URL
-  console.log(`- Current URL: ${page.url()}`);
+  testLogger.log(`- Current URL: ${page.url()}`);
 
   // Page title
   const title = await page.title();
-  console.log(`- Page title: ${title}`);
+  testLogger.log(`- Page title: ${title}`);
 
   // Take screenshot
   await page.screenshot({ path: `./test-results/debug-${Date.now()}.png` });
@@ -23,19 +24,19 @@ async function debugPageState(page: Page, note: string): Promise<void> {
   // Check for error messages
   const errorTexts = await page.getByText(/error/i).allTextContents();
   if (errorTexts.length > 0) {
-    console.log('- Error messages found:', errorTexts);
+    testLogger.log('- Error messages found:', errorTexts);
   }
 
   // Check for authentication state
   const authElements = await page.getByText(/log out/i).count();
-  console.log(`- Authentication indicators: ${authElements > 0 ? 'Found' : 'Not found'}`);
+  testLogger.log(`- Authentication indicators: ${authElements > 0 ? 'Found' : 'Not found'}`);
 }
 
 /**
  * Test that focuses purely on adding an application via the UI
  */
 test('Add application via UI', async ({ page }) => {
-  console.log('Starting applications add test (UI-only approach)');
+  testLogger.log('Starting applications add test (UI-only approach)');
 
   // Step 1: Navigate directly to applications page
   await page.goto(`${WEB_BASE}/applications`);
@@ -47,7 +48,7 @@ test('Add application via UI', async ({ page }) => {
   const appName = `UI Test Company ${timestamp}`;
   const appRole = `UI Test Role ${timestamp}`;
 
-  console.log(`Creating application: ${appName} - ${appRole}`);
+  testLogger.log(`Creating application: ${appName} - ${appRole}`);
 
   // Step 2: Fill and submit the form
   try {
@@ -60,7 +61,7 @@ test('Add application via UI', async ({ page }) => {
 
     // Submit form
     await page.getByRole('button', { name: 'Add' }).click();
-    console.log('Clicked Add button');
+    testLogger.log('Clicked Add button');
 
     // Wait for some indication of success
     await page.waitForTimeout(2000); // Give time for any response
@@ -73,11 +74,11 @@ test('Add application via UI', async ({ page }) => {
 
     // Log table contents
     const tableRows = await page.locator('table tr').count();
-    console.log(`Found ${tableRows} rows in table`);
+    testLogger.log(`Found ${tableRows} rows in table`);
 
     if (tableRows > 0) {
       const tableContent = await page.locator('table').textContent();
-      console.log('Table content:', tableContent);
+      testLogger.log('Table content:', tableContent);
     }
 
     // Check if our application appears in the list (be less strict about exact matches)
@@ -85,17 +86,17 @@ test('Add application via UI', async ({ page }) => {
     const appNameVisible = (await page.getByText(appNamePartial, { exact: false }).count()) > 0;
 
     if (appNameVisible) {
-      console.log('✅ Application appears in the list!');
+      testLogger.log('Application appears in the list!');
     } else {
-      console.log('❌ Application not found in the list');
+      testLogger.log('Application not found in the list');
       // Take a screenshot of the failure state
       await page.screenshot({ path: './test-results/app-not-found.png' });
       // Make test pass for now with a note about the issue
-      console.log('Marking test as passing but noting the application visibility issue');
+      testLogger.log('Marking test as passing but noting the application visibility issue');
     }
   } catch (error: unknown) {
     // Log the error but don't fail the test yet
-    console.error('Error during test:', error instanceof Error ? error.message : String(error));
+    testLogger.error('Error during test:', error instanceof Error ? error.message : String(error));
 
     // Take screenshot of error state
     await page.screenshot({ path: `./test-results/error-state.png` });
@@ -105,7 +106,7 @@ test('Add application via UI', async ({ page }) => {
       .locator('div')
       .filter({ hasText: /error|failed|invalid/i })
       .allTextContents();
-    console.log('Error messages on page:', errorMessages);
+    testLogger.log('Error messages on page:', errorMessages);
 
     // Re-throw to fail the test
     throw error;

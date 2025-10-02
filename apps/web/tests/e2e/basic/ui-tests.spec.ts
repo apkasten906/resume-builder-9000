@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+import { testLogger } from '../utils/test-logger';
 
 // Define test constants
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
@@ -13,11 +14,11 @@ if (!fs.existsSync(testResultsDir)) {
 
 // Simple function to log test progress
 function log(message: string): void {
-  console.log(`[${new Date().toISOString()}] ${message}`);
+  testLogger.log(`[${new Date().toISOString()}] ${message}`);
 }
 
 // Test the login page rendering without attempting to authenticate
-test('Login page UI test', async ({ page }) => {
+test('Login page UI test', async ({ page }: { page: Page }) => {
   log('Starting login page UI test');
 
   // Navigate to login page
@@ -44,7 +45,7 @@ test('Login page UI test', async ({ page }) => {
 });
 
 // Test public pages that don't require authentication
-test('Public pages accessibility test', async ({ page }) => {
+test('Public pages accessibility test', async ({ page }: { page: Page }) => {
   log('Starting public pages test');
 
   // Test home page

@@ -1,13 +1,8 @@
-# Copilot Processing - Service Layer Tests
+# Copilot Processing - E2E Test Fix
 
 ## User Request
 
-Add unit tests for the following service layer files:
-
-1. fileParser.ts
-2. resume-generator.ts
-3. resumeService.ts
-4. authService.ts
+Implement a fix based on best practices for the E2E test issues, specifically for applications-add-simple.spec.ts.
 
 ## Action Plan
 

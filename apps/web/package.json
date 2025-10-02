@@ -26,12 +26,14 @@
     "@tailwindcss/typography": "^0.5.16",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.543.0",
     "postcss": "^8.5.6",
     "react": "^18.3.1",
     "react-dom": "^18.2.0",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss": "^4.1.13"
+    "tailwindcss": "^4.1.13",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^15.5.3",

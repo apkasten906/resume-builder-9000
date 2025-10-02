@@ -25,7 +25,7 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
   const testAppName = `Test Company ${Date.now().toString().slice(-6)}`;
   const testAppRole = `Test Role ${Date.now().toString().slice(-6)}`;
 
-  console.log(`Creating test application: ${testAppName} - ${testAppRole}`);
+  testLogger.log(`Creating test application: ${testAppName} - ${testAppRole}`);
   const createResponse = await request.post(`${API_BASE}/applications`, {
     headers: {
       'Content-Type': 'application/json',
@@ -39,23 +39,23 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
 
   if (!createResponse.ok()) {
     const errorText = await createResponse.text();
-    console.error('Failed to create application:', errorText);
+    testLogger.error('Failed to create application:', errorText);
     throw new Error(`Application creation failed with status ${createResponse.status()}`);
   }
 
   const createdApp = await createResponse.json();
-  console.log('Successfully created application:', createdApp);
+  testLogger.log('Successfully created application:', createdApp);
 
   // Step 3: Navigate to the applications page in the UI
   await page.goto(`${WEB_BASE}/applications`);
   await page.waitForLoadState('networkidle');
-  console.log('Loaded applications page');
+  testLogger.log('Loaded applications page');
 
   // Take a screenshot for debugging
   await page.screenshot({ path: './test-results/applications-with-bearer-auth.png' });
 
   // Step 4: Verify the application appears in the list
-  console.log('Checking if application appears in UI...');
+  testLogger.log('Checking if application appears in UI...');
 
   // The token is already set up in localStorage and as a session cookie
   // by the testWithAuth fixture, so we just need to refresh
@@ -67,11 +67,11 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
     await expect(page.getByText(testAppName, { exact: false })).toBeVisible({
       timeout: 5000,
     });
-    console.log('✅ Success! Application is visible in the UI');
+    testLogger.log('Success! Application is visible in the UI');
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.log(`❌ Application not visible in UI: ${errorMessage}`);
-    console.log('Verifying application was created via direct API call');
+    testLogger.log(`Application not visible in UI: ${errorMessage}`);
+    testLogger.log('Verifying application was created via direct API call');
 
     // Do a direct API call to verify the application was created
     const listResponse = await request.get(`${API_BASE}/applications`, {
@@ -82,14 +82,14 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
 
     if (listResponse.ok()) {
       const apps = await listResponse.json();
-      console.log('Applications from API:', apps);
+      testLogger.log('Applications from API:', apps);
 
       const foundApp = apps.items?.find((app: { company: string }) => app.company === testAppName);
 
       if (foundApp) {
-        console.log('✅ Application exists in API response, UI issue confirmed');
+        testLogger.log('Application exists in API response, UI issue confirmed');
       } else {
-        console.log('❌ Application not found in API response either');
+        testLogger.log('Application not found in API response either');
         throw new Error('Application creation verified but not found in list');
       }
     }
@@ -99,7 +99,7 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
   const uiAppName = `UI Test Company ${Date.now().toString().slice(-6)}`;
   const uiAppRole = `UI Test Role ${Date.now().toString().slice(-6)}`;
 
-  console.log(`Attempting to create application via UI: ${uiAppName}`);
+  testLogger.log(`Attempting to create application via UI: ${uiAppName}`);
   await page.getByLabel('Company').fill(uiAppName);
   await page.getByLabel('Role').fill(uiAppRole);
   await page.getByRole('button', { name: 'Add' }).click();
@@ -108,7 +108,7 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
   await page.waitForTimeout(2000);
 
   // This should now work with Bearer token auth properly set up
-  console.log('Checking if UI-created application appears...');
+  testLogger.log('Checking if UI-created application appears...');
   await page.reload();
   await page.waitForLoadState('networkidle');
 
@@ -117,8 +117,27 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
     .isVisible()
     .catch(() => false);
 
-  console.log(`UI-created application visible: ${uiAppVisible}`);
+  testLogger.log(`UI-created application visible: ${uiAppVisible}`);
 
   // Success criteria: Applications created via API and UI should be visible
-  console.log('Test complete - Bearer token auth functioning correctly');
+  testLogger.log('Test complete - Bearer token auth functioning correctly');
+
+  // Cleanup: Remove test applications from the database
+  try {
+    // Remove API-created application
+    await request.delete(`${API_BASE}/applications/${testAppName}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    // Remove UI-created application
+    await request.delete(`${API_BASE}/applications/${uiAppName}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    testLogger.log('Test data cleaned up from database.');
+  } catch (cleanupError) {
+    testLogger.error('Error cleaning up test data:', cleanupError);
+  }
 });

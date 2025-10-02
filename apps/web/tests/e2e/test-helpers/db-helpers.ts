@@ -7,6 +7,7 @@
 import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
 import path from 'path';
+import { testLogger } from '../utils/test-logger';
 
 // Use the same database as the application
 // By default, this is resume.db in the project root
@@ -25,7 +26,7 @@ function getTestDb(): InstanceType<typeof Database> {
   // Find project root by going up 5 directories from this file
   const projectRoot = path.resolve(__dirname, '../../../../../');
   const dbPath = path.join(projectRoot, 'resume.db');
-  console.log(`Opening application database at ${dbPath}`);
+  testLogger.log(`Opening application database at ${dbPath}`);
 
   db = new Database(dbPath, { fileMustExist: true });
 

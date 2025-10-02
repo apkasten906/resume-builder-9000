@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+import { testLogger } from '../utils/test-logger';
 
 // Constants
 const API_BASE = process.env.API_BASE || 'http://localhost:4000';
@@ -11,7 +12,7 @@ const TEST_PASSWORD = 'password123';
 // Helper function to log test steps with timestamps
 function logStep(message: string): void {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${message}`);
+  testLogger.log(`[${timestamp}] ${message}`);
 
   // Also log to file for persistence
   const logDir = path.join(process.cwd(), 'test-results', 'auth-logs');
