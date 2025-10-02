@@ -1,4 +1,5 @@
-import { test } from './test-setup';
+import { test, Page, APIRequestContext, Cookie } from '@playwright/test';
+import { testLogger } from './utils/test-logger';
 import { randomUUID } from 'crypto';
 
 // Import constants for URLs
@@ -9,8 +10,14 @@ const API_BASE = process.env.API_BASE || 'http://localhost:4000';
  * Test that focuses on the API communication without UI interactions
  * This helps isolate whether the issue is with API endpoints or UI integration
  */
-test('API endpoints for applications', async ({ page, request }) => {
-  console.log('Starting API endpoints test');
+test('API endpoints for applications', async ({
+  page,
+  request,
+}: {
+  page: Page;
+  request: APIRequestContext;
+}) => {
+  testLogger.log('Starting API endpoints test');
 
   // First navigate to any page to establish session context
   await page.goto(`${WEB_BASE}`);
@@ -18,8 +25,8 @@ test('API endpoints for applications', async ({ page, request }) => {
 
   // Capture authentication state
   const cookies = await page.context().cookies();
-  const sessionCookie = cookies.find(c => c.name === 'session');
-  console.log('Session cookie present:', sessionCookie ? 'Yes' : 'No');
+  const sessionCookie = cookies.find((c: Cookie) => c.name === 'session');
+  testLogger.log('Session cookie present:', sessionCookie ? 'Yes' : 'No');
 
   // Headers for API requests
   const headers: Record<string, string> = {
@@ -32,21 +39,21 @@ test('API endpoints for applications', async ({ page, request }) => {
   }
 
   // Test GET /applications endpoint
-  console.log('Testing GET /applications endpoint...');
+  testLogger.log('Testing GET /applications endpoint...');
   const getResponse = await request.get(`${API_BASE}/applications`, { headers });
 
-  console.log(`GET /applications status: ${getResponse.status()}`);
+  testLogger.log(`GET /applications status: ${getResponse.status()}`);
   if (getResponse.ok()) {
     const data = await getResponse.json();
-    console.log('Applications returned:', data.items?.length || 0);
-    console.log('First few applications:', data.items?.slice(0, 2));
+    testLogger.log('Applications returned:', data.items?.length || 0);
+    testLogger.log('First few applications:', data.items?.slice(0, 2));
   } else {
     const errorText = await getResponse.text();
-    console.log('GET error response:', errorText);
+    testLogger.log('GET error response:', errorText);
   }
 
   // Test POST /applications endpoint
-  console.log('Testing POST /applications endpoint...');
+  testLogger.log('Testing POST /applications endpoint...');
   const testApp = {
     company: `API Test Co ${randomUUID().slice(0, 8)}`,
     role: 'API Test Role',
@@ -57,30 +64,30 @@ test('API endpoints for applications', async ({ page, request }) => {
     data: testApp,
   });
 
-  console.log(`POST /applications status: ${postResponse.status()}`);
+  testLogger.log(`POST /applications status: ${postResponse.status()}`);
   if (postResponse.ok()) {
     const data = await postResponse.json();
-    console.log('Created application:', data);
+    testLogger.log('Created application:', data);
   } else {
     const errorText = await postResponse.text();
-    console.log('POST error response:', errorText);
+    testLogger.log('POST error response:', errorText);
   }
 
   // Try GET again to see if the new application appears
   if (postResponse.ok()) {
-    console.log('Verifying application was created...');
+    testLogger.log('Verifying application was created...');
     const verifyResponse = await request.get(`${API_BASE}/applications`, { headers });
 
     if (verifyResponse.ok()) {
       const data = await verifyResponse.json();
       const found = data.items?.find((app: { company: string }) => app.company === testApp.company);
-      console.log('Application found in GET response:', found ? 'Yes' : 'No');
+      testLogger.log('Application found in GET response:', found ? 'Yes' : 'No');
     }
   }
 
   // Alternative: Try using fetch via page.evaluate to see if that works better
   // This uses the same authentication context as the page
-  console.log('Testing API call through page.evaluate()...');
+  testLogger.log('Testing API call through page.evaluate()...');
 
   const testCompany = `Browser Test Co ${randomUUID().slice(0, 8)}`;
   const pageApiResult = await page.evaluate(
@@ -113,7 +120,7 @@ test('API endpoints for applications', async ({ page, request }) => {
     { apiBase: API_BASE, company: testCompany }
   );
 
-  console.log('Browser API test results:', pageApiResult);
+  testLogger.log('Browser API test results:', pageApiResult);
 
-  console.log('API endpoints test completed');
+  testLogger.log('API endpoints test completed');
 });

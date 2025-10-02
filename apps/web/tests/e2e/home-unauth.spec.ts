@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
-test('Home page unauthenticated shows Get Started', async ({ page }) => {
+test('Home page unauthenticated shows Get Started', async ({ page }: { page: Page }) => {
   await page.context().clearCookies();
   const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
   await page.goto(baseUrl);

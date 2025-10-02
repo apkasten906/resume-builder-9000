@@ -15,10 +15,10 @@
     "update-deps": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {
-    "zod": "^4.1.5"
+    "zod": "^4.1.11"
   },
   "devDependencies": {
-    "@types/node": "^20.6.0",
+    "@types/node": "^20.19.19",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "eslint": "^8.57.1",
