@@ -10,6 +10,8 @@ export default function Home(): React.ReactElement {
   const { authenticated, checking, user } = useAuth(); // ← from AuthContext
   const [applications, setApplications] = useState<Application[]>([]);
   const [uploads, setUploads] = useState<ResumeUpload[]>([]);
+  const [uploadsError, setUploadsError] = useState<string | null>(null);
+  const [uploadsLoading, setUploadsLoading] = useState(false);
   const [insights, setInsights] = useState<string[]>([]);
 
   // When authenticated, fetch app data and compute insights
@@ -22,22 +24,31 @@ export default function Home(): React.ReactElement {
     }
 
     (async (): Promise<void> => {
+      setUploadsLoading(true);
+      setUploadsError(null);
       try {
         const appsRes = await fetch('/api/applications', { credentials: 'include' });
         const appsJson: { items?: Application[] } = await appsRes.json();
         const appItems = appsJson.items ?? [];
 
-        // Stub uploads (replace with your real API when ready)
-        const freshUploads: ResumeUpload[] = [
-          { fileName: 'resume-2025.pdf', lastUpdated: '2025-09-28T10:00:00Z' },
-          { fileName: 'resume-2025-ATS.docx', lastUpdated: '2025-09-15T14:30:00Z' },
-        ];
+        // Fetch uploads from API
+        const uploadsRes = await fetch('/api/uploads', { credentials: 'include' });
+        let fetchedUploads: ResumeUpload[] = [];
+        if (!uploadsRes.ok) {
+          setUploadsError(
+            'Apologies! We are having trouble retrieving your uploaded resumes right now.'
+          );
+          setUploads([]);
+        } else {
+          const uploadsJson: { items?: ResumeUpload[] } = await uploadsRes.json();
+          fetchedUploads = uploadsJson.items ?? [];
+          setUploads(fetchedUploads);
+        }
 
-        // Compute insights from locals (not stale state)
+        // Compute insights after uploads are fetched
         const nextInsights: string[] = [];
-
-        if (freshUploads.length > 0) {
-          const lastUpload = new Date(freshUploads[0].lastUpdated);
+        if (fetchedUploads.length > 0) {
+          const lastUpload = new Date(fetchedUploads[0].lastUpdated);
           const now = new Date();
           const months =
             (now.getFullYear() - lastUpload.getFullYear()) * 12 +
@@ -48,19 +59,21 @@ export default function Home(): React.ReactElement {
             );
           }
         }
-
         if (appItems.some(a => a.status === 'Awaiting Feedback')) {
           nextInsights.push('You have applications awaiting feedback');
         }
         if (appItems.length > 0) {
           nextInsights.push('Consider tailoring your resume for new job postings');
         }
-
         setApplications(appItems);
-        setUploads(freshUploads);
         setInsights(nextInsights);
+      } catch {
+        setUploadsError(
+          'Apologies! We are having trouble retrieving your uploaded resumes right now.'
+        );
+        setUploads([]);
       } finally {
-        // no separate loading flag needed here
+        setUploadsLoading(false);
       }
     })();
   }, [authenticated]);
@@ -162,33 +175,56 @@ export default function Home(): React.ReactElement {
 
           <div>
             <h3 className="text-xl font-bold mb-2">Recent Resume Uploads</h3>
-            <Table>
-              {uploads.slice(0, 10).map(upload => (
-                <TRow key={upload.fileName}>
-                  <TCell className="font-semibold">
-                    <button
-                      type="button"
-                      disabled
-                      className="text-blue-600 underline cursor-not-allowed bg-transparent p-0 border-none"
-                      title="Resume details page coming soon"
-                      aria-label="Resume details link placeholder"
-                    >
-                      {upload.fileName}
-                    </button>
-                  </TCell>
-                  <TCell className="text-xs text-gray-500">
-                    {new Date(upload.lastUpdated).toLocaleDateString()}
-                  </TCell>
-                </TRow>
-              ))}
-              {uploads.length === 0 && (
-                <TRow>
-                  <td colSpan={2} className="text-gray-500">
-                    No uploads found.
-                  </td>
-                </TRow>
-              )}
-            </Table>
+            <div className="bg-white rounded-lg shadow p-4">
+              {((): React.ReactNode => {
+                if (uploadsLoading) {
+                  return (
+                    <div className="py-8 text-center">
+                      <output
+                        className="spinner-border animate-spin inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"
+                        aria-label="Loading resumes"
+                      ></output>
+                    </div>
+                  );
+                }
+                if (uploadsError) {
+                  return (
+                    <div className="py-8 text-center text-red-600" role="alert">
+                      {uploadsError}
+                    </div>
+                  );
+                }
+                return (
+                  <Table>
+                    {uploads.slice(0, 10).map(upload => (
+                      <TRow key={upload.fileName}>
+                        <TCell className="font-semibold">
+                          <button
+                            type="button"
+                            disabled
+                            className="text-blue-600 underline cursor-not-allowed bg-transparent p-0 border-none"
+                            title="Resume details page coming soon"
+                            aria-label="Resume details link placeholder"
+                          >
+                            {upload.fileName}
+                          </button>
+                        </TCell>
+                        <TCell className="text-xs text-gray-500">
+                          {new Date(upload.lastUpdated).toLocaleDateString()}
+                        </TCell>
+                      </TRow>
+                    ))}
+                    {uploads.length === 0 && (
+                      <TRow>
+                        <td colSpan={2} className="text-gray-500">
+                          No uploads found.
+                        </td>
+                      </TRow>
+                    )}
+                  </Table>
+                );
+              })()}
+            </div>
           </div>
         </div>
       </section>
