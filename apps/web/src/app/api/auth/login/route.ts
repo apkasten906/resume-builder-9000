@@ -36,9 +36,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     });
     return response;
   } else {
-    // Redirect back to login with error param
-    const url = new URL('/login', req.url);
-    url.searchParams.set('error', 'invalid');
-    return NextResponse.redirect(url);
+    // Return JSON error for failed login
+    return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
   }
 }

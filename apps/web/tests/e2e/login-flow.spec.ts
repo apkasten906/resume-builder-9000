@@ -8,7 +8,10 @@ test.describe('Login flow', () => {
     await page.getByLabel('Email').fill('user@example.com');
     await page.getByLabel('Password').fill('ValidPassword1!');
     await page.getByRole('button', { name: 'Sign in' }).click();
-    await page.waitForURL(`${WEB_BASE}/applications`);
-    await expect(page.locator('h3')).toHaveText(/Applications/i);
+    await page.waitForURL(`${WEB_BASE}/`);
+    // Check for dashboard content/menu items on home page
+    await expect(page.getByRole('heading', { name: /Welcome back/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Resume Upload' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Applications' })).toBeVisible();
   });
 });
