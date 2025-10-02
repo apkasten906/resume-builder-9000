@@ -61,3 +61,4 @@ packages/api/logs/combined.log
 # Database files
 resume.db
 *.db-journal
+commit-message.txt

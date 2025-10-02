@@ -1,6 +1,10 @@
----
+# Mandatory TypeScript Return Types
+
+## All functions (including arrow and async functions) must have explicit return types. Never rely on type inference for exported or public functions. This is mandatory for all TypeScript code.
+
 description: 'Guidelines for GitHub Copilot to write comments to achieve self-explanatory code with less comments. Examples are in JavaScript but it should work on any language that has comments.'
-applyTo: '**'
+applyTo: '\*\*'
+
 ---
 
 # Self-explanatory Code Commenting Instructions

@@ -1,9 +1,13 @@
----
+# Mandatory TypeScript Return Types
+
+## All functions (including arrow and async functions) must have explicit return types. Never rely on type inference for exported or public functions. This is mandatory for all TypeScript code.
+
 description: 'Guidelines for writing Node.js and JavaScript code with Vitest testing'
-applyTo: '**/*.js, **/*.mjs, **/*.cjs'
+applyTo: '**/\*.js, **/_.mjs, \*\*/_.cjs'
+
 ---
 
-# Code Generation Guidelines
+## Code Generation Guidelines
 
 ## Coding standards
 

@@ -6,9 +6,11 @@ import { ResumeData, JobDetails } from '../index.js';
 class MockResumeGenerator implements ResumeGenerator {
   generateResume = vi
     .fn()
-    .mockImplementation(async (resumeData: ResumeData, jobDetails: JobDetails): Promise<string> => {
-      return '<html><body>Mocked Resume</body></html>';
-    });
+    .mockImplementation(
+      async (_resumeData: ResumeData, _jobDetails: JobDetails): Promise<string> => {
+        return '<html><body>Mocked Resume</body></html>';
+      }
+    );
 }
 
 // Mock implementation that returns structured data
@@ -16,8 +18,8 @@ class MockStructuredDataGenerator implements ResumeGenerator {
   generateResume = vi
     .fn()
     .mockImplementation(
-      async (resumeData: ResumeData, jobDetails: JobDetails): Promise<ResumeData> => {
-        return resumeData; // Just returns the same data
+      async (_resumeData: ResumeData, _jobDetails: JobDetails): Promise<ResumeData> => {
+        return _resumeData; // Just returns the same data
       }
     );
 }

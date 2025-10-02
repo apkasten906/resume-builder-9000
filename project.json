@@ -1,0 +1,8 @@
+﻿{
+  "errors": [
+    {
+      "message": "Expected one of SCHEMA, SCALAR, TYPE, ENUM, INPUT, UNION, INTERFACE, actual: DIR_SIGN (\"@\") at [1, 1]",
+      "locations": [{ "line": 1, "column": 1 }]
+    }
+  ]
+}

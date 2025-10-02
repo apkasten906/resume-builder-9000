@@ -19,17 +19,10 @@ export default defineConfig({
       process.env.BASE_URL ||
       (process.env.DOCKER_E2E_TEST
         ? 'http://resumebuilder-frontend:3000'
-        : 'http://localhost:3000'),
+        : 'http://localhost:3001'),
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-  },
-  webServer: {
-    command:
-      'concurrently "npm run dev --workspace=packages/api" "npm run dev --workspace=apps/web"',
-    url: 'http://localhost:3000',
-    timeout: 120 * 1000,
-    reuseExistingServer: true,
   },
   projects: [
     {
