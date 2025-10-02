@@ -27,7 +27,7 @@ const ApplicationsPage: React.FC = () => {
     }
   }, []);
 
-  async function load(): Promise<void> {
+  const load = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
@@ -64,11 +64,11 @@ const ApplicationsPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [authToken]);
 
   useEffect(() => {
     load();
-  }, [authToken]); // Reload when authToken changes
+  }, [load]); // Reload when load changes
 
   const filtered = useMemo(
     () => rows.filter(r => (r.company + r.role).toLowerCase().includes(query.toLowerCase())),

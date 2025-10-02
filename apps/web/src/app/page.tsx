@@ -1,76 +1,72 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Table, TRow, TCell } from '../components/ui/Table';
+import { useAuth } from '@/context/AuthContext';
 
 type Application = { id: string; company: string; status: string; lastUpdated: string };
 type ResumeUpload = { fileName: string; lastUpdated: string };
-type User = { name?: string };
 
 export default function Home(): React.ReactElement {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const { authenticated, checking, user } = useAuth(); // ← from AuthContext
   const [applications, setApplications] = useState<Application[]>([]);
   const [uploads, setUploads] = useState<ResumeUpload[]>([]);
   const [insights, setInsights] = useState<string[]>([]);
 
+  // When authenticated, fetch app data and compute insights
   useEffect(() => {
-    async function fetchAuth(): Promise<void> {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const data = await res.json();
-          setAuthenticated(data.authenticated);
-          setUser(data.user);
-        } else {
-          setAuthenticated(false);
-        }
-      } catch {
-        setAuthenticated(false);
-      }
+    if (!authenticated) {
+      setApplications([]);
+      setUploads([]);
+      setInsights([]);
+      return;
     }
-    fetchAuth();
-  }, []);
 
-  useEffect(() => {
-    if (!authenticated) return;
-    async function fetchData(): Promise<void> {
+    (async (): Promise<void> => {
       try {
-        const appsRes = await fetch('/api/applications');
-        const appsData = await appsRes.json();
-        setApplications(appsData.items || []);
-        setUploads([
+        const appsRes = await fetch('/api/applications', { credentials: 'include' });
+        const appsJson: { items?: Application[] } = await appsRes.json();
+        const appItems = appsJson.items ?? [];
+
+        // Stub uploads (replace with your real API when ready)
+        const freshUploads: ResumeUpload[] = [
           { fileName: 'resume-2025.pdf', lastUpdated: '2025-09-28T10:00:00Z' },
           { fileName: 'resume-2025-ATS.docx', lastUpdated: '2025-09-15T14:30:00Z' },
-        ]);
-        const insightsArr: string[] = [];
-        if (uploads.length > 0) {
-          const lastUpload = new Date(uploads[0].lastUpdated);
+        ];
+
+        // Compute insights from locals (not stale state)
+        const nextInsights: string[] = [];
+
+        if (freshUploads.length > 0) {
+          const lastUpload = new Date(freshUploads[0].lastUpdated);
           const now = new Date();
           const months =
             (now.getFullYear() - lastUpload.getFullYear()) * 12 +
             (now.getMonth() - lastUpload.getMonth());
-          if (months >= 3)
-            insightsArr.push(
+          if (months >= 3) {
+            nextInsights.push(
               'You haven’t updated your resume in 3 months—refresh now for better results'
             );
+          }
         }
-        if (applications.some(a => a.status === 'Awaiting Feedback')) {
-          insightsArr.push('You have applications awaiting feedback');
+
+        if (appItems.some(a => a.status === 'Awaiting Feedback')) {
+          nextInsights.push('You have applications awaiting feedback');
         }
-        if (applications.length > 0) {
-          insightsArr.push('Consider tailoring your resume for new job postings');
+        if (appItems.length > 0) {
+          nextInsights.push('Consider tailoring your resume for new job postings');
         }
-        setInsights(insightsArr);
+
+        setApplications(appItems);
+        setUploads(freshUploads);
+        setInsights(nextInsights);
       } finally {
-        // No need for loading state
+        // no separate loading flag needed here
       }
-    }
-    fetchData();
+    })();
   }, [authenticated]);
 
-  // Always start in signed-out view until authentication is confirmed
-  if (authenticated === null) {
-    // Show Get Started view while loading or if not authenticated
+  // While auth status is unknown, show your Get Started hero (unchanged)
+  if (checking) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <h2 className="text-3xl font-bold mb-4">Welcome to Resume Builder 9000</h2>
@@ -91,8 +87,8 @@ export default function Home(): React.ReactElement {
     );
   }
 
+  // Not authenticated → signed-out hero (unchanged)
   if (!authenticated) {
-    // Explicitly show signed-out view if not authenticated
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <h2 className="text-3xl font-bold mb-4">Welcome to Resume Builder 9000</h2>
@@ -113,12 +109,14 @@ export default function Home(): React.ReactElement {
     );
   }
 
+  // Authenticated → dashboard (unchanged)
   return (
     <div className="space-y-8">
       <section className="bg-white p-8 rounded-lg shadow-md">
         <div className="mb-4">
           <h2 className="text-3xl font-bold">Welcome back, {user?.name || 'User'}!</h2>
         </div>
+
         <div className="mb-8">
           <h3 className="text-xl font-bold mb-2">Actionable Insights</h3>
           <ul className="list-disc pl-5">
@@ -128,6 +126,7 @@ export default function Home(): React.ReactElement {
             {insights.length === 0 && <li>No insights at this time.</li>}
           </ul>
         </div>
+
         <div className="grid md:grid-cols-2 gap-8">
           <div>
             <h3 className="text-xl font-bold mb-2">Recent Applications</h3>
@@ -160,6 +159,7 @@ export default function Home(): React.ReactElement {
               )}
             </Table>
           </div>
+
           <div>
             <h3 className="text-xl font-bold mb-2">Recent Resume Uploads</h3>
             <Table>

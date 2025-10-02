@@ -1,11 +1,11 @@
 import type { ResumeData, Experience, Education, Skill } from '@rb9k/core';
-import React from 'react';
+import type { FC } from 'react';
 
 interface ResumePreviewProps {
-  resume: ResumeData;
+  readonly resume: ResumeData;
 }
 
-export const ResumePreview: React.FC<ResumePreviewProps> = ({ resume }) => {
+export const ResumePreview: FC<ResumePreviewProps> = ({ resume }) => {
   const { personalInfo, summary, experience, education, skills, certifications, projects } = resume;
   return (
     <div className="bg-white rounded-lg shadow-md p-8 max-w-2xl mx-auto">
@@ -94,7 +94,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resume }) => {
               </div>
               {edu.highlights && edu.highlights.length > 0 && (
                 <ul className="list-disc pl-6 mt-1">
-                  {edu.highlights.map(hl => (
+                  {edu.highlights.map((hl: string) => (
                     <li key={hl}>{hl}</li>
                   ))}
                 </ul>

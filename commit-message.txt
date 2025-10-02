@@ -1,45 +1,27 @@
-<type>docs</type>
-<scope>adr,review</scope>
-<description>Add ADR for null vs undefined decision and mark Copilot review recommendations</description>
-<body>
-Created ADR 0008 documenting decision to use null for optional/missing values.
-Updated scripts and code to use descriptive variable names and nullish coalescing operator.
-Marked Copilot review recommendations as completed or deferred (tech debt).
-</body>
-docs(testing): consolidate and organize Playwright testing documentation
+<type> feat(auth): robust logout flow, context types, and E2E test
 
-## Problem
-- Redundant and outdated Playwright testing documentation across multiple files
-- Inconsistent guidelines for running tests
-- Missing documentation about conflicts between Playwright and Vitest
-- Test documentation scattered across different locations
+<scope> web, api, tests
 
-## Solution
-1. Consolidated testing documentation into docs/testing/ directory:
-   - Created comprehensive guidelines in playwright-guidelines.md
-   - Added README.md for navigation
-   - Documented best practices for avoiding Vitest/Playwright conflicts
+<description>
+Implement robust logout flow and authentication context improvements:
+- Added Next.js API route for logout with cookie invalidation and server-side session clearing
+- Introduced strict context types and Zod schema for MeResponse
+- Created client helpers for fetching auth state and posting logout
+- Refactored AuthProvider to use new helpers and types
+- Added Playwright E2E test for logout, verifying session cookie removal and persistent logout state
+- Fixed all unit and integration tests to pass cleanly
 
-2. Updated references in main README.md to point to new location
+<breaking-change>
+None
 
-3. Removed redundant and deprecated files:
-   - Cleaned up old documentation files
-   - Removed leftover artifacts from previous test approaches
 
-4. Updated test checklist with latest improvements and next steps
+<issues>
+Partial progress on #10 (User Login & Identity Management)
+Partial progress on #15 (Logout flow reliability)
 
-3. Fixed accessibility issues:
-   - Replaced div elements with proper button elements
-   - Added proper ARIA attributes
-   - Improved keyboard navigation
 
-## Benefits
-- Complete job intake workflow for users
-- Multiple input options (paste or upload)
-- Improved user experience with proper validation
-- Accessible interface following best practices
-
-## Testing
-- Manual testing of file upload and text parsing
-- Playwright tests ready to be enabled
-- Updated CHECKLIST.md to reflect progress
+<notes>
+- Ensures logout is reliable and works across reloads
+- Improves type safety and test coverage for authentication
+- All tests (unit, integration, E2E) pass
+- Note: Clicking Get Started still leads to a 404; sign-in redirect is not yet implemented
