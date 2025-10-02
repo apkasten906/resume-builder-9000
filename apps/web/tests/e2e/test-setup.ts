@@ -25,22 +25,19 @@ async function getBearerToken(): Promise<string> {
 async function seedAuthCookie(page: Page): Promise<string> {
   const token = await getBearerToken();
 
-  // Use "url" instead of "domain" to avoid subtle domain/samesite issues on localhost/dev.
+  // Use ONLY `url` so Playwright infers domain + path for us.
   await page.context().addCookies([
     {
       name: COOKIE_NAME,
       value: token,
-      url: WEB_BASE, // <- Playwright will infer domain/path correctly from this
-      path: '/',
-      httpOnly: false, // tests can read it; server will still get it in requests
+      url: new URL('/', WEB_BASE).toString(), // e.g. "http://localhost:3000/"
+      httpOnly: true, // mirror real session cookies
       sameSite: 'Lax',
-      secure: WEB_BASE.startsWith('https'),
+      secure: new URL(WEB_BASE).protocol === 'https:',
     },
   ]);
 
-  // Warm the session: hit /api/auth/me to ensure the server sees the cookie
-  const res = await page.goto(`${WEB_BASE}/api/auth/me`);
-  testLogger.log(`/api/auth/me warmup: ${res?.status()}`);
+  // Optional warmup: hit the site so the cookie is attached to requests.
   await page.goto(WEB_BASE, { waitUntil: 'domcontentloaded' });
 
   return token;

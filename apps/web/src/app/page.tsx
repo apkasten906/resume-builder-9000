@@ -77,7 +77,7 @@ export default function Home(): React.ReactElement {
         <button
           className="px-8 py-4 bg-blue-600 text-white rounded-lg text-lg font-semibold shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={() => {
-            window.location.href = '/get-started';
+            window.location.href = '/login';
           }}
           aria-label="Get Started"
         >
@@ -99,7 +99,7 @@ export default function Home(): React.ReactElement {
         <button
           className="px-8 py-4 bg-blue-600 text-white rounded-lg text-lg font-semibold shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={() => {
-            window.location.href = '/get-started';
+            window.location.href = '/login';
           }}
           aria-label="Get Started"
         >

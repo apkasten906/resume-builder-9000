@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, beforeEach, afterEach, expect, vi, Mock } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { mockSignedIn } from './vitest.setup';
 
@@ -56,7 +56,9 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
     await waitFor(() => expect(screen.getByTestId('auth-status').textContent).toBe('signed-in'));
-    screen.getByTestId('logout-btn').click();
+    await act(async () => {
+      screen.getByTestId('logout-btn').click();
+    });
     // After logout, /api/auth/me returns no user
     (global.fetch as Mock).mockImplementationOnce((url: string) => {
       if (url === '/api/auth/me') {
@@ -79,7 +81,9 @@ describe('AuthContext', () => {
     );
 
     await waitFor(() => expect(screen.getByTestId('auth-status').textContent).toBe('signed-in'));
-    screen.getByTestId('logout-btn').click();
+    await act(async () => {
+      screen.getByTestId('logout-btn').click();
+    });
 
     // Mock backend to reject requests with invalidated token
     (global.fetch as Mock).mockImplementationOnce((url: string) => {
@@ -107,7 +111,9 @@ describe('AuthContext', () => {
     );
 
     await waitFor(() => expect(screen.getByTestId('auth-status').textContent).toBe('signed-in'));
-    screen.getByTestId('logout-btn').click();
+    await act(async () => {
+      screen.getByTestId('logout-btn').click();
+    });
 
     // Mock backend to ensure no re-authentication
     (global.fetch as Mock).mockImplementationOnce((url: string) => {

@@ -39,6 +39,7 @@ export default function AppShell({
   children,
 }: Readonly<React.PropsWithChildren>): React.ReactElement {
   const pathname = usePathname();
+  const { authenticated } = useAuth();
   const nav: NavItem[] = [
     { href: '/resume-upload', label: 'Resume Upload' },
     { href: '/job-intake', label: 'Job Intake' },
@@ -59,20 +60,22 @@ export default function AppShell({
           >
             RB9K
           </Link>
-          <nav className="space-y-1">
-            {nav.map(n => (
-              <Link
-                key={n.href}
-                href={n.href}
-                className={cls(
-                  'block px-3 py-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-zinc-800',
-                  pathname?.startsWith(n.href) && 'bg-white dark:bg-zinc-900 shadow font-semibold'
-                )}
-              >
-                {n.label}
-              </Link>
-            ))}
-          </nav>
+          {authenticated && (
+            <nav className="space-y-1">
+              {nav.map(n => (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className={cls(
+                    'block px-3 py-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-zinc-800',
+                    pathname?.startsWith(n.href) && 'bg-white dark:bg-zinc-900 shadow font-semibold'
+                  )}
+                >
+                  {n.label}
+                </Link>
+              ))}
+            </nav>
+          )}
         </aside>
         <main>
           <header className="sticky top-0 z-10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur border-b border-gray-200 dark:border-zinc-800">
