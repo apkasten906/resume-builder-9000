@@ -1,4 +1,4 @@
-import { test, expect } from './test-setup';
+﻿import { test, expect } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 import type { Page } from '@playwright/test';
 
@@ -80,3 +80,5 @@ test('Applications add and list', async ({ page }: { page: Page }) => {
 });
 
 // Note: Playwright test setup is handled by the test-setup.ts file
+
+

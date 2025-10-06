@@ -1,5 +1,5 @@
+﻿import { test, expect } from '@playwright/test';
 import { dbCleanup } from './db-cleanup.template';
-import { testWithAuth, expect } from './test-setup';
 import type { Page, APIRequestContext } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 
@@ -170,19 +170,19 @@ testWithAuth(
   }
 );
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   // TODO: Implement beforeAll logic
 });
 
-afterAll(async () => {
+test.afterAll(async () => {
   // TODO: Implement afterAll logic
 });
 
-beforeEach(async () => {
+test.beforeEach(async () => {
   // TODO: Implement beforeEach logic
 });
 
-afterEach(async () => {
+test.afterEach(async () => {
   try {
     await dbCleanup({
       tables: ['applications'],
@@ -197,3 +197,5 @@ afterEach(async () => {
     );
   }
 });
+
+
