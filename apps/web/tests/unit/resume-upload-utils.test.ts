@@ -1,3 +1,4 @@
+// Removed unused imports
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { validateFile, logPlaywrightDebug } from '../../src/app/resume-upload/resume-upload-utils';
 
@@ -63,4 +64,16 @@ describe('logPlaywrightDebug', () => {
     delete globalThis.window;
     expect(() => logPlaywrightDebug('debug!')).not.toThrow();
   });
+});
+
+beforeAll(async () => {
+  // TODO: Implement beforeAll logic
+});
+
+afterAll(async () => {
+  // TODO: Implement afterAll logic
+});
+
+beforeEach(async () => {
+  // TODO: Implement beforeEach logic
 });

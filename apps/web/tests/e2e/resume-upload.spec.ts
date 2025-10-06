@@ -1,3 +1,4 @@
+// Removed unused imports
 import { test, expect } from '@playwright/test';
 
 // Use BASE_URL from environment or default to localhost
@@ -44,4 +45,20 @@ test.describe('Resume Upload Flow', () => {
       .setInputFiles('apps/web/tests/assets/invalid_file.exe');
     await expect(page.getByTestId('resume-upload-error')).toBeVisible();
   });
+});
+
+beforeAll(async () => {
+  // TODO: Implement beforeAll logic
+});
+
+afterAll(async () => {
+  // TODO: Implement afterAll logic
+});
+
+beforeEach(async () => {
+  // TODO: Implement beforeEach logic
+});
+
+afterEach(async () => {
+  // TODO: Implement afterEach logic
 });

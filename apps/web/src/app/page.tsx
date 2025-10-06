@@ -1,35 +1,18 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Table, TRow, TCell } from '../components/ui/Table';
+import { useAuth } from '../context/AuthContext';
 
 type Application = { id: string; company: string; status: string; lastUpdated: string };
 type ResumeUpload = { fileName: string; lastUpdated: string };
 type User = { name?: string };
 
 export default function Home(): React.ReactElement {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const { authenticated, checking } = useAuth();
+  const [user] = useState<User | null>({ name: 'User' }); // Simplified for now
   const [applications, setApplications] = useState<Application[]>([]);
   const [uploads, setUploads] = useState<ResumeUpload[]>([]);
   const [insights, setInsights] = useState<string[]>([]);
-
-  useEffect(() => {
-    async function fetchAuth(): Promise<void> {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const data = await res.json();
-          setAuthenticated(data.authenticated);
-          setUser(data.user);
-        } else {
-          setAuthenticated(false);
-        }
-      } catch {
-        setAuthenticated(false);
-      }
-    }
-    fetchAuth();
-  }, []);
 
   useEffect(() => {
     if (!authenticated) return;
@@ -37,14 +20,19 @@ export default function Home(): React.ReactElement {
       try {
         const appsRes = await fetch('/api/applications');
         const appsData = await appsRes.json();
-        setApplications(appsData.items || []);
-        setUploads([
+        const currentApplications = appsData.items || [];
+        setApplications(currentApplications);
+
+        const insightsArr: string[] = [];
+        // Use local variables instead of state to prevent infinite loop
+        const currentUploads = [
           { fileName: 'resume-2025.pdf', lastUpdated: '2025-09-28T10:00:00Z' },
           { fileName: 'resume-2025-ATS.docx', lastUpdated: '2025-09-15T14:30:00Z' },
-        ]);
-        const insightsArr: string[] = [];
-        if (uploads.length > 0) {
-          const lastUpload = new Date(uploads[0].lastUpdated);
+        ];
+        setUploads(currentUploads);
+
+        if (currentUploads.length > 0) {
+          const lastUpload = new Date(currentUploads[0].lastUpdated);
           const now = new Date();
           const months =
             (now.getFullYear() - lastUpload.getFullYear()) * 12 +
@@ -54,10 +42,10 @@ export default function Home(): React.ReactElement {
               'You haven’t updated your resume in 3 months—refresh now for better results'
             );
         }
-        if (applications.some(a => a.status === 'Awaiting Feedback')) {
+        if (currentApplications.some((a: Application) => a.status === 'Awaiting Feedback')) {
           insightsArr.push('You have applications awaiting feedback');
         }
-        if (applications.length > 0) {
+        if (currentApplications.length > 0) {
           insightsArr.push('Consider tailoring your resume for new job postings');
         }
         setInsights(insightsArr);
@@ -66,11 +54,11 @@ export default function Home(): React.ReactElement {
       }
     }
     fetchData();
-  }, [authenticated]);
+  }, [authenticated]); // Only depend on authenticated - removing uploads/applications to prevent infinite loop
 
-  // Always start in signed-out view until authentication is confirmed
-  if (authenticated === null) {
-    // Show Get Started view while loading or if not authenticated
+  // Show loading state while checking authentication
+  if (checking) {
+    // Show loading view while authentication is being checked
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <h2 className="text-3xl font-bold mb-4">Welcome to Resume Builder 9000</h2>
@@ -81,7 +69,7 @@ export default function Home(): React.ReactElement {
         <button
           className="px-8 py-4 bg-blue-600 text-white rounded-lg text-lg font-semibold shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={() => {
-            window.location.href = '/get-started';
+            window.location.href = '/login';
           }}
           aria-label="Get Started"
         >
@@ -103,7 +91,7 @@ export default function Home(): React.ReactElement {
         <button
           className="px-8 py-4 bg-blue-600 text-white rounded-lg text-lg font-semibold shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={() => {
-            window.location.href = '/get-started';
+            window.location.href = '/login';
           }}
           aria-label="Get Started"
         >
