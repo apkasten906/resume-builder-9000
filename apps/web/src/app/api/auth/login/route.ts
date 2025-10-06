@@ -25,8 +25,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const data = await res.json().catch(() => ({}));
 
   if (res.ok && data?.token) {
-    // Set the session cookie and redirect to /applications
-    const response = NextResponse.redirect(new URL('/applications', req.url));
+    // Set the session cookie and redirect to root page (/) instead of /applications
+    const response = NextResponse.redirect(new URL('/', req.url));
     response.cookies.set('session', data.token, {
       httpOnly: true,
       sameSite: 'lax',

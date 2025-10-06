@@ -118,3 +118,19 @@ testWithAuth('Applications add and list', async ({ page, authToken }) => {
   expect(applicationVisible).toBeTruthy();
   testLogger.log('Application visible in table:', applicationVisible);
 });
+
+beforeAll(async () => {
+  // TODO: Implement beforeAll logic
+});
+
+afterAll(async () => {
+  // TODO: Implement afterAll logic
+});
+
+beforeEach(async () => {
+  // TODO: Implement beforeEach logic
+});
+
+afterEach(async () => {
+  // TODO: Implement afterEach logic
+});

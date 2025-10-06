@@ -1,91 +1,170 @@
 // apps/web/tests/e2e/utils/test-logger.ts
+/**
+ * Backward compatibility wrapper for testLogger
+ * Provides seamless integration with the new unified logging system
+ * while maintaining existing API for test files
+ */
 import { Page } from '@playwright/test';
+import { LoggerUtils, type UniversalLogger } from '@rb9k/core';
+
+// Create a unified logger for test environment with proper configuration
+const unifiedTestLogger = LoggerUtils.forTest('rb9k-web-e2e-tests');
 
 /**
  * Controls verbosity of console logging in Playwright tests
+ * Now enhanced with structured logging capabilities
  *
  * Usage:
  * - Set PLAYWRIGHT_VERBOSE=true to enable all logging
- * - Set PLAYWRIGHT_VERBOSE=false or leave unset to show only warnings and errors
+ * - Set TEST_LOG_ENABLE=true to enable structured logging output
+ * - Use testLogger methods for consistent, structured test logging
  *
  * Examples:
  * ```
  * // Windows PowerShell
- * $env:PLAYWRIGHT_VERBOSE="true"; npx playwright test
+ * $env:PLAYWRIGHT_VERBOSE="true"; $env:TEST_LOG_ENABLE="true"; npx playwright test
  *
  * // Windows Command Prompt
- * set PLAYWRIGHT_VERBOSE=true && npx playwright test
+ * set PLAYWRIGHT_VERBOSE=true && set TEST_LOG_ENABLE=true && npx playwright test
  *
  * // Linux/macOS
- * PLAYWRIGHT_VERBOSE=true npx playwright test
+ * PLAYWRIGHT_VERBOSE=true TEST_LOG_ENABLE=true npx playwright test
  * ```
  */
-export const testLogger = {
-  isVerbose: process.env.PLAYWRIGHT_VERBOSE === 'true',
+/**
+ * Enhanced test logger that combines backward compatibility with unified logging
+ */
+class EnhancedTestLogger {
+  private isVerbose = process.env.PLAYWRIGHT_VERBOSE === 'true';
+  private readonly unifiedLogger = unifiedTestLogger;
 
   /**
-   * Log a message if verbose mode is enabled
+   * Log a message (enhanced with structured logging)
    */
   log(...args: unknown[]): void {
+    const message = args[0] as string;
+    const meta = args.slice(1);
+
+    // Backward compatibility: console output in verbose mode
     if (this.isVerbose) {
       console.log(...args);
     }
-  },
+
+    // Enhanced: structured logging
+    this.unifiedLogger.info(message, { meta });
+  }
 
   /**
-   * Log a warning (always shown)
+   * Log an info message
+   */
+  info(...args: unknown[]): void {
+    this.log(...args);
+  }
+
+  /**
+   * Log a debug message
+   */
+  debug(...args: unknown[]): void {
+    const message = args[0] as string;
+    const meta = args.slice(1);
+
+    if (this.isVerbose) {
+      console.log('[DEBUG]', ...args);
+    }
+
+    this.unifiedLogger.debug(message, { meta });
+  }
+
+  /**
+   * Log a warning (always shown + structured logging)
    */
   warn(...args: unknown[]): void {
+    const message = args[0] as string;
+    const meta = args.slice(1);
+
     console.warn(...args);
-  },
+    this.unifiedLogger.warn(message, { meta });
+  }
 
   /**
-   * Log an error (always shown)
+   * Log an error (always shown + structured logging)
    */
   error(...args: unknown[]): void {
+    const message = args[0] as string;
+    const errorObj = args.find(arg => arg instanceof Error) || undefined;
+    const meta = args.slice(1);
+
     console.error(...args);
-  },
+    this.unifiedLogger.error(message, errorObj, { meta });
+  }
 
   /**
    * Enable verbose logging
    */
   enableVerbose(): void {
     this.isVerbose = true;
-  },
+  }
 
   /**
    * Disable verbose logging
    */
   disableVerbose(): void {
     this.isVerbose = false;
-  },
+  }
 
   /**
-   * Debug the page state - logs URL, title, and authentication status
+   * Create a child logger with test context
+   */
+  child(testName: string): UniversalLogger {
+    return this.unifiedLogger.child({ testName });
+  }
+
+  /**
+   * Debug the page state - enhanced with structured logging
    */
   async debugPageState(page: Page, note: string): Promise<void> {
-    if (!this.isVerbose) return;
-
-    console.log(`Debug (${note}):`);
-    console.log(`- Current URL: ${page.url()}`);
-    console.log(`- Page title: ${await page.title()}`);
-
-    // Check for authentication indicators
+    // Get authentication indicators
     const sessionCookie = await page
       .context()
       .cookies()
       .then(cookies => cookies.find(cookie => cookie.name === 'session'));
 
-    console.log(`- Authentication indicators: ${sessionCookie ? 'Found' : 'Not found'}`);
+    const debugInfo = {
+      note,
+      url: page.url(),
+      title: await page.title(),
+      hasAuth: !!sessionCookie,
+    };
+
+    // Backward compatibility: console output in verbose mode
+    if (this.isVerbose) {
+      console.log(`Debug (${note}):`);
+      console.log(`- Current URL: ${debugInfo.url}`);
+      console.log(`- Page title: ${debugInfo.title}`);
+      console.log(`- Authentication indicators: ${sessionCookie ? 'Found' : 'Not found'}`);
+    }
+
+    // Enhanced: structured logging
+    this.unifiedLogger.debug('Page state debug', debugInfo);
 
     // Take a screenshot if debug directory exists
     try {
-      await page.screenshot({ path: `./test-results/debug-${Date.now()}.png` });
-    } catch {
-      // Ignore screenshot errors
+      const screenshotPath = `./test-results/debug-${Date.now()}.png`;
+      await page.screenshot({ path: screenshotPath });
+
+      if (this.isVerbose) {
+        console.log(`- Screenshot saved: ${screenshotPath}`);
+      }
+
+      this.unifiedLogger.debug('Screenshot captured', { path: screenshotPath });
+    } catch (error) {
+      this.unifiedLogger.warn('Screenshot capture failed', { error });
     }
-  },
-};
+  }
+}
+
+// Create singleton instance
+export const testLogger = new EnhancedTestLogger();
 
 /**
  * Enable verbose logging for testing

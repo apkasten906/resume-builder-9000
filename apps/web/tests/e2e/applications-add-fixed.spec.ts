@@ -141,3 +141,19 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
     testLogger.error('Error cleaning up test data:', cleanupError);
   }
 });
+
+beforeAll(async () => {
+  // TODO: Implement beforeAll logic
+});
+
+afterAll(async () => {
+  // TODO: Implement afterAll logic
+});
+
+beforeEach(async () => {
+  // TODO: Implement beforeEach logic
+});
+
+afterEach(async () => {
+  // TODO: Implement afterEach logic
+});

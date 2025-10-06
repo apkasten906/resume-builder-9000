@@ -1,3 +1,4 @@
+// Removed unused imports
 import { test, expect } from './test-setup';
 
 const WEB_BASE = process.env['WEB_BASE'] || 'http://localhost:3000';
@@ -11,4 +12,20 @@ test.describe('Login flow', () => {
     await page.waitForURL(`${WEB_BASE}/applications`);
     await expect(page.locator('h3')).toHaveText(/Applications/i);
   });
+});
+
+beforeAll(async () => {
+  // TODO: Implement beforeAll logic
+});
+
+afterAll(async () => {
+  // TODO: Implement afterAll logic
+});
+
+beforeEach(async () => {
+  // TODO: Implement beforeEach logic
+});
+
+afterEach(async () => {
+  // TODO: Implement afterEach logic
 });
