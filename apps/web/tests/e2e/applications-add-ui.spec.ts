@@ -1,4 +1,4 @@
-import { test, Page } from '@playwright/test';
+﻿import { test, Page } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 import { debugPageState } from '../../src/utils/debug-page-state'; // Corrected import path
 
@@ -86,22 +86,23 @@ test('Add application via UI', async ({ page }: { page: Page }) => {
   }
 });
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   testLogger.log('Global setup for UI tests');
   // Initialize shared resources here
 });
 
-afterAll(async () => {
+test.afterAll(async () => {
   testLogger.log('Global teardown for UI tests');
   // Clean up shared resources here
 });
 
-beforeEach(async () => {
+test.beforeEach(async () => {
   testLogger.log('Setting up before each test');
   // Setup logic for each test
 });
 
-afterEach(async () => {
+test.afterEach(async () => {
   testLogger.log('Cleaning up after each test');
   // Cleanup logic for each test
 });
+

@@ -1,4 +1,4 @@
-import { expect, testWithAuth } from './test-setup';
+﻿import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import { testLogger } from './utils/test-logger';
 const WEB_BASE = process.env['WEB_BASE'] || 'http://localhost:3000';
@@ -119,18 +119,20 @@ testWithAuth('Applications add and list', async ({ page, authToken }) => {
   testLogger.log('Application visible in table:', applicationVisible);
 });
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   // TODO: Implement beforeAll logic
 });
 
-afterAll(async () => {
+test.afterAll(async () => {
   // TODO: Implement afterAll logic
 });
 
-beforeEach(async () => {
+test.beforeEach(async () => {
   // TODO: Implement beforeEach logic
 });
 
-afterEach(async () => {
+test.afterEach(async () => {
   // TODO: Implement afterEach logic
 });
+
+

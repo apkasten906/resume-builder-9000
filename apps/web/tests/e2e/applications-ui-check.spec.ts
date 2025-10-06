@@ -1,4 +1,4 @@
-import { test } from './test-setup';
+﻿import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 
@@ -83,18 +83,20 @@ test('Verify applications page UI components', async ({ page }: { page: Page }) 
   testLogger.log('UI verification test completed');
 });
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   // TODO: Implement beforeAll logic
 });
 
-afterAll(async () => {
+test.afterAll(async () => {
   // TODO: Implement afterAll logic
 });
 
-beforeEach(async () => {
+test.beforeEach(async () => {
   // TODO: Implement beforeEach logic
 });
 
-afterEach(async () => {
+test.afterEach(async () => {
   // TODO: Implement afterEach logic
 });
+
+

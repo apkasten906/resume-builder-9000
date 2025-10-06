@@ -1,5 +1,5 @@
+﻿import { test, expect } from '@playwright/test';
 // Removed unused import
-import { test } from './test-setup';
 import { decode } from 'jsonwebtoken'; // This should be available in the project
 import { testLogger } from './utils/test-logger';
 
@@ -95,18 +95,20 @@ test('JWT token analysis', async ({ request }) => {
   testLogger.log('JWT token analysis test completed');
 });
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   // TODO: Implement beforeAll logic
 });
 
-afterAll(async () => {
+test.afterAll(async () => {
   // TODO: Implement afterAll logic
 });
 
-beforeEach(async () => {
+test.beforeEach(async () => {
   // TODO: Implement beforeEach logic
 });
 
-afterEach(async () => {
+test.afterEach(async () => {
   // TODO: Implement afterEach logic
 });
+
+
