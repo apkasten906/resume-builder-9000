@@ -1,0 +1,277 @@
+import { test, expect } from '@playwright/test';
+import { testLogger } from './utils/test-logger';
+
+const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
+const API_BASE = process.env.API_BASE || 'http://localhost:4000';
+
+/**
+ * Integration tests for the complete authentication flow
+ * These tests ensure the authentication system works end-to-end
+ * and prevent regression of authentication issues
+ */
+test.describe('Authentication Flow Integration Tests', () => {
+  test.beforeEach(async ({ context }) => {
+    await context.clearCookies();
+    testLogger.log('Starting authentication integration test with clean state');
+  });
+
+  test('complete authentication flow: login -> authenticated state -> logout', async ({ page }) => {
+    testLogger.info('Testing complete authentication flow');
+
+    // Step 1: Start unauthenticated
+    await page.goto(WEB_BASE);
+    await page.waitForTimeout(1000);
+
+    // Verify unauthenticated state
+    await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
+    expect(await page.locator('aside nav').count()).toBe(0);
+    testLogger.debug('✅ Initial unauthenticated state verified');
+
+    // Step 2: Navigate to login
+    await page.getByRole('button', { name: 'Get Started' }).click();
+    await page.waitForURL('**/login');
+    testLogger.debug('✅ Navigation to login page successful');
+
+    // Step 3: Perform login
+    await page.fill('input[type="email"]', 'user@example.com');
+    await page.fill('input[type="password"]', 'ValidPassword1!');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    // Step 4: Verify redirect to home page (not /applications)
+    await page.waitForURL(`${WEB_BASE}/`);
+    expect(page.url()).toBe(`${WEB_BASE}/`);
+    testLogger.debug('✅ Login redirects to home page correctly');
+
+    // Step 5: Verify authenticated state
+    await page.waitForTimeout(2000); // Allow auth state to settle
+    expect(await page.locator('aside nav').count()).toBeGreaterThan(0);
+    await expect(page.getByText('Welcome back')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
+    testLogger.debug('✅ Authenticated state verified');
+
+    // Step 6: Verify session cookie exists
+    const cookies = await page.context().cookies();
+    const sessionCookie = cookies.find(cookie => cookie.name === 'session');
+    expect(sessionCookie).toBeTruthy();
+    expect(sessionCookie?.value).toBeTruthy();
+    testLogger.debug('✅ Session cookie verified');
+
+    // Step 7: Verify access to protected content
+    await page.goto(`${WEB_BASE}/applications`);
+    await page.waitForLoadState('domcontentloaded');
+    
+    // Should not see unauthorized error
+    const unauthorizedText = await page.locator('text=Error 401').count();
+    expect(unauthorizedText).toBe(0);
+    testLogger.debug('✅ Access to protected content verified');
+
+    // Step 8: Perform logout
+    await page.goto(`${WEB_BASE}/`); // Go back to home
+    await page.waitForTimeout(1000);
+    await page.getByRole('button', { name: 'Log out' }).click();
+
+    // Step 9: Verify logout redirect to home page
+    await page.waitForURL(`${WEB_BASE}/`);
+    expect(page.url()).toBe(`${WEB_BASE}/`);
+    testLogger.debug('✅ Logout redirects to home page correctly');
+
+    // Step 10: Verify unauthenticated state after logout
+    await page.waitForTimeout(2000); // Allow auth state to settle
+    await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
+    expect(await page.locator('aside nav').count()).toBe(0);
+    testLogger.debug('✅ Unauthenticated state after logout verified');
+
+    // Step 11: Verify session cookie is cleared
+    const cookiesAfterLogout = await page.context().cookies();
+    const sessionCookieAfterLogout = cookiesAfterLogout.find(
+      cookie => cookie.name === 'session' && cookie.value !== ''
+    );
+    expect(sessionCookieAfterLogout).toBeFalsy();
+    testLogger.debug('✅ Session cookie cleared after logout');
+
+    // Step 12: Verify access to protected content is denied
+    await page.goto(`${WEB_BASE}/applications`);
+    await page.waitForTimeout(2000);
+    
+    // Should see unauthorized error or be redirected
+    const currentUrl = page.url();
+    const hasUnauthorized = await page.locator('text=Error 401').count() > 0;
+    const redirectedToLogin = currentUrl.includes('/login');
+    const redirectedToHome = currentUrl === `${WEB_BASE}/`;
+    
+    expect(hasUnauthorized || redirectedToLogin || redirectedToHome).toBe(true);
+    testLogger.debug('✅ Access to protected content properly denied after logout');
+
+    testLogger.info('✅ Complete authentication flow test passed');
+  });
+
+  test('authentication state persists across page refreshes', async ({ page }) => {
+    testLogger.info('Testing authentication state persistence');
+
+    // Login
+    await page.goto(`${WEB_BASE}/login`);
+    await page.fill('input[type="email"]', 'user@example.com');
+    await page.fill('input[type="password"]', 'ValidPassword1!');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+    await page.waitForURL(`${WEB_BASE}/`);
+    await page.waitForTimeout(1000);
+
+    // Verify authenticated state
+    expect(await page.locator('aside nav').count()).toBeGreaterThan(0);
+    testLogger.debug('Initial authentication verified');
+
+    // Refresh page multiple times
+    for (let i = 1; i <= 3; i++) {
+      testLogger.debug(`Page refresh ${i}`);
+      await page.reload();
+      await page.waitForTimeout(2000);
+
+      // Should remain authenticated
+      expect(await page.locator('aside nav').count()).toBeGreaterThan(0);
+      await expect(page.getByText('Welcome back')).toBeVisible();
+    }
+
+    testLogger.info('✅ Authentication state persists across page refreshes');
+  });
+
+  test('handles invalid credentials gracefully', async ({ page }) => {
+    testLogger.info('Testing invalid credential handling');
+
+    await page.goto(`${WEB_BASE}/login`);
+
+    // Try invalid credentials
+    await page.fill('input[type="email"]', 'invalid@example.com');
+    await page.fill('input[type="password"]', 'wrongpassword');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    // Should stay on login page and show error
+    await page.waitForTimeout(2000);
+    expect(page.url()).toContain('/login');
+    
+    // Should show some error indication
+    const errorElements = await page.locator('[role="alert"], .error, .text-red-500').count();
+    expect(errorElements).toBeGreaterThan(0);
+
+    // Should remain unauthenticated
+    await page.goto(`${WEB_BASE}/`);
+    await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
+
+    testLogger.info('✅ Invalid credentials handled gracefully');
+  });
+
+  test('handles concurrent authentication requests', async ({ page }) => {
+    testLogger.info('Testing concurrent authentication request handling');
+
+    const apiRequests: string[] = [];
+    
+    // Monitor auth-related API requests
+    page.on('request', request => {
+      if (request.url().includes('/api/auth/')) {
+        apiRequests.push(request.url());
+      }
+    });
+
+    // Navigate to a page that might trigger multiple auth checks
+    await page.goto(WEB_BASE);
+    
+    // Quickly navigate between pages that require auth checks
+    const navigationPromises = [
+      page.goto(`${WEB_BASE}/applications`),
+      page.goto(`${WEB_BASE}/settings`),
+      page.goto(`${WEB_BASE}/`)
+    ];
+
+    await Promise.all(navigationPromises);
+    await page.waitForTimeout(2000);
+
+    // Should not have excessive concurrent auth requests
+    const authMeRequests = apiRequests.filter(url => url.includes('/auth/me'));
+    testLogger.debug(`Auth requests made: ${authMeRequests.length}`);
+    
+    // Should handle concurrent requests efficiently
+    expect(authMeRequests.length).toBeLessThan(10); // Reasonable limit
+
+    testLogger.info('✅ Concurrent authentication requests handled efficiently');
+  });
+
+  test('authentication works correctly with network delays', async ({ page }) => {
+    testLogger.info('Testing authentication with network delays');
+
+    // Add delays to auth requests to simulate slow network
+    await page.route('**/api/auth/**', async route => {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+      route.continue();
+    });
+
+    // Login with network delays
+    await page.goto(`${WEB_BASE}/login`);
+    await page.fill('input[type="email"]', 'user@example.com');
+    await page.fill('input[type="password"]', 'ValidPassword1!');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    // Should eventually succeed despite delays
+    await page.waitForURL(`${WEB_BASE}/`, { timeout: 10000 });
+    await page.waitForTimeout(3000); // Allow delayed auth to complete
+
+    // Should be properly authenticated
+    expect(await page.locator('aside nav').count()).toBeGreaterThan(0);
+    await expect(page.getByText('Welcome back')).toBeVisible();
+
+    testLogger.info('✅ Authentication works correctly with network delays');
+  });
+
+  test('session expiry is handled gracefully', async ({ page }) => {
+    testLogger.info('Testing session expiry handling');
+
+    // Login first
+    await page.goto(`${WEB_BASE}/login`);
+    await page.fill('input[type="email"]', 'user@example.com');
+    await page.fill('input[type="password"]', 'ValidPassword1!');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+    await page.waitForURL(`${WEB_BASE}/`);
+
+    // Verify authenticated state
+    expect(await page.locator('aside nav').count()).toBeGreaterThan(0);
+
+    // Manually clear session cookie to simulate expiry
+    await page.context().clearCookies();
+    testLogger.debug('Cleared session cookie to simulate expiry');
+
+    // Navigate to a new page
+    await page.reload();
+    await page.waitForTimeout(2000);
+
+    // Should handle expired session gracefully
+    // Either by showing unauthenticated state or redirecting to login
+    const isUnauthenticated = await page.getByRole('button', { name: 'Get Started' }).isVisible();
+    const isOnLoginPage = page.url().includes('/login');
+    
+    expect(isUnauthenticated || isOnLoginPage).toBe(true);
+    testLogger.info('✅ Session expiry handled gracefully');
+  });
+
+  test('direct API authentication calls work correctly', async ({ page }) => {
+    testLogger.info('Testing direct API authentication');
+
+    // Test /api/auth/me without being authenticated
+    const response1 = await page.request.get(`${WEB_BASE}/api/auth/me`);
+    expect(response1.status()).toBe(401);
+    testLogger.debug('✅ Unauthenticated API call correctly returns 401');
+
+    // Login through UI
+    await page.goto(`${WEB_BASE}/login`);
+    await page.fill('input[type="email"]', 'user@example.com');
+    await page.fill('input[type="password"]', 'ValidPassword1!');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+    await page.waitForURL(`${WEB_BASE}/`);
+
+    // Test /api/auth/me after authentication (with cookies from browser context)
+    const response2 = await page.request.get(`${WEB_BASE}/api/auth/me`);
+    expect(response2.status()).toBe(200);
+    const userData = await response2.json();
+    expect(userData.user).toBeDefined();
+    testLogger.debug('✅ Authenticated API call correctly returns user data');
+
+    testLogger.info('✅ Direct API authentication calls work correctly');
+  });
+});
