@@ -4,13 +4,11 @@ import React, {
   useContext,
   useEffect,
   useState,
-  ReactNode,
-  useRef,
   useCallback,
+  useMemo,
+  useRef,
 } from 'react';
 import { useRouter } from 'next/navigation';
-
-import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 
 export type User = {
   id?: string;
@@ -41,6 +39,7 @@ export function AuthProvider({
 }): React.ReactElement {
   const [authenticated, setAuthenticated] = useState<boolean>(false);
   const [checking, setChecking] = useState<boolean>(true);
+  const [user, setUser] = useState<User>(null);
   const router = useRouter();
 
   // Debug logging for state changes (reduced to prevent spam)
@@ -173,13 +172,14 @@ export function AuthProvider({
     () => ({
       authenticated,
       checking,
+      user,
       refreshAuth,
       logout,
     }),
-    [authenticated, checking] // refreshAuth and logout are stable callbacks
+    [authenticated, checking, user] // refreshAuth and logout are stable callbacks
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

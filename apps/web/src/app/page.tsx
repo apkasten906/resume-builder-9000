@@ -3,6 +3,12 @@ import { useEffect, useState } from 'react';
 import { Table, TRow, TCell } from '../components/ui/Table';
 import { useAuth } from '../context/AuthContext';
 
+type User = {
+  id?: string;
+  name?: string;
+  email?: string;
+};
+
 type Application = { id: string; company: string; status: string; lastUpdated: string };
 type ResumeUpload = { fileName: string; lastUpdated: string };
 
@@ -40,8 +46,8 @@ export default function Home(): React.ReactElement {
             (now.getFullYear() - lastUpload.getFullYear()) * 12 +
             (now.getMonth() - lastUpload.getMonth());
           if (months >= 3) {
-            nextInsights.push(
-              'You haven’t updated your resume in 3 months—refresh now for better results'
+            insightsArr.push(
+              "You haven't updated your resume in 3 months - refresh now for better results"
             );
           }
         }
@@ -51,8 +57,8 @@ export default function Home(): React.ReactElement {
         if (currentApplications.length > 0) {
           insightsArr.push('Consider tailoring your resume for new job postings');
         }
-        setApplications(appItems);
-        setInsights(nextInsights);
+        setApplications(currentApplications);
+        setInsights(insightsArr);
       } catch {
         setUploadsError(
           'Apologies! We are having trouble retrieving your uploaded resumes right now.'
