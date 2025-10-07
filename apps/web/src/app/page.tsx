@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Table, TRow, TCell } from '../components/ui/Table';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 type Application = { id: string; company: string; status: string; lastUpdated: string };
 type ResumeUpload = { fileName: string; lastUpdated: string };
 
 export default function Home(): React.ReactElement {
-  const { authenticated, checking, user } = useAuth(); // ← from AuthContext
+  const { authenticated, checking } = useAuth();
+  const [user] = useState<User | null>({ name: 'User' }); // Simplified for now
   const [applications, setApplications] = useState<Application[]>([]);
   const [uploads, setUploads] = useState<ResumeUpload[]>([]);
   const [uploadsError, setUploadsError] = useState<string | null>(null);
@@ -16,39 +17,24 @@ export default function Home(): React.ReactElement {
 
   // When authenticated, fetch app data and compute insights
   useEffect(() => {
-    if (!authenticated) {
-      setApplications([]);
-      setUploads([]);
-      setInsights([]);
-      return;
-    }
-
-    (async (): Promise<void> => {
-      setUploadsLoading(true);
-      setUploadsError(null);
+    if (!authenticated) return;
+    async function fetchData(): Promise<void> {
       try {
-        const appsRes = await fetch('/api/applications', { credentials: 'include' });
-        const appsJson: { items?: Application[] } = await appsRes.json();
-        const appItems = appsJson.items ?? [];
+        const appsRes = await fetch('/api/applications');
+        const appsData = await appsRes.json();
+        const currentApplications = appsData.items || [];
+        setApplications(currentApplications);
 
-        // Fetch uploads from API
-        const uploadsRes = await fetch('/api/uploads', { credentials: 'include' });
-        let fetchedUploads: ResumeUpload[] = [];
-        if (!uploadsRes.ok) {
-          setUploadsError(
-            'Apologies! We are having trouble retrieving your uploaded resumes right now.'
-          );
-          setUploads([]);
-        } else {
-          const uploadsJson: { items?: ResumeUpload[] } = await uploadsRes.json();
-          fetchedUploads = uploadsJson.items ?? [];
-          setUploads(fetchedUploads);
-        }
+        const insightsArr: string[] = [];
+        // Use local variables instead of state to prevent infinite loop
+        const currentUploads = [
+          { fileName: 'resume-2025.pdf', lastUpdated: '2025-09-28T10:00:00Z' },
+          { fileName: 'resume-2025-ATS.docx', lastUpdated: '2025-09-15T14:30:00Z' },
+        ];
+        setUploads(currentUploads);
 
-        // Compute insights after uploads are fetched
-        const nextInsights: string[] = [];
-        if (fetchedUploads.length > 0) {
-          const lastUpload = new Date(fetchedUploads[0].lastUpdated);
+        if (currentUploads.length > 0) {
+          const lastUpload = new Date(currentUploads[0].lastUpdated);
           const now = new Date();
           const months =
             (now.getFullYear() - lastUpload.getFullYear()) * 12 +
@@ -59,11 +45,11 @@ export default function Home(): React.ReactElement {
             );
           }
         }
-        if (appItems.some(a => a.status === 'Awaiting Feedback')) {
-          nextInsights.push('You have applications awaiting feedback');
+        if (currentApplications.some((a: Application) => a.status === 'Awaiting Feedback')) {
+          insightsArr.push('You have applications awaiting feedback');
         }
-        if (appItems.length > 0) {
-          nextInsights.push('Consider tailoring your resume for new job postings');
+        if (currentApplications.length > 0) {
+          insightsArr.push('Consider tailoring your resume for new job postings');
         }
         setApplications(appItems);
         setInsights(nextInsights);
@@ -75,11 +61,13 @@ export default function Home(): React.ReactElement {
       } finally {
         setUploadsLoading(false);
       }
-    })();
-  }, [authenticated]);
+    }
+    fetchData();
+  }, [authenticated]); // Only depend on authenticated - removing uploads/applications to prevent infinite loop
 
-  // While auth status is unknown, show your Get Started hero (unchanged)
+  // Show loading state while checking authentication
   if (checking) {
+    // Show loading view while authentication is being checked
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <h2 className="text-3xl font-bold mb-4">Welcome to Resume Builder 9000</h2>

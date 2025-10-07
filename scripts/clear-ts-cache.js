@@ -9,12 +9,9 @@
  *   node clear-ts-cache.js [--all] [--node-modules] [--vscode] [--tsserver]
  */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { spawnSync } = require('child_process');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const path = require('path');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
+import { spawnSync } from 'child_process';
+import path from 'path';
+import fs from 'fs';
 
 // Parse command line arguments
 const args = process.argv.slice(2);

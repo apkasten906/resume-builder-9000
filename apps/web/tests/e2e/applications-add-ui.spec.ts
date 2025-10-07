@@ -1,41 +1,14 @@
-import { test } from './test-setup';
-import { Page } from '@playwright/test';
+﻿import { test, Page } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
+import { debugPageState } from '../../src/utils/debug-page-state'; // Corrected import path
 
 // Import constants for URLs
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 
 /**
- * Helper function to log page state for debugging
- */
-async function debugPageState(page: Page, note: string): Promise<void> {
-  testLogger.log(`Debug (${note}):`);
-
-  // Current URL
-  testLogger.log(`- Current URL: ${page.url()}`);
-
-  // Page title
-  const title = await page.title();
-  testLogger.log(`- Page title: ${title}`);
-
-  // Take screenshot
-  await page.screenshot({ path: `./test-results/debug-${Date.now()}.png` });
-
-  // Check for error messages
-  const errorTexts = await page.getByText(/error/i).allTextContents();
-  if (errorTexts.length > 0) {
-    testLogger.log('- Error messages found:', errorTexts);
-  }
-
-  // Check for authentication state
-  const authElements = await page.getByText(/log out/i).count();
-  testLogger.log(`- Authentication indicators: ${authElements > 0 ? 'Found' : 'Not found'}`);
-}
-
-/**
  * Test that focuses purely on adding an application via the UI
  */
-test('Add application via UI', async ({ page }) => {
+test('Add application via UI', async ({ page }: { page: Page }) => {
   testLogger.log('Starting applications add test (UI-only approach)');
 
   // Step 1: Navigate directly to applications page
@@ -112,3 +85,24 @@ test('Add application via UI', async ({ page }) => {
     throw error;
   }
 });
+
+test.beforeAll(async () => {
+  testLogger.log('Global setup for UI tests');
+  // Initialize shared resources here
+});
+
+test.afterAll(async () => {
+  testLogger.log('Global teardown for UI tests');
+  // Clean up shared resources here
+});
+
+test.beforeEach(async () => {
+  testLogger.log('Setting up before each test');
+  // Setup logic for each test
+});
+
+test.afterEach(async () => {
+  testLogger.log('Cleaning up after each test');
+  // Cleanup logic for each test
+});
+

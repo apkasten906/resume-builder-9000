@@ -26,6 +26,7 @@ export function logPlaywrightDebug(debugInfo: string): void {
     typeof window !== 'undefined' &&
     window.navigator.userAgent.toLowerCase().includes('playwright')
   ) {
+    // Use structured logging in test environment
     // eslint-disable-next-line no-console
     console.log('JOB INTAKE DEBUG:', debugInfo);
   }

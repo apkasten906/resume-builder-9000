@@ -1,4 +1,4 @@
-import { testWithAuth, expect } from './test-setup';
+﻿import { test, expect } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 
 // Import constants for URLs
@@ -141,3 +141,21 @@ testWithAuth('Applications add and list with Bearer auth', async ({ page, reques
     testLogger.error('Error cleaning up test data:', cleanupError);
   }
 });
+
+test.beforeAll(async () => {
+  // TODO: Implement beforeAll logic
+});
+
+test.afterAll(async () => {
+  // TODO: Implement afterAll logic
+});
+
+test.beforeEach(async () => {
+  // TODO: Implement beforeEach logic
+});
+
+test.afterEach(async () => {
+  // TODO: Implement afterEach logic
+});
+
+

@@ -1,10 +1,14 @@
-import { testWithAuth, expect } from './test-setup';
+﻿import { test, expect } from '@playwright/test';
+import { dbCleanup } from './db-cleanup.template';
 import type { Page, APIRequestContext } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 
 // Import constants for URLs
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 const API_BASE = process.env.API_BASE || 'http://localhost:4000';
+
+// Store authToken for cleanup
+let currentAuthToken: string;
 
 /**
  * This test adds applications and verifies they appear in the list.
@@ -20,7 +24,13 @@ testWithAuth(
     request: APIRequestContext;
     authToken: string;
   }) => {
-    testLogger.log('Starting applications add and list test with API auth');
+    // Store authToken for cleanup
+    currentAuthToken = authToken;
+
+    testLogger.info(
+      'applications-add-test',
+      'Starting applications add and list test with API auth'
+    );
 
     // Store the token in localStorage as well for the application to find
     await page.evaluate((token: string) => {
@@ -149,21 +159,43 @@ testWithAuth(
 
     // Cleanup: Remove test applications from the database
     try {
-      // Remove API-created application
-      await request.delete(`${API_BASE}/applications/${initialAppName}`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
+      await dbCleanup({
+        tables: ['applications'],
+        testContext: { authToken, testId: 'applications-add-test' },
       });
-      // Remove UI-created application
-      await request.delete(`${API_BASE}/applications/${uiAppName}`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      testLogger.log('Test data cleaned up from database.');
+      testLogger.log('Test data cleaned up using dbCleanup.');
     } catch (cleanupError) {
-      testLogger.error('Error cleaning up test data:', cleanupError);
+      testLogger.error('Error cleaning up test data using dbCleanup:', cleanupError);
     }
   }
 );
+
+test.beforeAll(async () => {
+  // TODO: Implement beforeAll logic
+});
+
+test.afterAll(async () => {
+  // TODO: Implement afterAll logic
+});
+
+test.beforeEach(async () => {
+  // TODO: Implement beforeEach logic
+});
+
+test.afterEach(async () => {
+  try {
+    await dbCleanup({
+      tables: ['applications'],
+      testContext: { authToken: currentAuthToken, testId: 'applications-add-test' },
+    });
+    testLogger.info('applications-add-test', 'Test data cleaned up after each test.');
+  } catch (cleanupError) {
+    testLogger.error(
+      'applications-add-test',
+      'Error during afterEach cleanup:',
+      String(cleanupError)
+    );
+  }
+});
+
+

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { testLogger } from '../utils/test-logger';
@@ -248,3 +248,4 @@ test('Basic authentication test with detailed logging', async ({ page, request }
   // Basic assertion
   expect(page.url()).not.toContain('/login');
 });
+

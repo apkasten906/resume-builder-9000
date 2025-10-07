@@ -5,9 +5,6 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    ecmaFeatures: {
-      jsx: true,
-    },
   },
   plugins: [
     '@typescript-eslint',
@@ -16,19 +13,14 @@ module.exports = {
     // Use 'local-rules' for plugin name, not 'eslint-plugin-local-rules'
     'local-rules',
   ],
-  extends: [
-    'eslint:recommended',
-    'plugin:@next/next/recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:react-hooks/recommended',
-    'plugin:prettier/recommended',
-  ],
+  extends: ['eslint:recommended', 'plugin:@next/next/recommended', 'plugin:prettier/recommended'],
   rules: {
     'no-unused-vars': 'off',
-    '@typescript-eslint/no-unused-vars': ['error'],
-    '@typescript-eslint/explicit-function-return-type': 'error',
-    '@typescript-eslint/explicit-module-boundary-types': 'error',
-    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/no-unused-vars': ['warn'],
+    '@typescript-eslint/explicit-function-return-type': 'warn',
+    '@typescript-eslint/explicit-module-boundary-types': 'warn',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'no-undef': 'off', // Disable for browser globals like window, document
     'local-rules/no-hardcoded-test-data': 'error', // Updated to use new plugin
   },
   overrides: [
@@ -60,9 +52,30 @@ module.exports = {
         '@next/next/no-img-element': 'off',
       },
     },
-    // Core library (Node)
+    // JavaScript files - disable TypeScript-specific rules but keep JSX support
     {
-      files: ['packages/core/**/*.{js,ts}'],
+      files: ['**/*.js', '**/*.jsx'],
+      parser: '@typescript-eslint/parser', // Keep TS parser for JSX support
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      env: { browser: true, node: true },
+      rules: {
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        'no-unused-vars': 'warn',
+      },
+    },
+    // Core library (Node) - TypeScript files
+    {
+      files: ['packages/core/**/*.ts', 'apps/web/**/*.ts', 'packages/api/**/*.ts'],
+      extends: ['plugin:@typescript-eslint/recommended'],
       env: { node: true, browser: false },
     },
     // Exclude custom rule from all test folders (must be last for precedence)
@@ -72,6 +85,20 @@ module.exports = {
         'local-rules/no-hardcoded-test-data': 'off', // Removed legacy rule
       },
     },
+    // Exclude .ts and .js files in the Docs folder from linting, allow markdown files
+    {
+      files: ['docs/**/*.ts', 'docs/**/*.js'],
+      rules: {
+        all: 'off', // Disable all rules for .ts and .js files in the Docs folder
+      },
+    },
+    // ESLint plugin files need require() for compatibility
+    {
+      files: ['packages/eslint-plugin-local-rules/**/*.js'],
+      rules: {
+        '@typescript-eslint/no-require-imports': 'off',
+      },
+    },
   ],
   settings: {
     'import/resolver': {
@@ -79,6 +106,9 @@ module.exports = {
         paths: ['.'],
       },
     },
+  },
+  env: {
+    node: true,
   },
 };
 

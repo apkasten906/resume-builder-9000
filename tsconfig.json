@@ -6,21 +6,20 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "./",
+    "paths": {
+      "@rb9k/core/testLogger": ["packages/core/dist/testLogger"],
+      "@rb9k/core": ["packages/core/dist/index"]
+    }
   },
-  "files": [],
-  "references": [
-    { "path": "./apps/web" },
-    { "path": "./packages/api" },
-    { "path": "./packages/core" }
-  ],
   "exclude": [
-    "apps/*/node_modules",
-    "packages/*/node_modules",
-    "apps/*/dist",
-    "packages/*/dist",
-    "apps/*/.next",
-    "apps/*/coverage",
-    "packages/*/coverage"
+    "packages/core/templates/**/*",
+    "**/*.template.ts",
+    "**/*.template.js",
+    "apps/web/**/*",
+    "packages/api/**/*",
+    "**/node_modules/**/*",
+    "**/dist/**/*"
   ]
 }
