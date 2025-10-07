@@ -132,3 +132,22 @@ export const JobDetailsSchema = z.object({
 export type JobDetails = z.infer<typeof JobDetailsSchema>;
 
 export * from './resume.js';
+
+// Resume generator exports
+export type { ResumeGenerator, ResumeFormatter } from './resume.js';
+export { ResumeService } from './resume.js';
+
+// Logging utilities
+export {
+  UniversalLogger,
+  createLogger,
+  logger,
+  LoggerUtils,
+  type LoggerConfig,
+  type Environment,
+  type LogLevel,
+  // Keep backward compatibility
+  TestLogger,
+  testLogger,
+  type TestLoggerOptions,
+} from './logger.js';

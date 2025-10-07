@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+﻿import { test, expect, type Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { testLogger } from '../utils/test-logger';
@@ -64,3 +64,4 @@ test('Public pages accessibility test', async ({ page }: { page: Page }) => {
 
   log('Public pages test completed');
 });
+

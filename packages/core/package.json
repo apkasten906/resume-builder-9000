@@ -9,9 +9,9 @@
     "dev": "tsc --watch",
     "build": "tsc",
     "lint": "eslint src --config ../../.eslintrc.cjs",
-    "test": "vitest run --config ./vitest.config.mjs",
-    "test:watch": "vitest --config ./vitest.config.mjs",
-    "test:coverage": "vitest run --coverage --config ./vitest.config.mjs",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:watch": "vitest --config ./vitest.config.ts",
+    "test:coverage": "vitest run --coverage --config ./vitest.config.ts",
     "update-deps": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {

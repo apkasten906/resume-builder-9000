@@ -17,6 +17,13 @@ export function isTokenBlacklisted(token: string): boolean {
   return jwtBlacklist.has(token);
 }
 
+// User row interface for database queries
+interface UserRow {
+  id: string;
+  email: string;
+  password_hash: string;
+}
+
 export const authService = {
   async login(email: string, password: string): Promise<{ token: string } | null> {
     // Get database connection from shared pool
@@ -25,7 +32,7 @@ export const authService = {
     // Use prepared statement for security (prevent SQL injection)
     const user = db
       .prepare('SELECT id, email, password_hash FROM users WHERE email = ?')
-      .get(email);
+      .get(email) as UserRow | undefined;
 
     if (!user) {
       return null; // User not found

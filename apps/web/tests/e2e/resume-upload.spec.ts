@@ -1,4 +1,4 @@
-// Removed unused imports
+﻿// Removed unused imports
 import { test, expect } from '@playwright/test';
 
 // Use BASE_URL from environment or default to localhost
@@ -47,18 +47,19 @@ test.describe('Resume Upload Flow', () => {
   });
 });
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   // TODO: Implement beforeAll logic
 });
 
-afterAll(async () => {
+test.afterAll(async () => {
   // TODO: Implement afterAll logic
 });
 
-beforeEach(async () => {
+test.beforeEach(async () => {
   // TODO: Implement beforeEach logic
 });
 
-afterEach(async () => {
+test.afterEach(async () => {
   // TODO: Implement afterEach logic
 });
+
