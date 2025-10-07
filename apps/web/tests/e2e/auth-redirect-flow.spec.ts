@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
@@ -178,3 +178,4 @@ test.describe('Authentication Flow Redirects', () => {
     testLogger.log('✅ Root page displays correctly without errors');
   });
 });
+

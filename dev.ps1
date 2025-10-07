@@ -61,7 +61,7 @@ function Stop-AllDevServers {
   Get-Process | Where-Object { $_.ProcessName -match 'node' } | ForEach-Object {
     try {
       $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine
-      if ($cmdLine -match 'npm run dev' -and ($cmdLine -match 'packages\\api' -or $cmdLine -match 'apps\\web')) {
+      if ($cmdLine -match 'npm run dev(:stable)?' -and ($cmdLine -match 'packages\\api' -or $cmdLine -match 'apps\\web')) {
         Write-Host "Stopping dev server process: $($_.Id)" -ForegroundColor Yellow
         Stop-Process -Id $_.Id -Force
       }
@@ -197,7 +197,7 @@ See console output above for details.
   Get-Process | Where-Object { $_.ProcessName -match 'node' } | ForEach-Object {
     try {
       $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine
-      if ($cmdLine -match 'npm run dev' -and ($cmdLine -match 'packages\\api' -or $cmdLine -match 'apps\\web')) {
+      if ($cmdLine -match 'npm run dev(:stable)?' -and ($cmdLine -match 'packages\\api' -or $cmdLine -match 'apps\\web')) {
         Write-Host "Killing stale dev server process: $($_.Id)" -ForegroundColor Yellow
         Stop-Process -Id $_.Id -Force
       }
@@ -226,7 +226,8 @@ See console output above for details.
 
   if (-not $ApiOnly) {
     Write-Host "Starting Web frontend..." -ForegroundColor Cyan
-    $webProcess = Start-Process -NoNewWindow -PassThru powershell -ArgumentList "-Command cd $PSScriptRoot\apps\web; npm run dev"
+    Write-Host "Using stable build mode to avoid Next.js file watcher issues..." -ForegroundColor Yellow
+    $webProcess = Start-Process -NoNewWindow -PassThru powershell -ArgumentList "-Command cd $PSScriptRoot\apps\web; npm run dev:stable"
 
     # Wait a bit before checking health
     Start-Sleep -Seconds 5

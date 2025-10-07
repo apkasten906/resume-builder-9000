@@ -1,4 +1,4 @@
-import { test, type Page } from '@playwright/test';
+﻿import { test, type Page } from '@playwright/test';
 import { testLogger } from '../utils/test-logger';
 
 // Note: Environment variables should be set before running tests
@@ -20,3 +20,4 @@ test('Basic page rendering test - No auth needed', async ({ page }: { page: Page
   // Wait a moment to see if any errors appear
   await page.waitForTimeout(1000);
 });
+

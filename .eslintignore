@@ -1,0 +1,14 @@
+# Ignore template files as they contain placeholder code
+packages/core/templates/**/*
+**/*.template.ts
+**/*.template.js
+
+# Ignore build outputs
+**/dist/**/*
+**/node_modules/**/*
+
+# Ignore generated files
+**/*.d.ts
+
+# Ignore specific problem files while packages are excluded from root config
+packages/api/**/*

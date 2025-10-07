@@ -23,6 +23,23 @@ export interface Application extends NewApplication {
   createdAt: string;
 }
 
+// Database row interface for better typing
+interface ApplicationRow {
+  id: string;
+  company: string;
+  role: string;
+  location: string | null;
+  stage: string;
+  last_updated: string;
+  created_at: string;
+  jd_text: string | null;
+  currency: string | null;
+  salary_base: number | null;
+  salary_bonus: number | null;
+  salary_equity: string | null;
+  salary_notes: string | null;
+}
+
 export const applicationsRepo = {
   create(app: NewApplication): Application {
     const id = randomUUID();
@@ -61,18 +78,18 @@ export const applicationsRepo = {
   list(): Application[] {
     const rows = db
       .prepare('SELECT * FROM applications ORDER BY datetime(last_updated) DESC')
-      .all();
-    return rows.map((r: Record<string, unknown>) => ({
+      .all() as ApplicationRow[];
+    return rows.map((r: ApplicationRow) => ({
       id: r.id,
       company: r.company,
       role: r.role,
       location: r.location ?? undefined,
-      stage: r.stage,
+      stage: r.stage as Stage,
       lastUpdated: r.last_updated,
       createdAt: r.created_at,
       jdText: r.jd_text ?? undefined,
       salary: {
-        currency: r.currency ?? undefined,
+        currency: r.currency as Currency | undefined,
         base: r.salary_base ?? undefined,
         bonus: r.salary_bonus ?? undefined,
         equity: r.salary_equity ?? undefined,
@@ -83,7 +100,9 @@ export const applicationsRepo = {
 
   updateStage(appId: string, toStage: Stage, note?: string): void {
     const tx = db.transaction(() => {
-      const fromStageRow = db.prepare('SELECT stage FROM applications WHERE id = ?').get(appId);
+      const fromStageRow = db.prepare('SELECT stage FROM applications WHERE id = ?').get(appId) as
+        | { stage: string }
+        | undefined;
       const fromStage = fromStageRow?.stage ?? null;
       db.prepare('UPDATE applications SET stage=?, last_updated=? WHERE id=?').run(
         toStage,

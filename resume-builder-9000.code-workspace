@@ -15,6 +15,7 @@
         "prisma.prisma", // SQLite/Prisma
         "shadcn.ui", // shadcn/ui
         "wix.vscode-import-cost", // Import cost visualization
+        "ms-playwright.playwright", // Playwright E2E testing
       ],
     },
     // Formatting and linting

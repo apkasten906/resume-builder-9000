@@ -2,7 +2,7 @@
 // Simple cross-platform script to run the appropriate TypeScript cache clearing script
 
 // Use cross-platform spawn
-const { spawnSync } = require('child_process');
+import { spawnSync } from 'child_process';
 
 // Check if we're on Windows
 const isWindows = process.platform === 'win32';

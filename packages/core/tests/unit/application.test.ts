@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Application } from '../../src/application';
+import type { Application } from '../../src/application.js';
 
 describe('Application model', () => {
   it('basic shape compiles and runtime checks pass', () => {
