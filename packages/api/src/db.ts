@@ -35,9 +35,10 @@ export function connectDatabase(): SQLiteDatabase {
   const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
   logger.info(`Opening new database connection to ${dbPath}`);
   db = new Database(dbPath, {
-    verbose: process.env.NODE_ENV === 'development' ? logger.debug : undefined,
     fileMustExist: false,
   });
+
+  // Note: verbose logging removed due to type compatibility issues with newer better-sqlite3 versions
 
   // Create tables if they don't exist
   db.exec(`

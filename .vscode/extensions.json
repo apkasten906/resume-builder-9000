@@ -1,7 +1,15 @@
 {
   "recommendations": [
-    // No Python extensions recommended for this workspace
+    // Test framework extensions
+    "ms-playwright.playwright",
+    "zixuanchen.vitest-explorer",
+    // Code quality and formatting
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
     "editorconfig.editorconfig",
-    "davidanson.vscode-markdownlint"
+    "davidanson.vscode-markdownlint",
+    // TypeScript and frameworks
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss"
   ]
 }

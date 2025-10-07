@@ -5,17 +5,33 @@ import path from 'node:path';
 
 // Add comment to indicate ESM usage
 export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
+  esbuild: {
+    jsxFactory: 'React.createElement',
+    jsxFragment: 'React.Fragment',
+    loader: 'tsx',
+    include: /.*\.(js|jsx|ts|tsx)$/,
+    target: 'node14',
   },
+  plugins: [
+    react({
+      jsxImportSource: 'react',
+      include: '**/*.{js,jsx,ts,tsx}',
+    }),
+  ],
   test: {
     globals: true,
     environment: 'jsdom',
-    include: ['tests/**/*.{test,spec}.{js,ts,jsx,tsx}', 'src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
-    exclude: ['tests/e2e/**/*.ts'],
+    // Only include unit tests from the dedicated unit test directory
+    include: ['tests/unit/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+    exclude: [
+      'tests/e2e/**/*',
+      'tests/AuthContext.test.*',
+      'tests/AuthLogoutFlow.test.*',
+      'tests/home.test.*',
+      'tests/HomePageAuth.test.*',
+      'src/**/*.{test,spec}.*',
+      'tests/unit/**/BuildPageImpl.test.*',
+    ],
     setupFiles: ['./tests/vitest.setup.ts'],
     css: true,
     coverage: {

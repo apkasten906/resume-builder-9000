@@ -1,3 +1,4 @@
+﻿// Removed unused imports
 import { test, expect } from '@playwright/test';
 const WEB_BASE = process.env['WEB_BASE'] || 'http://localhost:3000';
 
@@ -15,3 +16,20 @@ test('JD Intake parses text', async ({ page }) => {
   const companySection = page.locator('div:has-text("Company") + div.font-semibold');
   await expect(companySection).toHaveText('ExampleCorp');
 });
+
+test.beforeAll(async () => {
+  // TODO: Implement beforeAll logic
+});
+
+test.afterAll(async () => {
+  // TODO: Implement afterAll logic
+});
+
+test.beforeEach(async () => {
+  // TODO: Implement beforeEach logic
+});
+
+test.afterEach(async () => {
+  // TODO: Implement afterEach logic
+});
+
