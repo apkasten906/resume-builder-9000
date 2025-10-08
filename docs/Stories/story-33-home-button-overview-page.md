@@ -37,3 +37,13 @@ Add a Home button and overview page to improve navigation and user experience.
     - Flow adapts based on user selection, minimizing cognitive load and streamlining onboarding
     - (copilot: Ensure accessibility and responsive design for all panes and prompts)
     - Tables for recent applications and resume uploads are hidden when not signed in
+
+### Advanced UI/UX Requirements
+
+- UI elements render consistently without flickering during page loads
+- Navigation elements maintain visibility during user interactions
+- Smooth transitions between public pages without UI disruption
+- Advanced loading states: skeleton screens, progressive content loading
+- Responsive design compliance across mobile, tablet, and desktop
+- Keyboard navigation support for all interactive elements
+- Screen reader compatibility and ARIA label implementation

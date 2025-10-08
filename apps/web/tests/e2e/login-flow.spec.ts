@@ -1,5 +1,4 @@
-﻿import { test, expect } from '@playwright/test';
-// Removed unused imports
+﻿import { test, expect } from './test-setup';
 const WEB_BASE = process.env['WEB_BASE'] || 'http://localhost:3000';
 
 test.describe('Login flow', () => {
@@ -15,21 +14,3 @@ test.describe('Login flow', () => {
     await expect(page.getByRole('link', { name: 'Applications' })).toBeVisible();
   });
 });
-
-test.beforeAll(async () => {
-  // TODO: Implement beforeAll logic
-});
-
-test.afterAll(async () => {
-  // TODO: Implement afterAll logic
-});
-
-test.beforeEach(async () => {
-  // TODO: Implement beforeEach logic
-});
-
-test.afterEach(async () => {
-  // TODO: Implement afterEach logic
-});
-
-

@@ -1,10 +1,5 @@
-import { test, expect } from '@playwright/test';
-
-// Simple console logging for debugging
-const testLogger = {
-  log: (msg: string): void => console.log(`[TEST] ${msg}`),
-  debug: (msg: string): void => console.log(`[DEBUG] ${msg}`),
-};
+import { test, expect } from './test-setup';
+import { testLogger } from './utils/test-logger';
 
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 

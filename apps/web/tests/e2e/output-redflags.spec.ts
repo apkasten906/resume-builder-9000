@@ -63,21 +63,3 @@ test.describe('Output and Red Flags', () => {
     }
   });
 });
-
-test.beforeAll(async () => {
-  // TODO: Implement beforeAll logic
-});
-
-test.afterAll(async () => {
-  // TODO: Implement afterAll logic
-});
-
-test.beforeEach(async () => {
-  // TODO: Implement beforeEach logic
-});
-
-test.afterEach(async () => {
-  // TODO: Implement afterEach logic
-});
-
-
