@@ -128,20 +128,3 @@ test('Applications add and list', async ({ page }: { page: Page }) => {
   // Cleanup: Clear authentication
   await AuthHelper.clearAuth(page);
 });
-
-test.beforeAll(async () => {
-  // TODO: Implement beforeAll logic
-});
-
-test.afterAll(async () => {
-  // TODO: Implement afterAll logic
-});
-
-test.beforeEach(async () => {
-  // TODO: Implement beforeEach logic
-});
-
-test.afterEach(async () => {
-  // TODO: Implement afterEach logic
-});
-

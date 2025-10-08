@@ -18,7 +18,7 @@ dotenv.config();
 
 // Create Express app
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.API_BASE || 4000;
 
 // Middleware
 app.use(httpLogger); // HTTP request logging

@@ -131,4 +131,3 @@ test('Authentication flow check', async ({
 
   testLogger.log('Authentication flow test completed');
 });
-

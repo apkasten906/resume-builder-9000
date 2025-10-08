@@ -20,4 +20,3 @@ test('Basic page rendering test - No auth needed', async ({ page }: { page: Page
   // Wait a moment to see if any errors appear
   await page.waitForTimeout(1000);
 });
-

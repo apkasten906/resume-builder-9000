@@ -248,4 +248,3 @@ test('Basic authentication test with detailed logging', async ({ page, request }
   // Basic assertion
   expect(page.url()).not.toContain('/login');
 });
-

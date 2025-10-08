@@ -64,4 +64,3 @@ test('Public pages accessibility test', async ({ page }: { page: Page }) => {
 
   log('Public pages test completed');
 });
-
