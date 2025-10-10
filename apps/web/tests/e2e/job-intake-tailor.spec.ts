@@ -33,7 +33,7 @@ test.describe('Job Description Intake and Tailoring', () => {
       await page.getByRole('button', { name: /parse/i }).click();
 
       // Verify parsed results are displayed
-      await expect(page.getByRole('heading', { name: /parsed jd/i })).toBeVisible({
+      await expect(page.getByRole('heading', { name: /parsed job description/i })).toBeVisible({
         timeout: 10000,
       });
 

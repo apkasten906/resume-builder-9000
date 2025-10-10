@@ -50,26 +50,36 @@ EXAMPLES:
 }
 
 /**
+ * Get the platform-specific flag for a given option
+ * @param {string} option
+ * @returns {string}
+ */
+function getPlatformFlag(option) {
+  const flags = {
+    all: { win: '-All', unix: '--all' },
+    nodeModules: { win: '-NodeModules', unix: '--node-modules' },
+    vscode: { win: '-VSCode', unix: '--vscode' },
+    tsserver: { win: '-TSServer', unix: '--tsserver' },
+  };
+  const platform = isWindows() ? 'win' : 'unix';
+  return flags[option][platform];
+}
+
+/**
  * Convert Node.js args to platform-specific args
  * @returns {Array} The converted arguments array
  */
 function getScriptArgs() {
   const scriptArgs = [];
-
   if (options.all) {
-    scriptArgs.push(isWindows() ? '-All' : '--all');
-  } else {
-    if (options.nodeModules) {
-      scriptArgs.push(isWindows() ? '-NodeModules' : '--node-modules');
-    }
-    if (options.vscode) {
-      scriptArgs.push(isWindows() ? '-VSCode' : '--vscode');
-    }
-    if (options.tsserver) {
-      scriptArgs.push(isWindows() ? '-TSServer' : '--tsserver');
-    }
+    scriptArgs.push(getPlatformFlag('all'));
+    return scriptArgs;
   }
-
+  ['nodeModules', 'vscode', 'tsserver'].forEach(opt => {
+    if (options[opt]) {
+      scriptArgs.push(getPlatformFlag(opt));
+    }
+  });
   return scriptArgs;
 }
 

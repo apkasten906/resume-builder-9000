@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS applications (
   stage TEXT NOT NULL CHECK (stage IN ('Prospect','Applied','Interview','Offer','Rejected','Accepted')),
   last_updated TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  jd_text TEXT,
+  job_description TEXT,
   currency TEXT CHECK (currency IN ('USD','EUR','GBP','CAD','AUD')),
   salary_base REAL,
   salary_bonus REAL,

@@ -22,7 +22,7 @@ vi.mock('../../src/db.js', () => {
                 stage: 'Applied',
                 last_updated: '2025-09-27T12:00:00.000Z',
                 created_at: '2025-09-26T12:00:00.000Z',
-                jd_text: 'Test job description',
+                job_description: 'Test job description',
                 currency: 'USD',
                 salary_base: 100000,
                 salary_bonus: 10000,
@@ -37,15 +37,15 @@ vi.mock('../../src/db.js', () => {
           };
         } else if (query.includes('UPDATE applications SET stage')) {
           return {
-            run: vi.fn(),
+            run: vi.fn().mockReturnValue({ changes: 1 }),
           };
         } else if (query.includes('INSERT INTO application_status_history')) {
           return {
-            run: vi.fn(),
+            run: vi.fn().mockReturnValue({ lastInsertRowid: 1 }),
           };
         } else if (query.includes('INSERT INTO attachments')) {
           return {
-            run: vi.fn(),
+            run: vi.fn().mockReturnValue({ lastInsertRowid: 2 }),
           };
         }
         // Default mock behavior
@@ -94,7 +94,7 @@ describe('Applications Repository', () => {
         role: 'Software Engineer',
         location: 'Remote',
         stage: 'Applied',
-        jdText: 'Test job description',
+        jobDescription: 'Test job description',
         salary: {
           currency: 'USD',
           base: 100000,
@@ -113,7 +113,7 @@ describe('Applications Repository', () => {
         role: 'Software Engineer',
         location: 'Remote',
         stage: 'Applied',
-        jdText: 'Test job description',
+        jobDescription: 'Test job description',
         salary: {
           currency: 'USD',
           base: 100000,
@@ -169,7 +169,7 @@ describe('Applications Repository', () => {
         stage: 'Applied',
         lastUpdated: '2025-09-27T12:00:00.000Z',
         createdAt: '2025-09-26T12:00:00.000Z',
-        jdText: 'Test job description',
+        jobDescription: 'Test job description',
         salary: {
           currency: 'USD',
           base: 100000,

@@ -51,7 +51,7 @@ export function addTestApplication(company: string, role: string, stage = 'Prosp
     `
     INSERT INTO applications (
       id, company, role, location, stage, last_updated, created_at,
-      jd_text, currency, salary_base, salary_bonus, salary_equity, salary_notes
+      job_description, currency, salary_base, salary_bonus, salary_equity, salary_notes
     ) VALUES (
       ?, ?, ?, ?, ?, ?, ?,
       NULL, NULL, NULL, NULL, NULL, NULL

@@ -1,75 +1,50 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TRow, TCell } from '../components/ui/Table';
 import { useAuth } from '../context/AuthContext';
+import { useApplications } from '../hooks/useApplications';
+import { Application } from '../lib/api-client';
 
 type User = {
   id?: string;
   name?: string;
   email?: string;
 };
-
-type Application = { id: string; company: string; status: string; lastUpdated: string };
 type ResumeUpload = { fileName: string; lastUpdated: string };
 
 export default function Home(): React.ReactElement {
   const { authenticated, checking } = useAuth();
+  const { applications } = useApplications();
   const [user] = useState<User | null>({ name: 'User' }); // Simplified for now
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [uploads, setUploads] = useState<ResumeUpload[]>([]);
-  const [uploadsError, setUploadsError] = useState<string | null>(null);
-  const [uploadsLoading, setUploadsLoading] = useState(false);
+  const [uploads] = useState<ResumeUpload[]>([]);
   const [insights, setInsights] = useState<string[]>([]);
 
-  // When authenticated, fetch app data and compute insights
+  // Compute insights when applications change
   useEffect(() => {
-    if (!authenticated) return;
-    async function fetchData(): Promise<void> {
-      try {
-        const appsRes = await fetch('/api/applications');
-        const appsData = await appsRes.json();
-        const currentApplications = appsData.items || [];
-        setApplications(currentApplications);
+    if (!authenticated || !applications) return;
 
-        const insightsArr: string[] = [];
-        // Use local variables instead of state to prevent infinite loop
-        const currentUploads = [
-          { fileName: 'resume-2025.pdf', lastUpdated: '2025-09-28T10:00:00Z' },
-          { fileName: 'resume-2025-ATS.docx', lastUpdated: '2025-09-15T14:30:00Z' },
-        ];
-        setUploads(currentUploads);
+    const insightsArr: string[] = [];
 
-        if (currentUploads.length > 0) {
-          const lastUpload = new Date(currentUploads[0].lastUpdated);
-          const now = new Date();
-          const months =
-            (now.getFullYear() - lastUpload.getFullYear()) * 12 +
-            (now.getMonth() - lastUpload.getMonth());
-          if (months >= 3) {
-            insightsArr.push(
-              "You haven't updated your resume in 3 months - refresh now for better results"
-            );
-          }
-        }
-        if (currentApplications.some((a: Application) => a.status === 'Awaiting Feedback')) {
-          insightsArr.push('You have applications awaiting feedback');
-        }
-        if (currentApplications.length > 0) {
-          insightsArr.push('Consider tailoring your resume for new job postings');
-        }
-        setApplications(currentApplications);
-        setInsights(insightsArr);
-      } catch {
-        setUploadsError(
-          'Apologies! We are having trouble retrieving your uploaded resumes right now.'
+    if (uploads.length > 0) {
+      const lastUpload = new Date(uploads[0].lastUpdated);
+      const now = new Date();
+      const months =
+        (now.getFullYear() - lastUpload.getFullYear()) * 12 +
+        (now.getMonth() - lastUpload.getMonth());
+      if (months >= 3) {
+        insightsArr.push(
+          "You haven't updated your resume in 3 months - refresh now for better results"
         );
-        setUploads([]);
-      } finally {
-        setUploadsLoading(false);
       }
     }
-    fetchData();
-  }, [authenticated]); // Only depend on authenticated - removing uploads/applications to prevent infinite loop
+    if (applications.some((a: Application) => a.status === 'Interview')) {
+      insightsArr.push('You have applications in interview stage');
+    }
+    if (applications.length > 0) {
+      insightsArr.push('Consider tailoring your resume for new job postings');
+    }
+    setInsights(insightsArr);
+  }, [authenticated, applications, uploads]);
 
   // Show loading state while checking authentication
   if (checking) {
@@ -171,23 +146,6 @@ export default function Home(): React.ReactElement {
             <h3 className="text-xl font-bold mb-2">Recent Resume Uploads</h3>
             <div className="bg-white rounded-lg shadow p-4">
               {((): React.ReactNode => {
-                if (uploadsLoading) {
-                  return (
-                    <div className="py-8 text-center">
-                      <output
-                        className="spinner-border animate-spin inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"
-                        aria-label="Loading resumes"
-                      ></output>
-                    </div>
-                  );
-                }
-                if (uploadsError) {
-                  return (
-                    <div className="py-8 text-center text-red-600" role="alert">
-                      {uploadsError}
-                    </div>
-                  );
-                }
                 return (
                   <Table>
                     {uploads.slice(0, 10).map(upload => (

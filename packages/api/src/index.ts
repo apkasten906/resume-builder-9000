@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 
 import applicationsRoutes from './routes/applications.js';
-import { parseJD } from './controllers/jd.js';
+import { parseJobDescription } from './controllers/jobDescription.js';
 import { tailorBullets } from './controllers/tailor.js';
 import { downloadResume } from './controllers/resumeDownload.js';
 import { resumeRoutes, parseResumeHandler, postResumeHandler } from './controllers/resume.js';
@@ -28,7 +28,7 @@ app.use('/auth', authRoutes);
 
 // Mount new API routes (per ROUTES_WIRING.md)
 app.use('/applications', applicationsRoutes);
-app.post('/jd/parse', parseJD);
+app.post('/jobDescription/parse', parseJobDescription);
 app.post('/tailor', tailorBullets);
 app.post('/resume/download', downloadResume);
 

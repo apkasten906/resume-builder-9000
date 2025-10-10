@@ -17,7 +17,6 @@ export default defineConfig({
         '**/applications-*.spec.ts',
         '**/job-*.spec.ts',
         '**/jwt-*.spec.ts',
-        '**/jd-*.spec.ts',
         '**/output-*.spec.ts',
         '**/resume-*.spec.ts',
         '**/standalone-*.spec.ts',

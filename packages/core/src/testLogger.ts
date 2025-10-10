@@ -13,7 +13,12 @@ interface TestLoggerOptions {
 
 class TestLogger {
   private readonly options: Required<TestLoggerOptions>;
-  private logs: Array<{ level: string; message: string; timestamp: Date; testName?: string }> = [];
+  private readonly logs: Array<{
+    level: string;
+    message: string;
+    timestamp: Date;
+    testName?: string;
+  }> = [];
 
   constructor(options: TestLoggerOptions = {}) {
     this.options = {
@@ -35,7 +40,7 @@ class TestLogger {
     );
   }
 
-  private log(level: string, message: string, ...args: unknown[]): void {
+  private log(level: string, message: unknown, ...args: unknown[]): void {
     if (!this.shouldLog(level)) {
       return;
     }
@@ -91,19 +96,19 @@ class TestLogger {
     }
   }
 
-  debug(message: string, ...args: unknown[]): void {
+  debug(message: unknown, ...args: unknown[]): void {
     this.log('debug', message, ...args);
   }
 
-  info(message: string, ...args: unknown[]): void {
+  info(message: unknown, ...args: unknown[]): void {
     this.log('info', message, ...args);
   }
 
-  warn(message: string, ...args: unknown[]): void {
+  warn(message: unknown, ...args: unknown[]): void {
     this.log('warn', message, ...args);
   }
 
-  error(message: string, ...args: unknown[]): void {
+  error(message: unknown, ...args: unknown[]): void {
     this.log('error', message, ...args);
   }
 

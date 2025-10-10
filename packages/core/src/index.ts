@@ -137,6 +137,10 @@ export * from './resume.js';
 export type { ResumeGenerator, ResumeFormatter } from './resume.js';
 export { ResumeService } from './resume.js';
 
+// Application exports
+export type { Application, CurrencyCode } from './application.js';
+export { createApplication } from './application.js';
+
 // Logging utilities
 export {
   UniversalLogger,

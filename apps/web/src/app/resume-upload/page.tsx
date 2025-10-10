@@ -5,6 +5,11 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { validateFile } from './resume-upload-utils';
 import { toast } from '@/components/ui/toaster';
+import {
+  API,
+  type ParseJobDescriptionRequest,
+  type ParseJobDescriptionResponse,
+} from '@/lib/api-client';
 
 type Parsed = { summary?: string; experience?: string[]; skills?: string[] };
 
@@ -38,20 +43,10 @@ export default function ResumeUploadPage(): React.ReactElement {
     }
     // Call your JD parser via our proxy (reuses your existing API)
     const text = await file.text();
-    const res = await fetch('/api/jd/parse', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-    });
-    if (!res.ok) {
-      toast({ title: 'Parse failed' });
-      return;
-    }
-    const data = (await res.json()) as {
-      title?: string;
-      requirements?: string[];
-      keywords?: string[];
-    };
+    const data = await API.jobDescription.post<
+      ParseJobDescriptionRequest,
+      ParseJobDescriptionResponse
+    >({ text }, '/parse');
     setParsed({
       summary: data.title,
       experience: data.requirements ?? [],
