@@ -101,9 +101,12 @@ try {
   if ($LLMProvider) { $env:LLM_PROVIDER = $LLMProvider }
   if ($LLMModel) { $env:LLM_MODEL = $LLMModel }
 
-  # Allow passing BASE_URL and NEXT_PUBLIC_API_URL for tests and dev server
-  if ($null -eq $env:BASE_URL) { $env:BASE_URL = "http://localhost:3000" }
-  if ($null -eq $env:NEXT_PUBLIC_API_URL) { $env:NEXT_PUBLIC_API_URL = "http://localhost:4000/api" }
+
+  # Set web frontend and API server URL variables
+  $WebFrontendUrl = if ($env:API_BASE) { $env:API_BASE } else { $env:NEXT_PUBLIC_API_URL }
+  $ApiServerUrl = if ($env:API_BASE) { $env:API_BASE } else { $env:NEXT_PUBLIC_API_URL }
+  if ($null -eq $env:BASE_URL) { $env:BASE_URL = $WebFrontendUrl }
+  if ($null -eq $env:NEXT_PUBLIC_API_URL) { $env:NEXT_PUBLIC_API_URL = "$ApiServerUrl/api" }
 
   # Copy example environment file if it exists
   if (Test-Path ".env.example") { Copy-Item -Path ".env.example" -Destination ".env" -Force }
@@ -216,12 +219,12 @@ See console output above for details.
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
 
-    $apiHealth = Test-ServiceHealth -Url "http://localhost:4000" -ServiceName "API server" -RequireSuccess:$true
+  $apiHealth = Test-ServiceHealth -Url $ApiServerUrl -ServiceName "API server" -RequireSuccess:$true
     if (-not $apiHealth) {
       throw "API server failed to start"
     }
 
-    Write-Host "API server started on http://localhost:4000" -ForegroundColor Green
+  Write-Host "API server started on $ApiServerUrl" -ForegroundColor Green
   }
 
   if (-not $ApiOnly) {
@@ -232,14 +235,14 @@ See console output above for details.
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
 
-    $webHealth = Test-ServiceHealth -Url "http://localhost:3000" -ServiceName "Web frontend"
+    $webHealth = Test-ServiceHealth -Url $WebFrontendUrl -ServiceName "Web frontend"
     if (-not $webHealth -and -not $ApiOnly) {
       if (-not $ApiOnly) {
         Write-Host "Continuing with development despite Web frontend issues" -ForegroundColor Yellow
       }
     }
 
-    Write-Host "Web frontend started on http://localhost:3000" -ForegroundColor Green
+    Write-Host "Web frontend started on $WebFrontendUrl" -ForegroundColor Green
   }
 
   Write-Host "Development environment is running" -ForegroundColor Green
