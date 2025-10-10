@@ -32,19 +32,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const data = await response.json().catch(() => ({}));
 
   if (response.ok) {
-    const nextResponse = NextResponse.json({ success: true, user: data.user });
-
-    if (data?.token) {
-      nextResponse.cookies.set('session', data.token, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: false,
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7,
-      });
-    }
-
-    return nextResponse;
+    return NextResponse.json({ success: true, ...data });
   }
 
   return NextResponse.json(data ?? { error: 'Registration failed' }, { status: response.status });

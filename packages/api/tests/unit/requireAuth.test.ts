@@ -36,8 +36,8 @@ describe('requireAuth middleware', () => {
 
     const hash = await bcrypt.hash(password, 10);
     db.prepare(
-      'INSERT INTO users (id, email, password_hash, name, created_at) VALUES (?, ?, ?, ?, ?)' 
-    ).run('user-id', 'user@example.com', hash, 'Test User', new Date().toISOString());
+      'INSERT INTO users (id, email, password_hash, name, created_at, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, ?, ?, 1, ?)' 
+    ).run('user-id', 'user@example.com', hash, 'Test User', new Date().toISOString(), new Date().toISOString());
   });
 
   afterEach(() => {

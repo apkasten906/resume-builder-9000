@@ -4,6 +4,9 @@ import {
   authService,
   blacklistToken,
   DuplicateEmailError,
+  EmailNotConfirmedError,
+  ExpiredVerificationTokenError,
+  InvalidVerificationTokenError,
   PasswordPolicyError,
 } from '../services/authService.js';
 import { evaluatePassword } from '@rb9k/core';
@@ -32,18 +35,30 @@ function setSessionCookie(res: Response, token: string): void {
 
 export async function login(req: Request, res: Response): Promise<Response> {
   const { email, password } = req.body || {};
-  const result = await authService.login(email, password);
-  if (!result) return res.status(401).json({ error: 'Invalid credentials' });
 
-  setSessionCookie(res, result.token);
+  try {
+    const result = await authService.login(email, password);
+    if (!result) return res.status(401).json({ error: 'Invalid credentials' });
 
-  // Only include token in response body for development/testing environments to prevent XSS risks
-  const responseData: Record<string, unknown> = { ok: true, user: result.user };
-  if (process.env.NODE_ENV !== 'production') {
-    responseData.token = result.token;
+    setSessionCookie(res, result.token);
+
+    // Only include token in response body for development/testing environments to prevent XSS risks
+    const responseData: Record<string, unknown> = { ok: true, user: result.user };
+    if (process.env.NODE_ENV !== 'production') {
+      responseData.token = result.token;
+    }
+
+    return res.json(responseData);
+  } catch (error) {
+    if (error instanceof EmailNotConfirmedError) {
+      return res.status(403).json({
+        error: 'Please confirm your email before signing in.',
+        field: 'email',
+        requiresEmailConfirmation: true,
+      });
+    }
+    return res.status(500).json({ error: 'Login failed. Please try again.' });
   }
-
-  return res.json(responseData);
 }
 
 export async function me(req: Request, res: Response): Promise<Response> {
@@ -105,19 +120,12 @@ export async function register(req: Request, res: Response): Promise<Response> {
       password,
       name: fullName,
     });
-
-    setSessionCookie(res, registration.token);
-
-    const response: Record<string, unknown> = {
+    return res.status(201).json({
       ok: true,
       user: registration.user,
-    };
-
-    if (process.env.NODE_ENV !== 'production') {
-      response.token = registration.token;
-    }
-
-    return res.status(201).json(response);
+      requiresEmailConfirmation: true,
+      verification: registration.verification,
+    });
   } catch (error) {
     if (error instanceof DuplicateEmailError) {
       return res.status(409).json({ error: 'Email already registered', field: 'email' });
@@ -130,5 +138,40 @@ export async function register(req: Request, res: Response): Promise<Response> {
       });
     }
     return res.status(500).json({ error: 'Registration failed. Please try again.' });
+  }
+}
+
+export async function verifyEmail(req: Request, res: Response): Promise<Response> {
+  const token =
+    (typeof req.query.token === 'string' && req.query.token) ||
+    (typeof req.body?.token === 'string' && req.body.token);
+
+  if (!token) {
+    return res.status(400).json({ error: 'Verification token is required.' });
+  }
+
+  try {
+    const result = await authService.verifyEmail(token);
+
+    setSessionCookie(res, result.token);
+
+    const response: Record<string, unknown> = {
+      ok: true,
+      user: result.user,
+    };
+
+    if (process.env.NODE_ENV !== 'production') {
+      response.token = result.token;
+    }
+
+    return res.json(response);
+  } catch (error) {
+    if (error instanceof InvalidVerificationTokenError) {
+      return res.status(400).json({ error: 'Invalid verification link.' });
+    }
+    if (error instanceof ExpiredVerificationTokenError) {
+      return res.status(410).json({ error: 'Verification link has expired.' });
+    }
+    return res.status(500).json({ error: 'Email verification failed. Please try again.' });
   }
 }
