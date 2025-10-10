@@ -53,6 +53,7 @@
     "@types/sqlite3": "^3.1.11",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.2.0",
+    "file-type": "^18.7.0",
     "mammoth": "^1.10.0",
     "morgan": "^1.10.1",
     "pdf-parse": "^1.1.1",
