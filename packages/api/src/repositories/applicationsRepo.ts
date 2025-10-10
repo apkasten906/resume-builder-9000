@@ -11,16 +11,31 @@ export type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
 export interface NewApplication {
   company: string;
   role: string;
-  location?: string;
+  location?: string | null;
   stage?: Stage;
-  jobDescription?: string;
-  salary?: { currency?: Currency; base?: number; bonus?: number; equity?: string; notes?: string };
+  jobDescription?: string | null;
+  salary?: {
+    currency?: Currency | null;
+    base?: number | null;
+    bonus?: number | null;
+    equity?: string | null;
+    notes?: string | null;
+  };
 }
 
-export interface Application extends NewApplication {
+export interface Application extends Omit<NewApplication, 'salary'> {
   id: string;
   lastUpdated: string;
   createdAt: string;
+  location: string | null;
+  jobDescription: string | null;
+  salary: {
+    currency: Currency | null;
+    base: number | null;
+    bonus: number | null;
+    equity: string | null;
+    notes: string | null;
+  };
 }
 
 // Database row interface for better typing
@@ -60,19 +75,35 @@ export const applicationsRepo = {
       id,
       company: app.company,
       role: app.role,
-      location: app.location ?? undefined,
+      location: app.location ?? null,
       stage,
       lastUpdated,
       createdAt,
-      jobDescription: app.jobDescription ?? undefined,
-      currency: salary.currency ?? undefined,
-      salary_base: salary.base ?? undefined,
-      salary_bonus: salary.bonus ?? undefined,
-      salary_equity: salary.equity ?? undefined,
-      salary_notes: salary.notes ?? undefined,
+      jobDescription: app.jobDescription ?? null,
+      currency: salary.currency ?? null,
+      salary_base: salary.base ?? null,
+      salary_bonus: salary.bonus ?? null,
+      salary_equity: salary.equity ?? null,
+      salary_notes: salary.notes ?? null,
     });
 
-    return { id, lastUpdated, createdAt, ...app };
+    return {
+      id,
+      lastUpdated,
+      createdAt,
+      company: app.company,
+      role: app.role,
+      location: app.location ?? null,
+      stage,
+      jobDescription: app.jobDescription ?? null,
+      salary: {
+        currency: salary.currency ?? null,
+        base: salary.base ?? null,
+        bonus: salary.bonus ?? null,
+        equity: salary.equity ?? null,
+        notes: salary.notes ?? null,
+      },
+    };
   },
 
   list(): Application[] {
@@ -83,17 +114,17 @@ export const applicationsRepo = {
       id: r.id,
       company: r.company,
       role: r.role,
-      location: r.location ?? undefined,
+      location: r.location ?? null,
       stage: r.stage as Stage,
       lastUpdated: r.last_updated,
       createdAt: r.created_at,
-      jobDescription: r.job_description ?? undefined,
+      jobDescription: r.job_description ?? null,
       salary: {
-        currency: r.currency as Currency | undefined,
-        base: r.salary_base ?? undefined,
-        bonus: r.salary_bonus ?? undefined,
-        equity: r.salary_equity ?? undefined,
-        notes: r.salary_notes ?? undefined,
+        currency: r.currency ? (r.currency as Currency) : null,
+        base: r.salary_base ?? null,
+        bonus: r.salary_bonus ?? null,
+        equity: r.salary_equity ?? null,
+        notes: r.salary_notes ?? null,
       },
     }));
   },
@@ -111,7 +142,7 @@ export const applicationsRepo = {
       );
       db.prepare(
         'INSERT INTO application_status_history (id, application_id, from_stage, to_stage, note) VALUES (?,?,?,?,?)'
-      ).run(randomUUID(), appId, fromStage, toStage, note ?? undefined);
+      ).run(randomUUID(), appId, fromStage, toStage, note ?? null);
     });
     tx();
   },
