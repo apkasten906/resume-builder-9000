@@ -13,7 +13,7 @@ export interface NewApplication {
   role: string;
   location?: string;
   stage?: Stage;
-  jdText?: string;
+  jobDescription?: string;
   salary?: { currency?: Currency; base?: number; bonus?: number; equity?: string; notes?: string };
 }
 
@@ -32,7 +32,7 @@ interface ApplicationRow {
   stage: string;
   last_updated: string;
   created_at: string;
-  jd_text: string | null;
+  job_description: string | null;
   currency: string | null;
   salary_base: number | null;
   salary_bonus: number | null;
@@ -49,10 +49,10 @@ export const applicationsRepo = {
     const salary = app.salary || {};
 
     const stmt = db.prepare(`INSERT INTO applications (
-      id, company, role, location, stage, last_updated, created_at, jd_text,
+      id, company, role, location, stage, last_updated, created_at, job_description,
       currency, salary_base, salary_bonus, salary_equity, salary_notes
     ) VALUES (
-      @id, @company, @role, @location, @stage, @lastUpdated, @createdAt, @jdText,
+      @id, @company, @role, @location, @stage, @lastUpdated, @createdAt, @jobDescription,
       @currency, @salary_base, @salary_bonus, @salary_equity, @salary_notes
     )`);
 
@@ -64,7 +64,7 @@ export const applicationsRepo = {
       stage,
       lastUpdated,
       createdAt,
-      jdText: app.jdText ?? undefined,
+      jobDescription: app.jobDescription ?? undefined,
       currency: salary.currency ?? undefined,
       salary_base: salary.base ?? undefined,
       salary_bonus: salary.bonus ?? undefined,
@@ -87,7 +87,7 @@ export const applicationsRepo = {
       stage: r.stage as Stage,
       lastUpdated: r.last_updated,
       createdAt: r.created_at,
-      jdText: r.jd_text ?? undefined,
+      jobDescription: r.job_description ?? undefined,
       salary: {
         currency: r.currency as Currency | undefined,
         base: r.salary_base ?? undefined,

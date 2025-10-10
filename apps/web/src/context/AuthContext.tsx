@@ -1,13 +1,5 @@
 'use client';
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 export type User = {
@@ -16,11 +8,6 @@ export type User = {
   name?: string;
   roles?: string[];
 } | null;
-
-type MeResponse = {
-  authenticated: boolean;
-  user?: User;
-};
 
 export interface AuthContextValue {
   authenticated: boolean;
@@ -39,7 +26,7 @@ export function AuthProvider({
 }): React.ReactElement {
   const [authenticated, setAuthenticated] = useState<boolean>(false);
   const [checking, setChecking] = useState<boolean>(true);
-  const [user, setUser] = useState<User>(null);
+  const [user] = useState<User>(null);
   const router = useRouter();
 
   // Debug logging for state changes (reduced to prevent spam)

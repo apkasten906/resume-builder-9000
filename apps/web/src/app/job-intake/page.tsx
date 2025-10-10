@@ -7,6 +7,11 @@ import { Textarea } from '@/components/ui/Textarea';
 import { z } from 'zod';
 import { toast } from '@/components/ui/toaster';
 import { validateFile } from './job-intake-utils';
+import {
+  API,
+  type ParseJobDescriptionRequest,
+  type ParseJobDescriptionResponse,
+} from '@/lib/api-client';
 
 const jdSchema = z.object({ text: z.string().min(10, 'Please paste a longer job description') });
 
@@ -73,17 +78,10 @@ const JobIntakePage: React.FC = () => {
     }
     setError('');
     try {
-      const res = await fetch('/api/jd/parse', {
-        method: 'POST',
-        body: JSON.stringify({ text: jd }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!res.ok) {
-        toast({ title: 'Parse failed' });
-        setIsLoading(false);
-        return;
-      }
-      const data = await res.json();
+      const data = await API.jobDescription.post<
+        ParseJobDescriptionRequest,
+        ParseJobDescriptionResponse
+      >({ text: jd }, '/parse');
       setParsed(data);
       toast({ title: 'JD parsed', description: 'Extracted role, company, and keywords' });
     } catch (error) {
@@ -99,17 +97,10 @@ const JobIntakePage: React.FC = () => {
     setIsLoading(true);
     try {
       const text = await file.text();
-      const res = await fetch('/api/jd/parse', {
-        method: 'POST',
-        body: JSON.stringify({ text, fileName: file.name }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!res.ok) {
-        toast({ title: 'Parse failed' });
-        setIsLoading(false);
-        return;
-      }
-      const data = await res.json();
+      const data = await API.jobDescription.post<
+        ParseJobDescriptionRequest,
+        ParseJobDescriptionResponse
+      >({ text, fileName: file.name }, '/parse');
       setParsed(data);
       toast({ title: 'JD parsed', description: 'Extracted role, company, and keywords from file' });
     } catch (error) {

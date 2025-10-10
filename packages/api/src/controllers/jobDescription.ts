@@ -1,7 +1,7 @@
-// packages/api/src/controllers/jd.ts
+// packages/api/src/controllers/jobDescription.ts
 import { Request, Response } from 'express';
 
-export async function parseJD(req: Request, res: Response): Promise<Response> {
+export async function parseJobDescription(req: Request, res: Response): Promise<Response> {
   const { text } = req.body || {};
   if (!text || typeof text !== 'string') return res.status(400).json({ error: 'text required' });
   const first = text.split('\n')[0] || '';

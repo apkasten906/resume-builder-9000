@@ -51,6 +51,13 @@
 			"command": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
 			"isBackground": true,
 			"group": "build"
+		},
+		{
+			"label": "Run Dev Script",
+			"type": "shell",
+			"command": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
+			"isBackground": true,
+			"group": "build"
 		}
 	]
 }

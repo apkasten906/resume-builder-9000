@@ -24,7 +24,7 @@ describe('Applications Repository Integration Tests', () => {
         stage TEXT NOT NULL,
         last_updated TEXT NOT NULL,
         created_at TEXT NOT NULL,
-        jd_text TEXT,
+        job_description TEXT,
         currency TEXT,
         salary_base INTEGER,
         salary_bonus INTEGER,
@@ -72,7 +72,7 @@ describe('Applications Repository Integration Tests', () => {
       role: string;
       location?: string;
       stage?: string;
-      jdText?: string;
+      jobDescription?: string;
       salary?: {
         currency?: string;
         base?: number;
@@ -88,10 +88,10 @@ describe('Applications Repository Integration Tests', () => {
       const salary = app.salary || {};
 
       const stmt = db.prepare(`INSERT INTO applications (
-        id, company, role, location, stage, last_updated, created_at, jd_text,
+        id, company, role, location, stage, last_updated, created_at, job_description,
         currency, salary_base, salary_bonus, salary_equity, salary_notes
       ) VALUES (
-        @id, @company, @role, @location, @stage, @lastUpdated, @createdAt, @jdText,
+        @id, @company, @role, @location, @stage, @lastUpdated, @createdAt, @jobDescription,
         @currency, @salary_base, @salary_bonus, @salary_equity, @salary_notes
       )`);
 
@@ -103,7 +103,7 @@ describe('Applications Repository Integration Tests', () => {
         stage,
         lastUpdated,
         createdAt,
-        jdText: app.jdText ?? null,
+        jobDescription: app.jobDescription ?? null,
         currency: salary.currency ?? null,
         salary_base: salary.base ?? null,
         salary_bonus: salary.bonus ?? null,
@@ -126,7 +126,7 @@ describe('Applications Repository Integration Tests', () => {
         stage: r.stage,
         lastUpdated: r.last_updated,
         createdAt: r.created_at,
-        jdText: r.jd_text ?? undefined,
+        jobDescription: r.job_description ?? undefined,
         salary: {
           currency: r.currency ?? undefined,
           base: r.salary_base ?? undefined,
@@ -178,7 +178,7 @@ describe('Applications Repository Integration Tests', () => {
         role: 'Software Engineer',
         location: 'Mountain View, CA',
         stage: 'Applied',
-        jdText: 'Build amazing software.',
+        jobDescription: 'Build amazing software.',
         salary: {
           currency: 'USD',
           base: 150000,
