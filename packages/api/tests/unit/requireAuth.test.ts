@@ -1,67 +1,77 @@
-import { describe, it, expect, vi } from 'vitest';
-// Mock better-sqlite3 and bcryptjs to match authService.test.ts
-vi.mock('better-sqlite3', () => {
-  return {
-    default: vi.fn(() => ({
-      prepare: vi.fn(() => ({
-        get: (email: string) => {
-          if (email === 'user@example.com') {
-            return { id: 1, email, password_hash: 'hashed' };
-          }
-          return undefined;
-        },
-      })),
-      exec: vi.fn(), // Add missing exec method
-      close: vi.fn(),
-    })),
-  };
-});
-vi.mock('bcryptjs', () => ({
-  __esModule: true,
-  default: {
-    compare: vi.fn((pw, hash) => pw === 'ValidPassword1!' && hash === 'hashed'),
-  },
-}));
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import bcrypt from 'bcryptjs';
+import type { Request, Response, NextFunction } from 'express';
+
 import { requireAuth } from '../../src/middleware/requireAuth.js';
 import { authService } from '../../src/services/authService.js';
+import { connectDatabase, closeDatabase } from '../../src/db.js';
 
-function mockReq(token?: string) {
-  return { cookies: token ? { session: token } : {}, headers: {} } as any;
-}
-function mockRes() {
-  const res: any = {};
-  res.statusCode = 200;
-  res.status = (c: number) => {
-    res.statusCode = c;
-    return res;
-  };
-  res.json = (b: any) => {
-    res.body = b;
-    return res;
-  };
-  return res;
+function createMockResponse(): Response & { statusCode?: number; body?: unknown } {
+  const res: Partial<Response & { statusCode?: number; body?: unknown }> = {};
+  res.status = function status(code: number) {
+    res.statusCode = code;
+    return res as Response;
+  } as Response['status'];
+  res.json = function json(payload: unknown) {
+    res.body = payload;
+    return res as Response;
+  } as Response['json'];
+  return res as Response & { statusCode?: number; body?: unknown };
 }
 
-describe('requireAuth', () => {
-  it('rejects when not authenticated', async () => {
-    const req = mockReq();
-    const res = mockRes();
-    let nextCalled = false;
-    await requireAuth(req, res, () => {
-      nextCalled = true;
-    });
-    expect(res.statusCode).toBe(401);
-    expect(nextCalled).toBe(false);
+function createMockRequest(token?: string): Request {
+  return {
+    cookies: token ? { session: token } : {},
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  } as unknown as Request;
+}
+
+describe('requireAuth middleware', () => {
+  const password = 'ValidPassword1!';
+
+  beforeEach(async () => {
+    process.env.DB_PATH = ':memory:';
+    const db = connectDatabase();
+    db.prepare('DELETE FROM users').run();
+
+    const hash = await bcrypt.hash(password, 10);
+    db.prepare(
+      'INSERT INTO users (id, email, password_hash, name, created_at) VALUES (?, ?, ?, ?, ?)' 
+    ).run('user-id', 'user@example.com', hash, 'Test User', new Date().toISOString());
   });
 
-  it('passes when valid token is present', async () => {
-    const login = await authService.login('user@example.com', 'ValidPassword1!');
-    const req = mockReq(login!.token);
-    const res = mockRes();
+  afterEach(() => {
+    closeDatabase();
+    delete process.env.DB_PATH;
+  });
+
+  it('rejects unauthenticated requests', async () => {
+    const req = createMockRequest();
+    const res = createMockResponse();
+    const next: NextFunction = () => {
+      throw new Error('next should not be called');
+    };
+
+    await requireAuth(req, res, next);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toMatchObject({ error: 'Unauthorized' });
+  });
+
+  it('allows requests with a valid session token', async () => {
+    const login = await authService.login('user@example.com', password);
+    expect(login).toBeTruthy();
+
+    const req = createMockRequest(login?.token);
+    const res = createMockResponse();
     let nextCalled = false;
+
     await requireAuth(req, res, () => {
       nextCalled = true;
     });
+
     expect(nextCalled).toBe(true);
+    expect(res.statusCode ?? 200).toBe(200);
   });
 });
+

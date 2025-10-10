@@ -51,6 +51,29 @@ export function connectDatabase(): SQLiteDatabase {
     )
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      name TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
+  `);
+
+  const userColumns = db.prepare('PRAGMA table_info(users)').all() as Array<{ name: string }>;
+  const columnNames = new Set(userColumns.map(col => col.name));
+  if (!columnNames.has('name')) {
+    db.exec('ALTER TABLE users ADD COLUMN name TEXT');
+  }
+  if (!columnNames.has('created_at')) {
+    db.exec("ALTER TABLE users ADD COLUMN created_at TEXT DEFAULT (datetime('now'))");
+  }
+
   logger.info('Database initialized successfully');
   return db;
 }
