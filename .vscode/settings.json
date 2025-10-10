@@ -49,5 +49,8 @@
     "*.chatmode.md": "markdown",
     "*.instructions.md": "markdown",
     "*.prompt.md": "markdown"
+  },
+  "[sql]": {
+    "editor.defaultFormatter": "dbcode.dbcode"
   }
 }
