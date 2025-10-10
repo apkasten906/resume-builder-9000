@@ -3,8 +3,8 @@
   "private": true,
   "description": "A resume orchestration engine that creates tailored, ATS-friendly resumes",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "playwright": "npx playwright",
