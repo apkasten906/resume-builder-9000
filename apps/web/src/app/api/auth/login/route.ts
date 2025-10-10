@@ -24,16 +24,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   });
   const data = await res.json().catch(() => ({}));
 
-  if (res.ok && data?.token) {
+  if (res.ok) {
     // Set the session cookie and return JSON success (don't redirect for AJAX calls)
     const response = NextResponse.json({ success: true, authenticated: true });
-    response.cookies.set('session', data.token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false, // Set to true in production with HTTPS
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    });
+
+    // In production, token won't be in response body for security, but cookie is still set by API
+    if (data?.token) {
+      response.cookies.set('session', data.token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false, // Set to true in production with HTTPS
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    }
     return response;
   } else {
     // Return JSON error for failed login
