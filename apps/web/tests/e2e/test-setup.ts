@@ -13,7 +13,10 @@ async function getBearerToken(): Promise<string> {
       body: JSON.stringify({ email: 'user@example.com', password: 'ValidPassword1!' }),
     });
     if (!r.ok) throw new Error(`login failed: ${r.status}`);
-    const data = (await r.json()) as { token: string };
+    const data = (await r.json()) as { token?: string };
+    if (!data.token) {
+      throw new Error('Token not available in response (production mode)');
+    }
     return data.token;
   } catch (err) {
     testLogger.error('API login failed:', err instanceof Error ? err.message : String(err));

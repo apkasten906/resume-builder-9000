@@ -36,6 +36,9 @@ export class AuthHelper {
 
       if (apiResponse.ok) {
         const data = await apiResponse.json();
+        if (!data.token) {
+          throw new Error('Token not available in response (production mode)');
+        }
         return data.token;
       } else {
         throw new Error(`Login failed: ${apiResponse.status} ${apiResponse.statusText}`);

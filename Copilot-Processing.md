@@ -1,22 +1,185 @@
-# Copilot Processing - Launch Dev Server
+# Copilot Processing - JWT Token Security Review
 
-## **CRITICAL REMINDER: ALWAYS LAUNCH DEV SERVER FIRST!**
+## User Request
 
-⚠️ **IMPORTANT**: The user has reminded me to ALWAYS run the 'dev script' task to launch the web server in a dedicated terminal. This is a critical step that must be done automatically at the start of every session!
+Review of the PR result from copilot gives us this feedback. The removal of the JWT token as suggested is a breaking change for us. Is there a way to working around this?
 
-### User's Reminder:
+Copilot AI feedback:
+"Including the JWT token in the response body alongside httpOnly cookies creates potential security risks. Since you're already setting an httpOnly cookie, consider removing the token from the response body to prevent XSS attacks from accessing it."
 
-- "always run the 'dev script' task to launch the web server, so that it launches in a dedicated terminal"
-- "it is not running now. please remember this!"
-- "You forget it quite often"
+Suggested change:
 
-### Action Taken:
+```javascript
+// Include token in response body for Next.js API route
+return res.json({ ok: true, token: result.token });
+// Token is set in httpOnly cookie; do not include in response body to prevent XSS risks
+return res.json({ ok: true });
+```
 
-✅ Started dev server using: `powershell.exe -ExecutionPolicy Bypass -File .\dev.ps1`
+## Analysis Complete
 
-- The dev script is now running in background terminal ID: 92ac64a6-7ad4-41b2-a04e-ced7ce2e7423
-- Building all packages and running tests
-- Will start both web app and API server when complete
+### Current JWT Implementation
+
+**Location of Issue:** `packages/api/src/controllers/auth.ts:15`
+
+```javascript
+// Include token in response body for Next.js API route
+return res.json({ ok: true, token: result.token });
+```
+
+**Dependencies Found:**
+
+1. **E2E Tests:** Multiple test files depend on `data.token` from login response:
+   - `apps/web/tests/e2e/jwt-token-check.spec.ts` - Line 28: `const token = data.token;`
+   - `apps/web/tests/e2e/utils/auth-helper.ts` - Line 39: `return data.token;`
+   - `apps/web/tests/e2e/test-setup.ts` - Line 17: `return data.token;`
+
+2. **Next.js API Route:** The web app's login route expects the token:
+   - `apps/web/src/app/api/auth/login/route.ts` - Line 27: `if (res.ok && data?.token)`
+
+### Breaking Change Impact
+
+Removing the token from response body would break:
+
+- JWT token analysis tests
+- Authentication helper utilities for E2E tests
+- Bearer token authentication testing
+
+### Security vs Compatibility Solutions
+
+#### Option 1: Environment-Based Token Exposure (Recommended)
+
+```javascript
+// packages/api/src/controllers/auth.ts
+export async function login(req: Request, res: Response): Promise<Response> {
+  const { email, password } = req.body || {};
+  const result = await authService.login(email, password);
+  if (!result) return res.status(401).json({ error: 'Invalid credentials' });
+
+  res.cookie('session', result.token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  });
+
+  // Only include token in response body for development/testing environments
+  const responseData: any = { ok: true };
+  if (process.env.NODE_ENV !== 'production') {
+    responseData.token = result.token;
+  }
+
+  return res.json(responseData);
+}
+```
+
+**Benefits:**
+
+- ✅ Maintains test compatibility in development
+- ✅ Secure in production (no token in response body)
+- ✅ Non-breaking change for existing development workflow
+- ✅ httpOnly cookie still provides authentication for all environments
+
+#### Option 2: Separate Test Endpoint
+
+Create a dedicated test-only endpoint that exposes tokens:
+
+```javascript
+// packages/api/src/controllers/auth.ts
+export async function testLogin(req: Request, res: Response): Promise<Response> {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  const { email, password } = req.body || {};
+  const result = await authService.login(email, password);
+  if (!result) return res.status(401).json({ error: 'Invalid credentials' });
+
+  // Test endpoint - includes token for E2E testing
+  return res.json({ ok: true, token: result.token });
+}
+```
+
+#### Option 3: Header-Based Token Exposure
+
+```javascript
+// packages/api/src/controllers/auth.ts
+export async function login(req: Request, res: Response): Promise<Response> {
+  const { email, password } = req.body || {};
+  const result = await authService.login(email, password);
+  if (!result) return res.status(401).json({ error: 'Invalid credentials' });
+
+  res.cookie('session', result.token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  });
+
+  // Set token in a custom header for test access (still accessible to XSS but more explicit)
+  if (process.env.NODE_ENV !== 'production') {
+    res.set('X-Auth-Token', result.token);
+  }
+
+  return res.json({ ok: true });
+}
+```
+
+### Recommended Implementation
+
+**Option 1** is recommended because:
+
+1. **Zero Breaking Changes:** Tests continue to work in development
+2. **Production Security:** No token exposure in production response bodies
+3. **Clear Intent:** Environment-based logic shows security consideration
+4. **Minimal Changes:** Only requires updating one function
+
+### Implementation Complete ✅
+
+#### Changes Made:
+
+1. **Updated Auth Controller** ✅
+   - `packages/api/src/controllers/auth.ts` - Environment-based token exposure
+   - Token only included in response body for non-production environments
+   - Production uses secure flag for cookies based on environment
+
+2. **Updated Test Files** ✅
+   - `apps/web/tests/e2e/jwt-token-check.spec.ts` - Graceful handling when token not present
+   - `apps/web/tests/e2e/utils/auth-helper.ts` - Error handling for production mode
+   - `apps/web/tests/e2e/test-setup.ts` - Type safety and production mode handling
+
+3. **Updated Next.js API Route** ✅
+   - `apps/web/src/app/api/auth/login/route.ts` - Conditional token handling
+   - Works regardless of token presence in API response
+
+4. **Verification** ✅
+   - All 57 API unit tests pass
+   - No breaking changes in development environment
+   - Production security maintained
+
+#### Security Improvements:
+
+- ✅ **Production**: No JWT token in response body (prevents XSS access)
+- ✅ **Development**: Token still available for testing (maintains compatibility)
+- ✅ **All environments**: httpOnly cookies provide secure authentication
+- ✅ **Production**: Secure flag enabled for HTTPS-only cookie transmission
+
+#### Result:
+
+**Non-breaking change** that addresses Copilot's security concern while maintaining full compatibility with existing tests and development workflow.
+
+### Documentation Updates ✅
+
+#### Architecture Decision Record (ADR 9)
+
+- **Created**: `docs/adr/0009-jwt-environment-based-security.md`
+- **Updated**: `docs/Architecture/architectural-decision-records.md` (index)
+- **Updated**: `docs/Architecture/authentication-architecture-updates.md` (security section)
+- **Updated**: `docs/authentication-system.md` (security enhancement notes)
+
+#### Summary
+
+Added final summary to `Copilot-Processing.md`. Review the summary and confirm completion of the process then remove the file when done so it is not added to the repository.
 
 ## Previous User Request (Completed - Database Field Renaming)
 

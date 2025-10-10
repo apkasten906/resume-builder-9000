@@ -5,14 +5,21 @@ export async function login(req: Request, res: Response): Promise<Response> {
   const { email, password } = req.body || {};
   const result = await authService.login(email, password);
   if (!result) return res.status(401).json({ error: 'Invalid credentials' });
+
   res.cookie('session', result.token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
     path: '/',
   });
-  // Include token in response body for Next.js API route
-  return res.json({ ok: true, token: result.token });
+
+  // Only include token in response body for development/testing environments to prevent XSS risks
+  const responseData: any = { ok: true };
+  if (process.env.NODE_ENV !== 'production') {
+    responseData.token = result.token;
+  }
+
+  return res.json(responseData);
 }
 
 export async function me(req: Request, res: Response): Promise<Response> {

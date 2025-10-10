@@ -17,6 +17,7 @@ Resume Builder 9000 uses a JWT-based authentication system with HTTP-only cookie
    - Backend API routes validate tokens via the `Authorization` header (Bearer token) or cookies
    - Both Bearer token and cookie authentication are supported
    - Token expiry is set to 7 days
+   - **Security Enhancement**: JWT tokens are only included in response bodies for non-production environments
 
 3. **Protected Routes**:
    - Frontend API routes proxy authenticated requests to the backend
@@ -52,6 +53,7 @@ Resume Builder 9000 uses a JWT-based authentication system with HTTP-only cookie
 - JWT tokens are signed with a secret key
 - Authentication cookies are HTTP-only to prevent JavaScript access
 - Backend validates tokens on every protected request
+- **JWT Token Security**: Tokens are excluded from response bodies in production to prevent XSS attacks (see [ADR 9](Architecture/adr/0009-jwt-environment-based-security.md))
 
 ## Testing Authentication
 

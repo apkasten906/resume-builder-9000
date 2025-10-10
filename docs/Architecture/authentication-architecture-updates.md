@@ -257,6 +257,35 @@ export const logger = (() => {
 - Multi-factor authentication support
 - Advanced brute force protection
 
+## JWT Token Security Enhancement (ADR 9)
+
+### Environment-Based Token Exposure
+
+Recent security improvements implement environment-aware JWT token handling to prevent XSS attacks while maintaining development compatibility:
+
+```typescript
+// packages/api/src/controllers/auth.ts
+const responseData: any = { ok: true };
+if (process.env.NODE_ENV !== 'production') {
+  responseData.token = result.token;
+}
+```
+
+**Security Benefits:**
+
+- **Production**: JWT tokens excluded from response bodies (prevents XSS access)
+- **Development**: Tokens remain accessible for testing and debugging
+- **All Environments**: httpOnly cookies provide secure authentication
+
+**Implementation Details:**
+
+- Cookie security enhanced with environment-aware secure flag
+- Test infrastructure updated to handle production token absence gracefully
+- Zero breaking changes to existing development workflow
+- All authentication functionality continues via httpOnly cookies
+
+This enhancement addresses OWASP XSS prevention guidelines while maintaining backward compatibility with existing testing infrastructure. See [ADR 9](../adr/0009-jwt-environment-based-security.md) for complete decision documentation.
+
 ### User Experience
 
 - Progressive authentication state loading
