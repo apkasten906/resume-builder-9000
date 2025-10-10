@@ -17,6 +17,7 @@ export default async function globalSetup(): Promise<void> {
     ...process.env,
     NODE_ENV: process.env.NODE_ENV ?? 'test',
     DB_PATH: dbPath,
+    APP_BASE_URL: process.env.APP_BASE_URL ?? 'http://localhost:3000',
   };
 
   const skipBuild = sharedEnv.PLAYWRIGHT_SKIP_BUILD === '1';

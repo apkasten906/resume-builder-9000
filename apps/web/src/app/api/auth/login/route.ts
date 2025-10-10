@@ -39,8 +39,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       });
     }
     return response;
-  } else {
-    // Return JSON error for failed login
-    return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
   }
+
+  const status = res.status || 401;
+  const errorPayload =
+    typeof data === 'object' && data !== null ? data : { error: 'Invalid email or password.' };
+
+  return NextResponse.json(errorPayload, { status });
 }

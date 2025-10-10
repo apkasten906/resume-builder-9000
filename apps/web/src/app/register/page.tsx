@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { evaluatePassword } from '@rb9k/core';
 import { Input } from '@/components/ui/Input';
-import { useAuth } from '@/context/AuthContext';
 
 const steps = [
   { id: 'account', label: 'Account' },
@@ -29,7 +28,6 @@ interface FormErrors {
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterPage(): ReactElement {
-  const { refreshAuth } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [formValues, setFormValues] = useState<FormState>({
     email: '',
@@ -46,6 +44,10 @@ export default function RegisterPage(): ReactElement {
   });
   const [serverUnmetRules, setServerUnmetRules] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [completedRegistration, setCompletedRegistration] = useState<{
+    email: string;
+    expiresAt?: string;
+  } | null>(null);
 
   const passwordEvaluation = useMemo(
     () => evaluatePassword(formValues.password || ''),
@@ -191,16 +193,58 @@ export default function RegisterPage(): ReactElement {
         }
 
         setErrors({ email: '', password: '', confirmPassword: '', fullName: '', general: '' });
-        await refreshAuth();
-        window.location.replace('/');
+        setCompletedRegistration({
+          email: formValues.email.trim(),
+          expiresAt:
+            typeof data?.verification?.expiresAt === 'string'
+              ? data.verification.expiresAt
+              : undefined,
+        });
       } catch {
         setErrors(prev => ({ ...prev, general: 'Network error. Please try again.' }));
       } finally {
         setLoading(false);
       }
     },
-    [currentStep, formValues, goToNextStep, refreshAuth, validateStep]
+    [currentStep, formValues, goToNextStep, validateStep]
   );
+
+  if (completedRegistration) {
+    const expiresLabel = completedRegistration.expiresAt
+      ? new Date(completedRegistration.expiresAt).toLocaleTimeString(undefined, {
+          hour: 'numeric',
+          minute: '2-digit',
+        })
+      : null;
+
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-10">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Check your email</h1>
+        <p className="mt-4 text-base text-muted-foreground">
+          We sent a confirmation link to{' '}
+          <span className="font-semibold text-foreground">{completedRegistration.email}</span>.{' '}
+          Follow the link to activate your account before signing in.
+        </p>
+        <div className="mt-6 rounded-xl border border-muted bg-muted/20 p-6">
+          <h2 className="text-lg font-semibold text-foreground">What happens next?</h2>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+            <li>Open the email and click the confirmation button.</li>
+            <li>
+              The link expires {expiresLabel ? `around ${expiresLabel}` : 'in 30 minutes'}. If it
+              expires, you can request a new one from the login page.
+            </li>
+            <li>Once confirmed, sign in with your email and password.</li>
+          </ul>
+        </div>
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          Ready to sign in?
+          <a href="/login" className="ml-2 font-semibold text-blue-600 hover:underline">
+            Go to login
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">

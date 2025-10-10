@@ -55,9 +55,15 @@ const hashedPassword = bcrypt.hashSync('ValidPassword1!', saltRounds);
 
 // Dynamically build the SQL query based on available columns
 const hasNameColumn = userColumns.some(col => col.name === 'name');
+const hasEmailConfirmedColumn = userColumns.some(col => col.name === 'email_confirmed');
 
 let insert;
-if (hasNameColumn) {
+if (hasNameColumn && hasEmailConfirmedColumn) {
+  insert = db.prepare(
+    "INSERT INTO users (email, password_hash, name, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, 1, datetime('now'))"
+  );
+  insert.run('user@example.com', hashedPassword, 'Test User');
+} else if (hasNameColumn) {
   insert = db.prepare('INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)');
   insert.run('user@example.com', hashedPassword, 'Test User');
 } else {

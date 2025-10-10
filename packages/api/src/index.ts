@@ -18,7 +18,22 @@ dotenv.config();
 
 // Create Express app
 const app = express();
-const port = process.env.API_BASE || 4000;
+const defaultPort = 4000;
+const apiBase = process.env.API_BASE;
+let port = Number(process.env.PORT || process.env.API_PORT);
+
+if (!port || Number.isNaN(port)) {
+  if (apiBase) {
+    try {
+      const parsed = new URL(apiBase);
+      port = Number(parsed.port) || defaultPort;
+    } catch {
+      port = defaultPort;
+    }
+  } else {
+    port = defaultPort;
+  }
+}
 
 // Middleware
 app.use(httpLogger); // HTTP request logging

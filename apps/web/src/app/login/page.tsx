@@ -25,19 +25,27 @@ export default function LoginPage(): ReactElement {
         credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         // Try to parse error response for field info
-        let field = '';
-        try {
-          const data = await res.json();
-          field = data?.field || '';
-        } catch {
-          // ignore parse errors, fallback to generic error
-        }
-        setError('Invalid email or password.');
-        if (field === 'email') setEmailError('Invalid email');
-        else if (field === 'password') setPasswordError('Invalid password');
-        else {
+        const field = typeof data?.field === 'string' ? data.field : '';
+        const message =
+          typeof data?.error === 'string'
+            ? data.error
+            : res.status === 403
+              ? 'Please confirm your email before signing in.'
+              : 'Invalid email or password.';
+        setError(message);
+        if (data?.requiresEmailConfirmation) {
+          setEmailError('Email not verified');
+          setPasswordError('');
+        } else if (field === 'email') {
+          setEmailError('Invalid email');
+          setPasswordError('');
+        } else if (field === 'password') {
+          setPasswordError('Invalid password');
+          setEmailError('');
+        } else {
           setEmailError('Invalid email');
           setPasswordError('Invalid password');
         }
