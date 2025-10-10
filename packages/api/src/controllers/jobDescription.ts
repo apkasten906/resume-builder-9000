@@ -19,18 +19,13 @@ export async function parseJobDescription(req: Request, res: Response): Promise<
     .filter((s: string) => /experience|years|typescript|react|node|next/i.test(s))
     .slice(0, 8)
     .map((s: string) => s.trim());
-  const keywordRegex = /typescript|react|next\.js|node|aws|sql|css|html|docker|kubernetes|graphql/g;
+  const keywordRegex =
+    /typescript|react|next\.js|node|aws|sql|css|html|docker|kubernetes|graphql/gi;
   const keywords = Array.from(
     new Set(
       requirements.flatMap((s: string) => {
-        const found = [] as string[];
-        let match;
         const lower = s.toLowerCase();
-        while ((match = keywordRegex.exec(lower)) !== null) {
-          found.push(match[0]);
-        }
-        keywordRegex.lastIndex = 0; // Reset regex state for global regex
-        return found;
+        return lower.match(keywordRegex) || [];
       })
     )
   );
