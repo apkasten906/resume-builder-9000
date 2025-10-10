@@ -5,6 +5,10 @@ import { test, expect } from '@playwright/test';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 test.describe('Resume Upload Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`${BASE_URL}/resume-upload`);
+    // Optionally clear file input if needed (handled by reload)
+  });
   test('should upload a resume and show parsed data', async ({ page }) => {
     test.setTimeout(30000);
     await page.goto(`${BASE_URL}/resume-upload`);
