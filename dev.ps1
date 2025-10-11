@@ -28,10 +28,12 @@ function Test-ServiceHealth {
       if ($response -and $response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
         Write-Host "$ServiceName is responsive with status code $($response.StatusCode)" -ForegroundColor Green
         $isHealthy = $true
-      } else {
+      }
+      else {
         throw "Non-successful status code: $($response.StatusCode)"
       }
-    } catch {
+    }
+    catch {
       $attempts++
       if ($attempts -lt $MaxAttempts) {
         Write-Host "Waiting for $ServiceName to start (attempt $attempts of $MaxAttempts)..." -ForegroundColor Yellow
@@ -50,6 +52,34 @@ function Test-ServiceHealth {
   return $isHealthy
 }
 
+function GetLocalEnvVariable {
+  param (
+    [string]$RequiredVar = "",
+    [string]$EnvFilePath = "./.env"
+  )
+
+  $value = $null
+
+  if (-not (Test-Path $EnvFilePath)) {
+    Write-Warning "$EnvFilePath not found."
+    return $value
+  }
+
+  if ((Test-Path $EnvFilePath) -and (-not $value)) {
+    Get-Content $EnvFilePath | ForEach-Object {
+      if ($_ -match "^($RequiredVar)=(.*)$") {
+        $value = $matches[2].Trim()
+        Write-Host "[DEBUG] Loaded $RequiredVar from .env" $value -ForegroundColor Green
+      }
+    }
+  }
+  else {
+    Write-Warning ".env file not found and $RequiredVar not set."
+  }
+
+  return $value
+}
+
 # Function to kill all dev server processes
 function Stop-AllDevServers {
   param (
@@ -65,7 +95,8 @@ function Stop-AllDevServers {
         Write-Host "Stopping dev server process: $($_.Id)" -ForegroundColor Yellow
         Stop-Process -Id $_.Id -Force
       }
-    } catch {}
+    }
+    catch {}
   }
 
   Write-Host "All development servers have been stopped." -ForegroundColor Yellow
@@ -96,17 +127,30 @@ try {
     if (Test-Path .\packages\core\node_modules) { Remove-Item .\packages\core\node_modules -Recurse -Force }
   }
 
-  # Set environment variables
-  $env:ALLOW_EXTERNAL_LLM = if ($WithLLM) { "true" } else { "false" }
-  if ($LLMProvider) { $env:LLM_PROVIDER = $LLMProvider }
-  if ($LLMModel) { $env:LLM_MODEL = $LLMModel }
+  # Set environment variables for LLM integration
+  $env:ALLOW_EXTERNAL_LLM = if ($WithLLM) { $true } else { GetLocalEnvVariable -RequiredVar "ALLOW_EXTERNAL_LLM" }
+  $env:LLM_PROVIDER = if ($LLMProvider) { $LLMProvider } else { GetLocalEnvVariable -RequiredVar "LLM_PROVIDER" }
+  $env:LLM_MODEL = if ($LLMModel) { $LLMModel } else { GetLocalEnvVariable -RequiredVar "LLM_MODEL" }
 
+  if ($env:ALLOW_EXTERNAL_LLM -eq $true) {
+    if (-not $env:LLM_PROVIDER) {
+      throw "LLM integration enabled but LLM_PROVIDER is not set. Use -LLMProvider or set it in .env"
+    }
+    if (-not $env:LLM_MODEL) {
+      throw "LLM integration enabled but LLM_MODEL is not set. Use -LLMModel or set it in .env"
+    }
+    Write-Host "External LLM integration enabled with provider '$($env:LLM_PROVIDER)' and model '$($env:LLM_MODEL)'" -ForegroundColor Green
+  }
+  else {
+    Write-Host "External LLM integration is disabled" -ForegroundColor Yellow
+  }
 
-  # Set web frontend and API server URL variables
-  $WebFrontendUrl = if ($env:API_BASE) { $env:API_BASE } else { $env:NEXT_PUBLIC_API_URL }
-  $ApiServerUrl = if ($env:API_BASE) { $env:API_BASE } else { $env:NEXT_PUBLIC_API_URL }
-  if ($null -eq $env:BASE_URL) { $env:BASE_URL = $WebFrontendUrl }
-  if ($null -eq $env:NEXT_PUBLIC_API_URL) { $env:NEXT_PUBLIC_API_URL = "$ApiServerUrl/api" }
+  # Set web frontend and API server environment variables
+  $env:WEB_BASE = if (-not $env:WEB_BASE) { GetLocalEnvVariable -RequiredVar "WEB_BASE" } else { "http://localhost:3000" }
+  $env:API_BASE = if (-not $env:API_BASE) { GetLocalEnvVariable -RequiredVar "API_BASE" } else { "http://localhost:4000" }
+
+  Write-Host "Web frontend URL: $($env:WEB_BASE)"
+  Write-Host "API server URL: $($env:API_BASE)"
 
   # Copy example environment file if it exists
   if (Test-Path ".env.example") { Copy-Item -Path ".env.example" -Destination ".env" -Force }
@@ -204,7 +248,8 @@ See console output above for details.
         Write-Host "Killing stale dev server process: $($_.Id)" -ForegroundColor Yellow
         Stop-Process -Id $_.Id -Force
       }
-    } catch {}
+    }
+    catch {}
   }
 
   # Track running processes so we can stop them if needed
@@ -219,12 +264,12 @@ See console output above for details.
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
 
-  $apiHealth = Test-ServiceHealth -Url $ApiServerUrl -ServiceName "API server" -RequireSuccess:$true
+    $apiHealth = Test-ServiceHealth -Url $env:API_BASE -ServiceName "API server" -RequireSuccess:$true
     if (-not $apiHealth) {
       throw "API server failed to start"
     }
 
-  Write-Host "API server started on $ApiServerUrl" -ForegroundColor Green
+    Write-Host "API server started on $env:API_BASE" -ForegroundColor Green
   }
 
   if (-not $ApiOnly) {
@@ -235,14 +280,14 @@ See console output above for details.
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
 
-    $webHealth = Test-ServiceHealth -Url $WebFrontendUrl -ServiceName "Web frontend"
+    $webHealth = Test-ServiceHealth -Url $env:WEB_BASE -ServiceName "Web frontend"
     if (-not $webHealth -and -not $ApiOnly) {
       if (-not $ApiOnly) {
         Write-Host "Continuing with development despite Web frontend issues" -ForegroundColor Yellow
       }
     }
 
-    Write-Host "Web frontend started on $WebFrontendUrl" -ForegroundColor Green
+    Write-Host "Web frontend started on $env:WEB_BASE" -ForegroundColor Green
   }
 
   Write-Host "Development environment is running" -ForegroundColor Green
