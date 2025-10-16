@@ -34,13 +34,20 @@ Follow accessibility best practices
 ## Setup Instructions
 
 - Run `setup.ps1` to install dependencies and build the project
-- Use `dev.ps1` for the development environment:
+- Run Task `Run Dev Script` to start the development environment in it's own terminal window:
+  - This starts both the API and Web servers with hot reload enabled
+  - Set environment variables in `.env` files as needed
+  - The dev script uses `concurrently` to run both servers
+  - The API server runs on port 4000 and the Web server on port 3000 by default
+  - Unit tests are run as a pre-build step for the API server
+- Use the following suffixes for different setup configurations:
   - `-Fresh`: For a clean install
   - `-WithLLM`: To enable external LLM integration
   - `-ApiOnly`/`-WebOnly`: To run specific parts of the application
 
 ## Playwright E2E Testing
 
+- Run E2E tests using the `test:e2e` npm script to ensure proper environment setup and server availability.
 - Always use Playwright with the `dot` reporter (`--reporter=dot`) for automated and autonomous test runs. This ensures the process exits automatically after tests complete, enabling hands-off debugging and CI/CD workflows.
 
 ## Feature Development
