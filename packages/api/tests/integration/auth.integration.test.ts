@@ -25,7 +25,7 @@ describe('POST /auth/register', () => {
 
     const passwordHash = await bcrypt.hash('ValidPassword1!', 10);
     db.prepare(
-      'INSERT INTO users (id, email, password_hash, name, created_at, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, ?, ?, 1, ?)' 
+      'INSERT INTO users (id, email, password_hash, name, created_at, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, ?, ?, 1, ?)'
     ).run(
       'existing-user',
       'user@example.com',
@@ -138,4 +138,3 @@ describe('POST /auth/register', () => {
     expect(stored.email_confirmed).toBe(1);
   });
 });
-

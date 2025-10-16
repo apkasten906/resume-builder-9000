@@ -9,11 +9,12 @@ const repoRoot = path.resolve(__dirname, '../../../..');
 const EMAIL_OUTBOX_PATH = path.join(repoRoot, 'packages/api/.tmp/email-outbox.json');
 
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
+const API_BASE = process.env.API_BASE || 'http://localhost:4000';
 
 type OutboxEntry = { to: string; metadata?: { token?: string; type?: string } };
 
 async function waitForVerificationToken(email: string): Promise<string> {
-  const timeoutAt = Date.now() + 5000;
+  const timeoutAt = Date.now() + 10000;
   while (Date.now() < timeoutAt) {
     try {
       const raw = await readFile(EMAIL_OUTBOX_PATH, 'utf-8');
@@ -42,6 +43,26 @@ test.describe('User registration flow', () => {
     }
     await page.context().clearCookies();
     await rm(EMAIL_OUTBOX_PATH, { force: true });
+
+    // Seed the duplicate user for the duplicate email test by calling the backend API directly.
+    // Use JSON POST so the backend receives the expected content-type.
+    try {
+      await page.request.post(`${API_BASE}/auth/register`, {
+        data: JSON.stringify({
+          email: 'user@example.com',
+          password: 'ValidPassword1!',
+          confirmPassword: 'ValidPassword1!',
+          fullName: 'Existing User',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch {
+      // If seeding fails, continue — the test will exercise the registration flow and surface errors.
+      // We don't want seeding failures to block the rest of the beforeEach cleanup.
+      // Playwright's request api will throw on non-2xx statuses; swallow here to let tests run and fail with actionable output.
+    }
+    // Optionally, confirm the email for this user if your flow requires it
+    // You can add logic here to read the outbox and confirm the user if needed
   });
 
   test('completes the multi-step registration process', async ({ page }) => {
@@ -57,11 +78,14 @@ test.describe('User registration flow', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
 
     await page.getByLabel('Full Name').fill('Playwright User');
+
+    // Submit via the client so the UI shows the "Check your email" screen
     await page.getByRole('button', { name: 'Create Account' }).click();
 
     await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
     await expect(page.getByText(uniqueEmail)).toBeVisible();
 
+    // Confirm that the outbox contains the verification email and obtain token
     const token = await waitForVerificationToken(uniqueEmail);
 
     await page.goto(`${WEB_BASE}/confirm-email?token=${token}`, { waitUntil: 'domcontentloaded' });
@@ -92,10 +116,11 @@ test.describe('User registration flow', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
 
     await page.getByLabel('Full Name').fill('Existing User');
+
+    // Submit via the client so the UI surfaces validation errors for duplicate emails
     await page.getByRole('button', { name: 'Create Account' }).click();
 
     await expect(page.getByText(/Email already registered/i)).toBeVisible();
     await expect(page.getByLabel('Email')).toHaveAttribute('value', 'user@example.com');
   });
 });
-

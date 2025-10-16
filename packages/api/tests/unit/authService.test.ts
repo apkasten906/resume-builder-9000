@@ -30,7 +30,7 @@ describe('authService', () => {
 
     const passwordHash = await bcrypt.hash(BASE_USER.password, 10);
     db.prepare(
-      'INSERT INTO users (id, email, password_hash, name, created_at, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, ?, ?, 1, ?)' 
+      'INSERT INTO users (id, email, password_hash, name, created_at, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, ?, ?, 1, ?)'
     ).run(
       BASE_USER.id,
       BASE_USER.email,
@@ -54,7 +54,11 @@ describe('authService', () => {
 
       expect(result).toBeTruthy();
       expect(result?.token).toBeTypeOf('string');
-      expect(result?.user).toEqual({ id: BASE_USER.id, email: BASE_USER.email, name: BASE_USER.name });
+      expect(result?.user).toEqual({
+        id: BASE_USER.id,
+        email: BASE_USER.email,
+        name: BASE_USER.name,
+      });
     });
 
     it('returns null for an unknown email', async () => {
@@ -72,11 +76,17 @@ describe('authService', () => {
       const passwordHash = await bcrypt.hash('ValidPassword1!', 10);
       db.prepare(
         'INSERT INTO users (id, email, password_hash, name, created_at, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, ?, ?, 0, NULL)'
-      ).run('pending-user', 'pending@example.com', passwordHash, 'Pending User', new Date().toISOString());
-
-      await expect(authService.login('pending@example.com', 'ValidPassword1!')).rejects.toBeInstanceOf(
-        EmailNotConfirmedError
+      ).run(
+        'pending-user',
+        'pending@example.com',
+        passwordHash,
+        'Pending User',
+        new Date().toISOString()
       );
+
+      await expect(
+        authService.login('pending@example.com', 'ValidPassword1!')
+      ).rejects.toBeInstanceOf(EmailNotConfirmedError);
     });
   });
 
@@ -113,9 +123,13 @@ describe('authService', () => {
     });
 
     it('throws DuplicateEmailError when the email is already registered', async () => {
-      await expect(authService.register({ email: BASE_USER.email, password: 'ValidPassword1!', name: 'Copy Cat' })).rejects.toBeInstanceOf(
-        DuplicateEmailError
-      );
+      await expect(
+        authService.register({
+          email: BASE_USER.email,
+          password: 'ValidPassword1!',
+          name: 'Copy Cat',
+        })
+      ).rejects.toBeInstanceOf(DuplicateEmailError);
     });
 
     it('throws PasswordPolicyError when the password is too weak', async () => {
@@ -163,7 +177,10 @@ describe('authService', () => {
       const db = connectDatabase();
       const stored = db
         .prepare('SELECT email_confirmed, email_confirmed_at FROM users WHERE email = ?')
-        .get('verify@example.com') as { email_confirmed: number; email_confirmed_at: string | null };
+        .get('verify@example.com') as {
+        email_confirmed: number;
+        email_confirmed_at: string | null;
+      };
       expect(stored.email_confirmed).toBe(1);
       expect(stored.email_confirmed_at).not.toBeNull();
 
@@ -189,7 +206,7 @@ describe('authService', () => {
       const db = connectDatabase();
       const tokenRecord = db
         .prepare(
-          'SELECT user_id FROM email_verification_tokens WHERE user_id = (SELECT id FROM users WHERE email = ?)' 
+          'SELECT user_id FROM email_verification_tokens WHERE user_id = (SELECT id FROM users WHERE email = ?)'
         )
         .get('expire@example.com') as { user_id: string };
 
@@ -208,4 +225,3 @@ describe('authService', () => {
     });
   });
 });
-

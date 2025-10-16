@@ -160,9 +160,9 @@ export const authService = {
   }> {
     const db = connectDatabase();
 
-    const existing = db
-      .prepare('SELECT id FROM users WHERE email = ?')
-      .get(email) as { id: string } | undefined;
+    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email) as
+      | { id: string }
+      | undefined;
 
     if (existing) {
       throw new DuplicateEmailError();
@@ -201,6 +201,40 @@ export const authService = {
     });
 
     return { user, verification: { sentTo: email, expiresAt: verification.expiresAt } };
+  },
+  async resendVerification(email: string): Promise<{ sentTo: string; expiresAt: string }> {
+    const db = connectDatabase();
+
+    const user = db.prepare('SELECT id, email_confirmed FROM users WHERE email = ?').get(email) as
+      | { id: string; email_confirmed: number }
+      | undefined;
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.email_confirmed) {
+      throw new Error('Email already confirmed');
+    }
+
+    const verification = createVerificationRecord();
+    const createdAt = new Date().toISOString();
+
+    db.prepare(
+      'INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)'
+    ).run(randomUUID(), user.id, verification.tokenHash, verification.expiresAt, createdAt);
+
+    const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const verificationUrl = `${normalizeBaseUrl(appBaseUrl)}/confirm-email?token=${verification.token}`;
+
+    await sendVerificationEmail({
+      to: email,
+      verificationUrl,
+      expiresAt: verification.expiresAt,
+      token: verification.token,
+    });
+
+    return { sentTo: email, expiresAt: verification.expiresAt };
   },
   async getUserFromRequest(
     req: Request

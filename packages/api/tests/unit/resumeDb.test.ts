@@ -43,13 +43,15 @@ vi.mock('better-sqlite3', () => {
       prepare: vi.fn().mockImplementation(query => {
         if (query.includes('PRAGMA table_info(users)')) {
           return {
-            all: vi.fn().mockReturnValue([
-              { name: 'id' },
-              { name: 'email' },
-              { name: 'password_hash' },
-              { name: 'name' },
-              { name: 'created_at' },
-            ]),
+            all: vi
+              .fn()
+              .mockReturnValue([
+                { name: 'id' },
+                { name: 'email' },
+                { name: 'password_hash' },
+                { name: 'name' },
+                { name: 'created_at' },
+              ]),
           };
         }
         if (query.includes('SELECT * FROM resumes ORDER BY created_at DESC')) {
@@ -321,13 +323,15 @@ describe('Resume Database Operations', () => {
       const mockPrepare = vi.fn().mockImplementation(query => {
         if (query.includes('PRAGMA table_info(users)')) {
           return {
-            all: vi.fn().mockReturnValue([
-              { name: 'id' },
-              { name: 'email' },
-              { name: 'password_hash' },
-              { name: 'name' },
-              { name: 'created_at' },
-            ]),
+            all: vi
+              .fn()
+              .mockReturnValue([
+                { name: 'id' },
+                { name: 'email' },
+                { name: 'password_hash' },
+                { name: 'name' },
+                { name: 'created_at' },
+              ]),
           };
         }
         return {

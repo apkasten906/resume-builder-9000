@@ -6,7 +6,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '../../../..');
 const defaultDbPath = path.join(repoRoot, 'packages/api/test-e2e.db');
-const dbPath = process.env.DB_PATH && process.env.DB_PATH.trim().length > 0 ? process.env.DB_PATH : defaultDbPath;
+const dbPath =
+  process.env.DB_PATH && process.env.DB_PATH.trim().length > 0
+    ? process.env.DB_PATH
+    : defaultDbPath;
 
 process.env.DB_PATH = dbPath;
 process.env.API_BASE = process.env.API_BASE || 'http://localhost:4000';
@@ -40,7 +43,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'npm run start',
+      command: 'npm run dev',
       cwd: path.join(repoRoot, 'packages/api'),
       url: 'http://localhost:4000/api/health',
       reuseExistingServer: !process.env.CI,
@@ -49,12 +52,12 @@ export default defineConfig({
       timeout: 120000,
       env: {
         ...process.env,
-        NODE_ENV: 'test',
+        NODE_ENV: 'development',
         DB_PATH: dbPath,
       },
     },
     {
-      command: 'npm run start',
+      command: 'npm run dev',
       cwd: path.join(repoRoot, 'apps/web'),
       url: 'http://localhost:3000',
       reuseExistingServer: !process.env.CI,
@@ -63,7 +66,7 @@ export default defineConfig({
       timeout: 180000,
       env: {
         ...process.env,
-        NODE_ENV: 'production',
+        NODE_ENV: 'development',
         DB_PATH: dbPath,
         NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000',
         API_BASE: process.env.API_BASE || 'http://localhost:4000',

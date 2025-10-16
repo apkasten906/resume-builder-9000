@@ -175,3 +175,23 @@ export async function verifyEmail(req: Request, res: Response): Promise<Response
     return res.status(500).json({ error: 'Email verification failed. Please try again.' });
   }
 }
+
+export async function resendVerification(req: Request, res: Response): Promise<Response> {
+  const email = typeof req.body?.email === 'string' ? req.body.email : undefined;
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required.' });
+  }
+
+  try {
+    const result = await authService.resendVerification(email);
+    return res.json({ ok: true, sentTo: result.sentTo, expiresAt: result.expiresAt });
+  } catch (error: any) {
+    if (error?.message === 'User not found') {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    if (error?.message === 'Email already confirmed') {
+      return res.status(400).json({ error: 'Email already confirmed.' });
+    }
+    return res.status(500).json({ error: 'Failed to resend verification email.' });
+  }
+}
