@@ -9,7 +9,10 @@ const repoRoot = path.resolve(__dirname, '../../../..');
 const defaultDbPath = path.join(repoRoot, 'packages/api/test-e2e.db');
 
 export default async function globalSetup(): Promise<void> {
-  const dbPath = process.env.DB_PATH && process.env.DB_PATH.trim().length > 0 ? process.env.DB_PATH : defaultDbPath;
+  const dbPath =
+    process.env.DB_PATH && process.env.DB_PATH.trim().length > 0
+      ? process.env.DB_PATH
+      : defaultDbPath;
 
   await rm(dbPath, { force: true });
 

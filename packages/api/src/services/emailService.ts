@@ -77,4 +77,3 @@ export function clearEmailOutbox(): void {
   emailOutbox.splice(0, emailOutbox.length);
   void persistOutbox();
 }
-

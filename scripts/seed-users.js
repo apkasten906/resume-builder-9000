@@ -57,18 +57,25 @@ const hashedPassword = bcrypt.hashSync('ValidPassword1!', saltRounds);
 const hasNameColumn = userColumns.some(col => col.name === 'name');
 const hasEmailConfirmedColumn = userColumns.some(col => col.name === 'email_confirmed');
 
+// Generate a UUID for the test user
+const userId = '00000000-0000-0000-0000-000000000001';
+
 let insert;
 if (hasNameColumn && hasEmailConfirmedColumn) {
   insert = db.prepare(
-    "INSERT INTO users (email, password_hash, name, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, 1, datetime('now'))"
+    "INSERT INTO users (id, email, password_hash, name, created_at, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, ?, datetime('now'), 1, datetime('now'))"
   );
-  insert.run('user@example.com', hashedPassword, 'Test User');
+  insert.run(userId, 'user@example.com', hashedPassword, 'Test User');
 } else if (hasNameColumn) {
-  insert = db.prepare('INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)');
-  insert.run('user@example.com', hashedPassword, 'Test User');
+  insert = db.prepare(
+    "INSERT INTO users (id, email, password_hash, name, created_at) VALUES (?, ?, ?, ?, datetime('now'))"
+  );
+  insert.run(userId, 'user@example.com', hashedPassword, 'Test User');
 } else {
-  insert = db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)');
-  insert.run('user@example.com', hashedPassword);
+  insert = db.prepare(
+    "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, datetime('now'))"
+  );
+  insert.run(userId, 'user@example.com', hashedPassword);
 }
 
 console.log('Test user created:');
