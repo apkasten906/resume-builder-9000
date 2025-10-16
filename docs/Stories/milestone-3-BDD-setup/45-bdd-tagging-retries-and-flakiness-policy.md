@@ -45,9 +45,9 @@ Exact Implementation Steps (for Codex)
 
 ```jsonc
 {
-   "scripts": {
-      "test:bdd:ci": "cucumber-js --require-module ts-node/register --require tests/bdd/**/*.ts --format json:reports/cucumber/cucumber.json --format @cucumber/html-formatter --publish-quiet --retry 1 --retryTagFilter 'not @wip'"
-   }
+  "scripts": {
+    "test:bdd:ci": "cucumber-js --require-module ts-node/register --require tests/bdd/**/*.ts --format json:reports/cucumber/cucumber.json --format @cucumber/html-formatter --publish-quiet --retry 1 --retryTagFilter 'not @wip'",
+  },
 }
 ```
 

@@ -33,7 +33,14 @@ Seed helper sketch (Node)
 // tests/bdd/support/seed.ts
 import fetch from 'node-fetch';
 async function seed() {
-  await fetch(process.env.API_BASE + '/seed/jobs', { method: 'POST', body: JSON.stringify({ jobs: [/*...*/] }) });
+  await fetch(process.env.API_BASE + '/seed/jobs', {
+    method: 'POST',
+    body: JSON.stringify({
+      jobs: [
+        /*...*/
+      ],
+    }),
+  });
 }
 seed()
   .then(() => console.log('seeded'))
