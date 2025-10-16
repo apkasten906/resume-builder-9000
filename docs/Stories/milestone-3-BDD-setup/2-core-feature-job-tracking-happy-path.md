@@ -94,6 +94,7 @@ Cover the most valuable user journey end-to-end in BDD: create job → parse job
 
 2. **PO stubs (adjust selectors to app)**
    - `tests/bdd/pages/JobFormPage.ts`
+
    ```ts
    import type { Page, Locator } from 'playwright';
    export class JobFormPage {
@@ -114,7 +115,8 @@ Cover the most valuable user journey end-to-end in BDD: create job → parse job
    ```
 
    - `tests/bdd/pages/ResumePreviewPage.ts`
-   ```ts
+
+   ````ts
    import type { Page, Locator } from 'playwright';
    export class ResumePreviewPage {
      readonly panel: Locator;
@@ -122,89 +124,98 @@ Cover the most valuable user journey end-to-end in BDD: create job → parse job
      constructor(private page: Page) {
        this.panel = page.getByTestId('resume-preview');
        this.content = this.panel.getByTestId('resume-preview-content');
+    ---
+    title: Core Feature — Job Tracking (Happy Path)
+    summary: Full BDD spec for the core job tracking happy-path feature (feature, POs, steps, data)
+    ---
+
+    This story delivers a complete end-to-end BDD feature that covers the highest-value user flow: create a job, have a candidate attach a resume, and move the candidate through the pipeline. It includes a smoke scenario and a Scenario Outline for variations.
+
+    Feature (smoke + outline)
+
+    ```gherkin
+    Feature: Job Application Tracking
+      As a recruiter, I can create a job, view applicants, and move an application through stages so hiring progress is tracked.
+
+      Background:
+        Given the test environment is seeded with deterministic data
+        And the app base URL is configured
+
+      @smoke
+      Scenario: Add a new job and see it in the list
+        When I add a job with title "Senior SWE" and company "Acme"
+        Then I should see the job "Senior SWE" at "Acme" in the job list
+
+      Scenario Outline: Tailor a resume for saved job and view preview
+        Given a saved job "<title>" at "<company>"
+        When I open the resume tailoring panel for "<title>" at "<company>"
+        Then a tailored resume preview is generated for "<title>" at "<company>"
+
+        Examples:
+          | title        | company |
+          | Senior SWE   | Acme    |
+          | Backend Lead | Globex  |
+   ````
+
+   POs and Steps (implementation notes)
+   - Page Objects (TypeScript): `DashboardPage`, `JobFormPage`, `ResumePreviewPage` under `tests/bdd/pages`.
+   - Steps: `tests/bdd/steps/job-tracking.steps.ts` should only call POs.
+   - Data: `tests/bdd/data/jobs.examples.json` contains example rows used by Scenario Outline.
+   - Seed: Provide `tests/bdd/support/seed.ts` or a Background step that uses API endpoints to create deterministic state.
+
+   Acceptance Criteria
+   - `@smoke` scenario adds a new job and it appears in the UI.
+   - Scenario Outline produces a working resume preview for each example.
+   - All selectors use `data-testid` or role-based locators; no fragile CSS paths.
+   - Steps and POs compile under TypeScript strict checking.
+
+   Definition of Done
+   - Feature, steps, POs, and data committed under `tests/bdd/**`.
+   - CI (Story 3) uploads artifacts on failure.
+
+   Implementation snippets
+
+   Job form PO stub
+
+   ```ts
+   import type { Page, Locator } from 'playwright';
+   export class JobFormPage {
+     readonly titleInput: Locator;
+     readonly companyInput: Locator;
+     readonly saveButton: Locator;
+     constructor(private page: Page) {
+       this.titleInput = page.getByTestId('job-title');
+       this.companyInput = page.getByTestId('job-company');
+       this.saveButton = page.getByRole('button', { name: /save/i });
      }
-     async isReady() {
-       await this.panel.waitFor({ state: 'visible' });
-       await this.content.waitFor({ state: 'visible' });
+     async addJob(data: { title: string; company: string }) {
+       await this.titleInput.fill(data.title);
+       await this.companyInput.fill(data.company);
+       await this.saveButton.click();
      }
    }
    ```
 
-   - Update `tests/bdd/pages/DashboardPage.ts` to include helpers
-   ```ts
-   import type { Page, Locator } from 'playwright';
-   export class DashboardPage {
-     constructor(private page: Page) {}
-     async goto(base: string) {
-       await this.page.goto(base);
-     }
-     jobRow(title: string, company: string): Locator {
-       return this.page
-         .getByTestId('job-row')
-         .filter({ hasText: title })
-         .filter({ hasText: company });
-     }
-     async openTailoringPanelFor(title: string, company: string) {
-       const row = this.jobRow(title, company);
-       await row.getByRole('button', { name: /tailor/i }).click();
-     }
-   }
-   ```
-3. **Steps** `tests/bdd/steps/job-tracking.steps.ts`
+   Steps example (job add / assert)
 
    ```ts
    import { Given, When, Then } from '@cucumber/cucumber';
-   import { TestWorld } from '../support/world';
    import { DashboardPage } from '../pages/DashboardPage';
    import { JobFormPage } from '../pages/JobFormPage';
-   import { ResumePreviewPage } from '../pages/ResumePreviewPage';
-
-   Given('I am on the dashboard', async function (this: TestWorld) {
-     const dash = new DashboardPage(this.page);
-     await dash.goto(this.webBase);
-   });
 
    When(
      'I add a job with title {string} and company {string}',
-     async function (this: TestWorld, title: string, company: string) {
+     async function (title: string, company: string) {
        const form = new JobFormPage(this.page);
        await form.addJob({ title, company });
      }
    );
 
    Then(
-     'I should see the job {string} at {string} in the list',
-     async function (this: TestWorld, title: string, company: string) {
+     'I should see the job {string} at {string} in the job list',
+     async function (title: string, company: string) {
        const dash = new DashboardPage(this.page);
        await dash.jobRow(title, company).waitFor({ state: 'visible' });
      }
    );
-
-   Given(
-     'a saved job {string} at {string}',
-     async function (this: TestWorld, title: string, company: string) {
-       const form = new JobFormPage(this.page);
-       await form.addJob({ title, company });
-     }
-   );
-
-   When('I open the resume tailoring panel', async function (this: TestWorld) {
-     // naive: open the first job row's tailor button; replace with exact title/company if needed
-     const dash = new DashboardPage(this.page);
-     await dash.openTailoringPanelFor('Senior SWE', 'Acme');
-   });
-
-   Then(
-     'a tailored resume is generated for {string} at {string}',
-     async function (this: TestWorld, title: string, company: string) {
-       const preview = new ResumePreviewPage(this.page);
-       await preview.isReady();
-     }
-   );
    ```
-
----
-
-## Non-Goals
-
-- Negative paths (validation errors), export-to-file verification, or PDF diffing.
