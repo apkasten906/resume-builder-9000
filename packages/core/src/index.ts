@@ -236,7 +236,7 @@ export {
 
 // Authentication utilities
 export {
-  PASSWORD_REQUIREMENTS,
+  PASSWORD_POLICY_RULES,
   evaluatePassword,
   validatePassword,
   type PasswordRequirement,
