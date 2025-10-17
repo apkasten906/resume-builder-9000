@@ -16,11 +16,10 @@ test.describe('Authentication System Tests', () => {
   test('homepage shows Get Started button when unauthenticated', async ({ page }) => {
     testLogger.info('Testing unauthenticated homepage state');
 
-    await page.goto(WEB_BASE);
-    await page.waitForTimeout(1000);
+    await page.goto(WEB_BASE, { waitUntil: 'networkidle' });
 
     // Should show Get Started button
-    await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible({ timeout: 10000 });
 
     // Should not show navigation sidebar
     expect(await page.locator('aside nav').count()).toBe(0);
@@ -31,10 +30,10 @@ test.describe('Authentication System Tests', () => {
   test('Get Started button navigates to login page', async ({ page }) => {
     testLogger.info('Testing navigation to login page');
 
-    await page.goto(WEB_BASE);
+    await page.goto(WEB_BASE, { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: 'Get Started' }).click();
 
-    await page.waitForURL('**/login');
+    await page.waitForURL('**/login', { timeout: 10000 });
     expect(page.url()).toContain('/login');
 
     testLogger.info('[PASS] Get Started button navigates to login page');
@@ -43,17 +42,16 @@ test.describe('Authentication System Tests', () => {
   test('login page has required form elements', async ({ page }) => {
     testLogger.info('Testing login page form elements');
 
-    await page.goto(`${WEB_BASE}/login`);
-    await page.waitForTimeout(1000);
+    await page.goto(`${WEB_BASE}/login`, { waitUntil: 'networkidle' });
 
     // Verify form elements exist
     const emailInput = page.locator('input[type="email"]');
     const passwordInput = page.locator('input[type="password"]');
     const submitButton = page.getByRole('button', { name: 'Sign In' });
 
-    await expect(emailInput).toBeVisible();
-    await expect(passwordInput).toBeVisible();
-    await expect(submitButton).toBeVisible();
+    await expect(emailInput).toBeVisible({ timeout: 10000 });
+    await expect(passwordInput).toBeVisible({ timeout: 10000 });
+    await expect(submitButton).toBeVisible({ timeout: 10000 });
 
     testLogger.info('[PASS] Login page has all required form elements');
   });
@@ -61,8 +59,10 @@ test.describe('Authentication System Tests', () => {
   test('login form accepts user input', async ({ page }) => {
     testLogger.info('Testing login form input functionality');
 
-    await page.goto(`${WEB_BASE}/login`);
-    await page.waitForTimeout(1000);
+    await page.goto(`${WEB_BASE}/login`, { waitUntil: 'networkidle' });
+
+    // Wait for form to be interactive
+    await page.waitForSelector('input[type="email"]', { state: 'visible', timeout: 10000 });
 
     // Test form input functionality
     await page.fill('input[type="email"]', 'test@example.com');
@@ -80,8 +80,10 @@ test.describe('Authentication System Tests', () => {
   test('login form can be submitted', async ({ page }) => {
     testLogger.info('Testing login form submission');
 
-    await page.goto(`${WEB_BASE}/login`);
-    await page.waitForTimeout(1000);
+    await page.goto(`${WEB_BASE}/login`, { waitUntil: 'networkidle' });
+
+    // Wait for form to be interactive
+    await page.waitForSelector('input[type="email"]', { state: 'visible', timeout: 10000 });
 
     // Fill form and submit with valid credentials
     await page.fill('input[type="email"]', 'user@example.com');

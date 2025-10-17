@@ -1,63 +1,66 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "Run Dev Script",
-			"type": "shell",
-			"command": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
-			"group": "build",
-			"presentation": {
-				"reveal": "always",
-				"panel": "new"
-			},
-			"problemMatcher": []
-		},
-		{
-			"label": "lint",
-			"type": "shell",
-			"command": "npm run lint",
-			"problemMatcher": [],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"detail": "Runs the linting process using ESLint."
-		},
-		{
-			"label": "format",
-			"type": "shell",
-			"command": "npm run format",
-			"problemMatcher": [],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"detail": "Formats the codebase using Prettier."
-		},
-		{
-			"label": "test:watch",
-			"type": "shell",
-			"command": "npm run test:watch",
-			"problemMatcher": [],
-			"group": {
-				"kind": "test",
-				"isDefault": true
-			},
-			"detail": "Runs the test suite in watch mode using Vitest."
-		},
-		{
-			"label": "Run Dev Script",
-			"type": "shell",
-			"command": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
-			"isBackground": true,
-			"group": "build"
-		},
-		{
-			"label": "Run Dev Script",
-			"type": "shell",
-			"command": "powershell.exe -ExecutionPolicy Bypass -File ./dev.ps1",
-			"isBackground": true,
-			"group": "build"
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Dev and E2E Test Script (session secret)",
+      "type": "shell",
+      "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"$env:CI='true'; & .\\scripts\\run-e2e-with-temp-secret.ps1\"",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Dev Script (direct)",
+      "type": "shell",
+      "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\dev.ps1 -PersistTestSecret",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "lint",
+      "type": "shell",
+      "command": "npm run lint",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "Runs the linting process using ESLint."
+    },
+    {
+      "label": "format",
+      "type": "shell",
+      "command": "npm run format",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "Formats the codebase using Prettier."
+    },
+    {
+      "label": "test:watch",
+      "type": "shell",
+      "command": "npm run test:watch",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "detail": "Runs the test suite in watch mode using Vitest."
+    }
+  ]
 }

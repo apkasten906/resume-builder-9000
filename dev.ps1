@@ -5,6 +5,7 @@ param(
   [string]$LLMModel = "",
   [switch]$ApiOnly,
   [switch]$WebOnly,
+  [switch]$PersistTestSecret,
   [switch]$Help
 )
 
@@ -28,10 +29,12 @@ function Test-ServiceHealth {
       if ($response -and $response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
         Write-Host "$ServiceName is responsive with status code $($response.StatusCode)" -ForegroundColor Green
         $isHealthy = $true
-      } else {
+      }
+      else {
         throw "Non-successful status code: $($response.StatusCode)"
       }
-    } catch {
+    }
+    catch {
       $attempts++
       if ($attempts -lt $MaxAttempts) {
         Write-Host "Waiting for $ServiceName to start (attempt $attempts of $MaxAttempts)..." -ForegroundColor Yellow
@@ -50,6 +53,39 @@ function Test-ServiceHealth {
   return $isHealthy
 }
 
+function GetLocalEnvVariable {
+  param (
+    [string]$RequiredVar = "", # Name of the environment variable to retrieve
+    [string]$EnvFilePath = "./.env", # Path to the .env file
+    [switch]$Debug = $false # If set, enables debug output for this function
+  )
+
+  $value = $null
+
+  if (-not (Test-Path $EnvFilePath)) {
+    Write-Warning "$EnvFilePath not found."
+    return $value
+  }
+
+  if ((Test-Path $EnvFilePath) -and (-not $value)) {
+    Get-Content $EnvFilePath | ForEach-Object {
+      if ($_ -match "^($RequiredVar)=(.*)$") {
+        $value = $matches[2].Trim()
+        if ($Debug) { Write-Host "[DEBUG] Loaded $RequiredVar from .env: $value" -ForegroundColor Green }
+      }
+    }
+  }
+
+  # Normalize empty values to $null and strip surrounding quotes (use char array to avoid quoting/escape pitfalls)
+  if ($value -and ($value.StartsWith("'") -or $value.StartsWith('"'))) {
+    $trimChars = @("'", '"', '`')
+    $value = $value.Trim($trimChars)
+  }
+
+  return $value
+}
+
+
 # Function to kill all dev server processes
 function Stop-AllDevServers {
   param (
@@ -65,11 +101,13 @@ function Stop-AllDevServers {
         Write-Host "Stopping dev server process: $($_.Id)" -ForegroundColor Yellow
         Stop-Process -Id $_.Id -Force
       }
-    } catch {}
+    }
+    catch {}
   }
 
   Write-Host "All development servers have been stopped." -ForegroundColor Yellow
 }
+
 
 if ($Help) {
   Write-Host "Resume Builder 9000 Development Script"
@@ -96,17 +134,82 @@ try {
     if (Test-Path .\packages\core\node_modules) { Remove-Item .\packages\core\node_modules -Recurse -Force }
   }
 
-  # Set environment variables
-  $env:ALLOW_EXTERNAL_LLM = if ($WithLLM) { "true" } else { "false" }
-  if ($LLMProvider) { $env:LLM_PROVIDER = $LLMProvider }
-  if ($LLMModel) { $env:LLM_MODEL = $LLMModel }
+  # Set environment variables for LLM integration
+  $env:ALLOW_EXTERNAL_LLM = if ($WithLLM) { $true } else { GetLocalEnvVariable -RequiredVar "ALLOW_EXTERNAL_LLM" }
+  $env:LLM_PROVIDER = if ($LLMProvider) { $LLMProvider } else { GetLocalEnvVariable -RequiredVar "LLM_PROVIDER" }
+  $env:LLM_MODEL = if ($LLMModel) { $LLMModel } else { GetLocalEnvVariable -RequiredVar "LLM_MODEL" }
 
-  # Allow passing BASE_URL and NEXT_PUBLIC_API_URL for tests and dev server
-  if ($null -eq $env:BASE_URL) { $env:BASE_URL = "http://localhost:3000" }
-  if ($null -eq $env:NEXT_PUBLIC_API_URL) { $env:NEXT_PUBLIC_API_URL = "http://localhost:4000/api" }
+  if ($env:ALLOW_EXTERNAL_LLM -eq $true) {
+    if (-not $env:LLM_PROVIDER) {
+      throw "LLM integration enabled but LLM_PROVIDER is not set. Use -LLMProvider or set it in .env"
+    }
+    if (-not $env:LLM_MODEL) {
+      throw "LLM integration enabled but LLM_MODEL is not set. Use -LLMModel or set it in .env"
+    }
+    Write-Host "External LLM integration enabled with provider '$($env:LLM_PROVIDER)' and model '$($env:LLM_MODEL)'" -ForegroundColor Green
+  }
+  else {
+    Write-Host "External LLM integration is disabled" -ForegroundColor Yellow
+  }
 
-  # Copy example environment file if it exists
-  if (Test-Path ".env.example") { Copy-Item -Path ".env.example" -Destination ".env" -Force }
+  # Set web frontend and API server environment variables
+  $env:WEB_BASE = if (-not $env:WEB_BASE) { GetLocalEnvVariable -RequiredVar "WEB_BASE" } else { "http://localhost:3000" }
+  $env:API_BASE = if (-not $env:API_BASE) { GetLocalEnvVariable -RequiredVar "API_BASE" } else { "http://localhost:4000" }
+
+  Write-Host "Detected Web frontend URL: $($env:WEB_BASE)"
+  Write-Host "Detected API server URL: $($env:API_BASE)"
+
+  # Copy example environment file if .env does not exist
+  if (-not (Test-Path ".env")) { Copy-Item -Path ".env.example" -Destination ".env" -Force }
+
+
+  # If test routes are enabled but no TEST_ROUTE_SECRET is provided, generate a
+  # secure secret for the current session and persist it to .env (development only).
+  # This makes local runs easier while keeping the secret out of source control.
+  if ([string]::IsNullOrEmpty($env:ENABLE_TEST_ROUTES)) {
+    $env:ENABLE_TEST_ROUTES = GetLocalEnvVariable -RequiredVar "ENABLE_TEST_ROUTES"
+  }
+  if ([string]::IsNullOrEmpty($env:ENABLE_TEST_ROUTES)) { $env:ENABLE_TEST_ROUTES = 'false' }
+
+  if ([string]::IsNullOrEmpty($env:TEST_ROUTE_SECRET)) {
+    $env:TEST_ROUTE_SECRET = GetLocalEnvVariable -RequiredVar "TEST_ROUTE_SECRET"
+  }
+
+  if ($env:ENABLE_TEST_ROUTES -eq 'true' -and [string]::IsNullOrEmpty($env:TEST_ROUTE_SECRET)) {
+    # Generate 32 bytes of cryptographically secure random data and base64-encode it.
+    $bytes = New-Object 'System.Byte[]' 32
+    [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+    $generatedSecret = [Convert]::ToBase64String($bytes)
+    Write-Host "Generating secure TEST_ROUTE_SECRET for this development session." -ForegroundColor Green
+    $envFile = ".env"
+    try {
+      if ($PersistTestSecret) {
+        if (Test-Path $envFile) {
+          $content = Get-Content -Raw -Path $envFile
+          if ($content -match '(?im)^TEST_ROUTE_SECRET\s*=') {
+            $newContent = $content -replace '(?im)^TEST_ROUTE_SECRET\s*=.*$', "TEST_ROUTE_SECRET=$generatedSecret"
+            Set-Content -Path $envFile -Value $newContent
+          }
+          else {
+            Add-Content -Path $envFile -Value "`nTEST_ROUTE_SECRET=$generatedSecret"
+          }
+        }
+        else {
+          Set-Content -Path $envFile -Value "TEST_ROUTE_SECRET=$generatedSecret"
+        }
+        Write-Host ".env updated with TEST_ROUTE_SECRET (do not commit .env)" -ForegroundColor Yellow
+      }
+      else {
+        Write-Host "TEST_ROUTE_SECRET generated for session only (use -PersistTestSecret to persist to .env)" -ForegroundColor Yellow
+      }
+      $env:TEST_ROUTE_SECRET = $generatedSecret
+    }
+    catch {
+      Write-Host "Failed to persist TEST_ROUTE_SECRET to .env: $_" -ForegroundColor Yellow
+      $env:TEST_ROUTE_SECRET = $generatedSecret
+    }
+  }
+
 
   # Display config
   Write-Host "Starting Resume Builder 9000 in development mode" -ForegroundColor Green
@@ -152,7 +255,7 @@ try {
       $nextConfig = Get-Content -Path ".\apps\web\next.config.js" -Raw
 
       if (-not ($nextConfig -match "swcMinify: false")) {
-        $nextConfig = $nextConfig -replace "const nextConfig = \{", "const nextConfig = {`n  swcMinify: false,`n  experimental: {`n    forceSwcTransforms: false,`n  },"
+        $nextConfig = $nextConfig -replace "const nextConfig = \ { ", "const nextConfig = { `n  swcMinify: false, `n  experimental: { `n    forceSwcTransforms: false, `n }, "
         Set-Content -Path ".\apps\web\next.config.js" -Value $nextConfig
       }
     }
@@ -182,15 +285,16 @@ try {
     if ($LASTEXITCODE -ne 0) {
       Write-Host "[ERROR] Unit tests failed. Stopping script." -ForegroundColor Red
       $errorDetails = @"
-Unit test failure at $(Get-Date)
-Script: dev.ps1
-Exit code: $LASTEXITCODE
-See console output above for details.
+          Unit test failure at $(Get-Date)
+          Script: dev.ps1
+          Exit code: $LASTEXITCODE
+          See console output above for details.
 "@
       Add-Content -Path "$PSScriptRoot\dev-error.log" -Value $errorDetails
       throw "Unit tests failed. See output above."
     }
   }
+
 
   # Kill any existing dev servers on ports 3000 and 4000 (API and Web)
   Write-Host "Ensuring no stale dev servers are running..." -ForegroundColor Cyan
@@ -201,8 +305,36 @@ See console output above for details.
         Write-Host "Killing stale dev server process: $($_.Id)" -ForegroundColor Yellow
         Stop-Process -Id $_.Id -Force
       }
-    } catch {}
+    }
+    catch {}
   }
+
+  # --- Robust port/process cleanup before starting servers ---
+
+  function Stop-PortProcess {
+    param([int]$Port)
+    $netstat = netstat -ano | Select-String ":$Port "
+    foreach ($line in $netstat) {
+      if ($line -match '\s+(\d+)$') {
+        $procId = $matches[1]
+        try {
+          Write-Host "Killing process on port $Port (PID: $procId)" -ForegroundColor Yellow
+          Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+        }
+        catch {
+          Write-Host ("Failed to kill process { 0 } on port { 1 }: { 2 }" -f $procId, $Port, $_) -ForegroundColor Red
+        }
+      }
+    }
+  }
+
+  $apiPort = $env:API_BASE.Split(':')[-1]
+  $webPort = $env:WEB_BASE.Split(':')[-1]
+
+  Write-Host "Ensuring no stale dev servers are running on ports $apiPort and $webPort..." -ForegroundColor Cyan
+  Stop-PortProcess -Port $apiPort
+  Stop-PortProcess -Port $webPort
+  # --- End port/process cleanup ---
 
   # Track running processes so we can stop them if needed
   $apiProcess = $null
@@ -211,35 +343,47 @@ See console output above for details.
   # Start development servers
   if (-not $WebOnly) {
     Write-Host "Starting API server..." -ForegroundColor Cyan
-    $apiProcess = Start-Process -NoNewWindow -PassThru powershell -ArgumentList "-Command cd $PSScriptRoot\packages\api; npm run dev"
+    # Start npm in the packages/api working directory using cmd.exe so the npm.cmd shim is invoked correctly on Windows
+    $apiProcess = Start-Process -NoNewWindow -PassThru -FilePath "cmd.exe" -ArgumentList "/c npm run dev" -WorkingDirectory "$PSScriptRoot\packages\api"
 
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
 
-    $apiHealth = Test-ServiceHealth -Url "http://localhost:4000" -ServiceName "API server" -RequireSuccess:$true
+    # Use a guaranteed 200 endpoint for health check
+    $apiHealthUrl = $env:API_BASE
+    if ($apiHealthUrl -notlike "*/api/health*") {
+      if ($apiHealthUrl.TrimEnd('/') -match '^https?://[^/]+(:\d+)?$') {
+        $apiHealthUrl = "$apiHealthUrl/api/health"
+      }
+      else {
+        $apiHealthUrl = "$apiHealthUrl/health"
+      }
+    }
+    $apiHealth = Test-ServiceHealth -Url $apiHealthUrl -ServiceName "API server" -RequireSuccess:$true
     if (-not $apiHealth) {
       throw "API server failed to start"
     }
 
-    Write-Host "API server started on http://localhost:4000" -ForegroundColor Green
+    Write-Host "API server started on $env:API_BASE" -ForegroundColor Green
   }
 
   if (-not $ApiOnly) {
     Write-Host "Starting Web frontend..." -ForegroundColor Cyan
     Write-Host "Using stable build mode to avoid Next.js file watcher issues..." -ForegroundColor Yellow
-    $webProcess = Start-Process -NoNewWindow -PassThru powershell -ArgumentList "-Command cd $PSScriptRoot\apps\web; npm run dev:stable"
+    # Start npm run dev:stable in the web working directory using cmd.exe so the npm shim is invoked correctly
+    $webProcess = Start-Process -NoNewWindow -PassThru -FilePath "cmd.exe" -ArgumentList "/c npm run dev:stable" -WorkingDirectory "$PSScriptRoot\apps\web"
 
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
 
-    $webHealth = Test-ServiceHealth -Url "http://localhost:3000" -ServiceName "Web frontend"
+    $webHealth = Test-ServiceHealth -Url $env:WEB_BASE -ServiceName "Web frontend"
     if (-not $webHealth -and -not $ApiOnly) {
       if (-not $ApiOnly) {
         Write-Host "Continuing with development despite Web frontend issues" -ForegroundColor Yellow
       }
     }
 
-    Write-Host "Web frontend started on http://localhost:3000" -ForegroundColor Green
+    Write-Host "Web frontend started on $env:WEB_BASE" -ForegroundColor Green
   }
 
   Write-Host "Development environment is running" -ForegroundColor Green
@@ -276,10 +420,10 @@ catch {
 
   # Log error to file
   $errorDetails = @"
-Error occurred at $(Get-Date)
-Message: $_
-Stack trace:
-$($_.ScriptStackTrace)
+          Error occurred at $(Get-Date)
+          Message: $_
+          Stack trace:
+          $($_.ScriptStackTrace)
 "@
   Add-Content -Path "$PSScriptRoot\dev-error.log" -Value $errorDetails
 
