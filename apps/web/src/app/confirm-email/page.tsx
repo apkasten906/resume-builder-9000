@@ -77,10 +77,10 @@ function ConfirmEmailContent(): ReactElement {
             . You can sign in right away.
           </p>
           <a
-            href="/login"
+            href="/"
             className="inline-flex rounded-2xl bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
           >
-            Go to login
+            Go to home
           </a>
         </div>
       )}
@@ -88,10 +88,10 @@ function ConfirmEmailContent(): ReactElement {
         <div className="mt-6 space-y-4">
           <p className="text-base text-destructive">{state.message}</p>
           <a
-            href="/login"
+            href="/"
             className="inline-flex rounded-2xl border border-muted px-6 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
           >
-            Back to login
+            Back to home
           </a>
         </div>
       )}

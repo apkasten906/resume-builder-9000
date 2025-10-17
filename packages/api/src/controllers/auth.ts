@@ -195,3 +195,39 @@ export async function resendVerification(req: Request, res: Response): Promise<R
     return res.status(500).json({ error: 'Failed to resend verification email.' });
   }
 }
+
+/**
+ * Get the current verification token for the authenticated user (development only).
+ * This endpoint requires authentication and only returns the user's own token.
+ * In production, tokens should only be delivered via email for security.
+ */
+export async function getVerificationToken(req: Request, res: Response): Promise<Response> {
+  // Only allow in development/test environments
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  try {
+    const user = await authService.getUserFromRequest(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const tokenData = await authService.getVerificationToken(user.id);
+    if (!tokenData) {
+      return res.status(404).json({
+        error: 'No pending verification token found',
+        hint: 'Email may already be verified, or you may need to call /auth/resend-verification first',
+      });
+    }
+
+    return res.json({
+      ok: true,
+      token: tokenData.token,
+      expiresAt: tokenData.expiresAt,
+      verificationUrl: tokenData.verificationUrl,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Failed to retrieve verification token' });
+  }
+}
