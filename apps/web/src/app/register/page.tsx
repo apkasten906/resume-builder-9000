@@ -159,7 +159,10 @@ export default function RegisterPage(): ReactElement {
           }),
         });
 
-        const data = await response.json().catch(() => ({}));
+        const data = await response.json().catch(err => {
+          console.error('Failed to parse JSON response:', err);
+          return { error: 'Invalid response from server', parseError: true };
+        });
 
         if (!response.ok) {
           const message = typeof data?.error === 'string' ? data.error : 'Registration failed';

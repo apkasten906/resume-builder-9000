@@ -74,7 +74,13 @@ function Import-DotEnv {
         $value = $matches[2].Trim()
         # Remove quotes if present
         $value = $value -replace '^[''"]|[''"]$', ''
-        [System.Environment]::SetEnvironmentVariable($key, $value, [System.EnvironmentVariableTarget]::Process)
+        
+        # Validate key name: only allow alphanumeric and underscores, starting with a letter or underscore
+        if ($key -match '^[A-Za-z_][A-Za-z0-9_]*$') {
+          [System.Environment]::SetEnvironmentVariable($key, $value, [System.EnvironmentVariableTarget]::Process)
+        } else {
+          Write-Warning "Skipping invalid environment variable key: '$key'"
+        }
       }
     }
   }

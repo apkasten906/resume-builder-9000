@@ -10,17 +10,19 @@ import { getEmailOutbox, clearEmailOutbox } from '../services/emailService.js';
  */
 const router = Router();
 
-// Debug: indicate the module has been loaded and whether test routes are enabled
-try {
-  // eslint-disable-next-line no-console -- debug visibility for local dev
-  console.info(
-    '[test-support] module loaded. ENABLE_TEST_ROUTES=',
-    process.env.ENABLE_TEST_ROUTES,
-    'NODE_ENV=',
-    process.env.NODE_ENV
-  );
-} catch (e) {
-  // ignore
+// Debug: indicate the module has been loaded and whether test routes are enabled (dev/test only)
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    // eslint-disable-next-line no-console -- debug visibility for local dev
+    console.info(
+      '[test-support] module loaded. ENABLE_TEST_ROUTES=',
+      process.env.ENABLE_TEST_ROUTES,
+      'NODE_ENV=',
+      process.env.NODE_ENV
+    );
+  } catch (e) {
+    // ignore
+  }
 }
 
 // Opt-in, unprotected debug endpoint (ONLY when explicitly enabled via DEBUG_TEST_ROUTES=true)
@@ -61,18 +63,24 @@ function ensureTestAccess(req: Request, res: Response, next: NextFunction): void
     ip === '127.0.0.1' || ip === '::1' || ip.startsWith('::ffff:127.') || ip.startsWith('127.');
 
   if (!isLocal || !secret || provided !== secret) {
-    // eslint-disable-next-line no-console -- log suspicious access attempts for local debugging
-    console.warn('[test-support] Blocked test-support access', {
-      ip,
-      hasSecret: Boolean(secret),
-      provided: provided ? 'yes' : 'no',
-    });
+    // Only log suspicious access attempts in dev/test, not production
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console -- log suspicious access attempts for local debugging
+      console.warn('[test-support] Blocked test-support access', {
+        ip,
+        hasSecret: Boolean(secret),
+        provided: provided ? 'yes' : 'no',
+      });
+    }
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
 
-  // eslint-disable-next-line no-console -- debug visibility
-  console.info('[test-support] ensureTestAccess passed for ip=', ip);
+  // Debug logging only in dev/test
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console -- debug visibility
+    console.info('[test-support] ensureTestAccess passed for ip=', ip);
+  }
   return next();
 }
 
