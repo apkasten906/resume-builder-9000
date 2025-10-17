@@ -311,4 +311,71 @@ export const authService = {
 
     return { token: sessionToken, user };
   },
+  /**
+   * Get the current verification token for a user (development/testing only).
+   * Returns the raw token, expiration time, and verification URL.
+   * This should only be used in non-production environments.
+   */
+  async getVerificationToken(
+    userId: string
+  ): Promise<{ token: string; expiresAt: string; verificationUrl: string } | null> {
+    const db = connectDatabase();
+
+    // Get the most recent verification token for this user
+    const record = db
+      .prepare(
+        `SELECT token_hash, expires_at
+         FROM email_verification_tokens
+         WHERE user_id = ?
+         ORDER BY created_at DESC
+         LIMIT 1`
+      )
+      .get(userId) as
+      | {
+          token_hash: string;
+          expires_at: string;
+        }
+      | undefined;
+
+    if (!record) {
+      return null;
+    }
+
+    // Check if token is expired
+    const now = Date.now();
+    if (new Date(record.expires_at).getTime() < now) {
+      return null;
+    }
+
+    // We can't reverse the hash, so we need to look it up from the email outbox
+    // This is only possible because we're using the in-memory email service for dev/test
+    const { getEmailOutbox } = await import('./emailService.js');
+    const emails = getEmailOutbox();
+
+    // Find the verification email with matching expiration time (most recent match)
+    const verificationEmail = [...emails]
+      .reverse() // Get most recent first
+      .find(
+        email =>
+          email.metadata?.type === 'email-verification' &&
+          email.metadata?.expiresAt === record.expires_at
+      );
+
+    if (
+      !verificationEmail?.metadata?.token ||
+      typeof verificationEmail.metadata.token !== 'string'
+    ) {
+      return null;
+    }
+
+    const token = verificationEmail.metadata.token as string;
+    const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const verificationUrl = `${normalizeBaseUrl(appBaseUrl)}/confirm-email?token=${token}`;
+
+    return {
+      token,
+      expiresAt: record.expires_at,
+      verificationUrl,
+    };
+  },
 };
