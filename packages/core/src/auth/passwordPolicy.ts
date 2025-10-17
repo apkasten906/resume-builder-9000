@@ -45,19 +45,15 @@ export const PASSWORD_POLICY_RULES: readonly PasswordRequirement[] = [
     test: (password: string): boolean => {
       const normalized = password.toLowerCase();
 
-      // Build patterns from character codes to avoid triggering static rules
-      // that detect hardcoded test/mock data. The effective behavior is the
-      // same as matching common weak passwords while keeping the source free
-      // of the literal strings.
-      const make = (codes: number[]) => String.fromCharCode(...codes);
-
+      // Block common weak password patterns using direct literal strings for clarity.
+      // These are well-known weak passwords that should be blocked for security.
       const patterns: RegExp[] = [
-        new RegExp(make([112, 97, 115, 115, 119, 111, 114, 100, 49, 50, 51])), // password123
-        new RegExp(make([112, 97, 115, 115, 119, 48, 114, 100])), // passw0rd
-        new RegExp(make([113, 119, 101, 114, 116, 121])), // qwerty
-        new RegExp(make([108, 101, 116, 109, 101, 105, 110])), // letmein
-        new RegExp(`\\b${make([49, 50, 51, 52, 53, 54])}\\b`), // 123456
-        new RegExp(make([119, 101, 108, 99, 111, 109, 101])), // welcome
+        /password123/,
+        /passw0rd/,
+        /qwerty/,
+        /letmein/,
+        /\b123456\b/,
+        /welcome/,
       ];
 
       return !patterns.some(rx => rx.test(normalized));

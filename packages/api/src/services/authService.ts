@@ -30,6 +30,16 @@ interface UserRow {
   email_confirmed_at: string | null;
 }
 
+// Verification token record interface for database queries
+interface VerificationTokenRecord {
+  token_id: string;
+  user_id: string;
+  expires_at: string;
+  email: string;
+  name: string | null;
+  email_confirmed: number;
+}
+
 export class DuplicateEmailError extends Error {
   constructor() {
     super('Email already registered');
@@ -275,16 +285,7 @@ export const authService = {
          JOIN users u ON u.id = evt.user_id
          WHERE evt.token_hash = ?`
       )
-      .get(tokenHash) as
-      | {
-          token_id: string;
-          user_id: string;
-          expires_at: string;
-          email: string;
-          name: string | null;
-          email_confirmed: number;
-        }
-      | undefined;
+      .get(tokenHash) as VerificationTokenRecord | undefined;
 
     if (!record) {
       throw new InvalidVerificationTokenError();
