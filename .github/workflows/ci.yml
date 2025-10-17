@@ -104,6 +104,9 @@ jobs:
 
       - name: Run E2E tests
         run: npx playwright test --config=apps/web/tests/e2e/playwright.config.ts
+        env:
+          ENABLE_TEST_ROUTES: true
+          TEST_ROUTE_SECRET: ${{ secrets.TEST_ROUTE_SECRET }}
 
   build:
     name: Build
