@@ -25,9 +25,9 @@ The email verification system has two ways to retrieve verification tokens for t
 
 ### Why This Method?
 
-✅ **Works with unverified accounts** - Perfect for testing initial registration  
-✅ **No login required** - Just needs TEST_ROUTE_SECRET from .env  
-✅ **Script auto-loads** - Automatically reads .env file  
+✅ **Works with unverified accounts** - Perfect for testing initial registration
+✅ **No login required** - Just needs TEST_ROUTE_SECRET from .env
+✅ **Script auto-loads** - Automatically reads .env file
 ✅ **E2E test compatible** - Same method used in automated tests
 
 ### Quick Start
@@ -44,17 +44,19 @@ The email verification system has two ways to retrieve verification tokens for t
 
 ### Why This Method?
 
-✅ **More secure** - Requires authentication, users can only access their own token  
-✅ **No secrets needed** - Works with just email/password  
-✅ **Production-safe** - Automatically disabled in production  
+✅ **More secure** - Requires authentication, users can only access their own token
+✅ **No secrets needed** - Works with just email/password
+✅ **Production-safe** - Automatically disabled in production
 ✅ **User-centric** - Follows "you can only see your own data" principle
 
 ⚠️ **Limitation**: Only works with already-verified accounts (can't login with unverified account)
 
 ### Endpoint Details```http
+
 GET /auth/verification-token
 Authorization: Bearer <jwt-token>
-```
+
+````
 
 **Response:**
 
@@ -65,7 +67,7 @@ Authorization: Bearer <jwt-token>
   "expiresAt": "2025-10-17T14:30:00.000Z",
   "verificationUrl": "http://localhost:3000/confirm-email?token=abc123def456..."
 }
-```
+````
 
 **Security:**
 
