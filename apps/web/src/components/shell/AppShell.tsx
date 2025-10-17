@@ -97,6 +97,13 @@ export default function AppShell({
                 ATS-friendly resume tailoring
               </div>
               <div className="flex items-center gap-3">
+                <Link
+                  href="/about"
+                  className="text-sm hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="About Resume Builder 9000"
+                >
+                  About
+                </Link>
                 <AuthButton />
               </div>
             </div>
