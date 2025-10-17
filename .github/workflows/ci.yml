@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -36,7 +36,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install SQLite dependencies
         run: |
@@ -65,7 +65,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install SQLite dependencies
         run: |
@@ -87,12 +87,20 @@ jobs:
         run: npm install wait-on --no-save
 
       - name: Start servers
-        run: npm run dev:ci &
-        env:
-          NODE_ENV: test
+        run: |
+          # Start dev servers in test mode with test routes enabled and secret from repo secrets
+          export ENABLE_TEST_ROUTES=true
+          export TEST_ROUTE_SECRET=${{ secrets.TEST_ROUTE_SECRET }}
+          export NODE_ENV=test
+          npm run dev:ci &
+          sleep 1
+          echo "Started dev:ci in background"
 
       - name: Wait for servers to be ready
         run: npx wait-on http://localhost:3000 http://localhost:4000
+        env:
+          ENABLE_TEST_ROUTES: true
+          TEST_ROUTE_SECRET: ${{ secrets.TEST_ROUTE_SECRET }}
 
       - name: Run E2E tests
         run: npx playwright test --config=apps/web/tests/e2e/playwright.config.ts
@@ -107,7 +115,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install SQLite dependencies
         run: |

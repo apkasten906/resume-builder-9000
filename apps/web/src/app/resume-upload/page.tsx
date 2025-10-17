@@ -10,6 +10,7 @@ import {
   type ParseJobDescriptionRequest,
   type ParseJobDescriptionResponse,
 } from '@/lib/api-client';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 type Parsed = { summary?: string; experience?: string[]; skills?: string[] };
 
@@ -70,97 +71,99 @@ export default function ResumeUploadPage(): React.ReactElement {
   }
 
   return (
-    <div className="grid gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload Your Resume</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          {/* Visually hidden input remains the real control */}
-          <input
-            ref={inputRef}
-            id="resumeFile"
-            data-testid="resume-upload-input"
-            type="file"
-            accept=".pdf,.docx,.txt,.md"
-            className="sr-only"
-            aria-invalid={!!error}
-            onChange={e => onFiles(e.currentTarget.files)}
-          />
-
-          {/* Accessible drop area: now a button for proper interactivity */}
-          <button
-            type="button"
-            tabIndex={0}
-            onKeyDown={handleKeyDown}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            aria-describedby="resume-help"
-            className="border-2 border-dashed rounded-2xl p-8 text-center bg-white dark:bg-zinc-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-            onClick={() => inputRef.current?.click()}
-          >
-            <p className="mb-2">Drag &amp; drop your resume here,</p>
-            <p className="mb-3">
-              or press <kbd>Enter</kbd> / <kbd>Space</kbd> to browse
-            </p>
-            <p id="resume-help" className="text-xs text-gray-600 dark:text-gray-300">
-              Accepted: PDF, DOCX, TXT, MD. Max size: 5MB.
-            </p>
-          </button>
-
-          {/* Error/selection feedback with SR-friendly announcements */}
-          <output aria-live="polite" className="min-h-[1rem] block">
-            {error && (
-              <div data-testid="resume-upload-error" className="text-red-600 mt-2" role="alert">
-                {error}
-              </div>
-            )}
-            {file && !error && (
-              <div className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                Selected: <Badge>{file.name}</Badge>
-              </div>
-            )}
-          </output>
-
-          <div>
-            <Button onClick={parse} disabled={!file}>
-              Parse
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {parsed && (
+    <ProtectedRoute>
+      <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Parsed Results</CardTitle>
+            <CardTitle>Upload Your Resume</CardTitle>
           </CardHeader>
-          <CardContent className="grid md:grid-cols-3 gap-4">
-            <div className="md:col-span-3">
-              <h4 className="font-semibold mb-2">Summary</h4>
-              <p data-testid="parsed-summary" className="text-sm">
-                {parsed.summary}
+          <CardContent className="grid gap-4">
+            {/* Visually hidden input remains the real control */}
+            <input
+              ref={inputRef}
+              id="resumeFile"
+              data-testid="resume-upload-input"
+              type="file"
+              accept=".pdf,.docx,.txt,.md"
+              className="sr-only"
+              aria-invalid={!!error}
+              onChange={e => onFiles(e.currentTarget.files)}
+            />
+
+            {/* Accessible drop area: now a button for proper interactivity */}
+            <button
+              type="button"
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              aria-describedby="resume-help"
+              className="border-2 border-dashed rounded-2xl p-8 text-center bg-white dark:bg-zinc-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
+              onClick={() => inputRef.current?.click()}
+            >
+              <p className="mb-2">Drag &amp; drop your resume here,</p>
+              <p className="mb-3">
+                or press <kbd>Enter</kbd> / <kbd>Space</kbd> to browse
               </p>
-            </div>
+              <p id="resume-help" className="text-xs text-gray-600 dark:text-gray-300">
+                Accepted: PDF, DOCX, TXT, MD. Max size: 5MB.
+              </p>
+            </button>
+
+            {/* Error/selection feedback with SR-friendly announcements */}
+            <output aria-live="polite" className="min-h-[1rem] block">
+              {error && (
+                <div data-testid="resume-upload-error" className="text-red-600 mt-2" role="alert">
+                  {error}
+                </div>
+              )}
+              {file && !error && (
+                <div className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                  Selected: <Badge>{file.name}</Badge>
+                </div>
+              )}
+            </output>
+
             <div>
-              <h4 className="font-semibold mb-2">Experience</h4>
-              <ul data-testid="parsed-experience" className="list-disc pl-4 space-y-1">
-                {parsed.experience?.map(x => (
-                  <li key={x}>{x}</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">Skills</h4>
-              <div data-testid="parsed-skills" className="flex gap-2 flex-wrap">
-                {parsed.skills?.map(s => (
-                  <Badge key={s}>{s}</Badge>
-                ))}
-              </div>
+              <Button onClick={parse} disabled={!file}>
+                Parse
+              </Button>
             </div>
           </CardContent>
         </Card>
-      )}
-    </div>
+
+        {parsed && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Parsed Results</CardTitle>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-3 gap-4">
+              <div className="md:col-span-3">
+                <h4 className="font-semibold mb-2">Summary</h4>
+                <p data-testid="parsed-summary" className="text-sm">
+                  {parsed.summary}
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Experience</h4>
+                <ul data-testid="parsed-experience" className="list-disc pl-4 space-y-1">
+                  {parsed.experience?.map(x => (
+                    <li key={x}>{x}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Skills</h4>
+                <div data-testid="parsed-skills" className="flex gap-2 flex-wrap">
+                  {parsed.skills?.map(s => (
+                    <Badge key={s}>{s}</Badge>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </ProtectedRoute>
   );
 }

@@ -1,8 +1,8 @@
 import { test as base, expect, Page } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 
-const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
-const API_BASE = process.env.API_BASE || 'http://localhost:4000';
+export const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
+export const API_BASE = process.env.API_BASE || 'http://localhost:4000';
 const COOKIE_NAME = process.env.AUTH_SESSION_COOKIE_NAME || 'session'; // ← match your app
 
 async function getBearerToken(): Promise<string> {

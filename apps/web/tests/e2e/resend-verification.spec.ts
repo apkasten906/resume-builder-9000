@@ -1,15 +1,36 @@
 import { test, expect } from '@playwright/test';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
+const API_BASE = process.env.API_BASE || 'http://localhost:4000';
 
-test.describe('Resend verification flow', () => {
-  test('shows resend link after 403 and resends email', async ({ page }) => {
-    // Log network requests/responses and runtime errors for debugging
-    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
-    page.on('pageerror', err => console.log('PAGE ERROR:', err.message, err.stack));
-    page.on('request', req => console.log('PAGE REQ:', req.method(), req.url()));
-    page.on('response', res => console.log('PAGE RES:', res.status(), res.url()));
+test.describe('Resend verification flow (real email outbox)', () => {
+  test.beforeEach(async ({ request }) => {
+    // Get test secret for authenticated requests
+    const secret = process.env.TEST_ROUTE_SECRET || '';
+    let headers: Record<string, string> | undefined;
+    if (secret) {
+      headers = { 'x-test-secret': secret };
+    } else {
+      headers = undefined;
+    }
 
+    // Seed an unverified user for testing
+    const seedRes = await request.post(`${API_BASE}/__test/seed-unverified-user`, {
+      headers,
+      data: { email: 'unverified@example.com', password: 'password123' },
+    });
+    if (!seedRes.ok()) {
+      throw new Error('Failed to seed unverified test user');
+    }
+
+    // Clear server-side email outbox before starting
+    const clearRes = await request.post(`${API_BASE}/__test/clear-emails`, { headers });
+    if (!clearRes.ok()) {
+      throw new Error('Failed to clear test email outbox');
+    }
+  });
+
+  test('shows resend link after 403 and actually records sent email', async ({ page, request }) => {
     // Intercept login to respond with 403 and requiresEmailConfirmation
     await page.route('**/api/auth/login', route => {
       route.fulfill({
@@ -19,35 +40,44 @@ test.describe('Resend verification flow', () => {
       });
     });
 
-    // Intercept verify-email to simulate success
-    await page.route('**/api/auth/verify-email', route => {
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: 'Verification email resent' }),
-      });
-    });
-
     await page.goto(`${BASE}/login`);
 
     await page.fill('input[name="email"]', 'unverified@example.com');
     await page.fill('input[name="password"]', 'password123');
 
-    // Click submit and wait for the mocked login flow to update the UI
+    // Click submit and wait for the UI to show the resend link
     await page.click('button[type="submit"]');
 
-    // Expect resend link to appear (backend provides an error message; exact text may vary)
-    try {
-      await page.locator('text=Resend Verification Email').waitFor({ timeout: 30000 });
-    } catch (err) {
-      // Dump page content for debugging
-      // eslint-disable-next-line no-console
-      console.log('PAGE CONTENT AFTER CLICK:\n', await page.content());
-      throw err;
-    }
+    await page.locator('text=Resend Verification Email').waitFor({ timeout: 30000 });
 
-    // Click resend and expect success message
+    // Click resend which will call the real API endpoint on the server
     await page.click('text=Resend Verification Email');
-    await expect(page.locator('text=Verification email')).toBeVisible();
+
+    // Expect success indicator in UI (wait for the success message to appear)
+    await expect(page.locator('text=Verification email resent successfully')).toBeVisible({
+      timeout: 10000,
+    });
+
+    // Poll the test outbox endpoint to find the sent email
+    const secret = process.env.TEST_ROUTE_SECRET || '';
+    let headers: Record<string, string> | undefined;
+    if (secret) {
+      headers = { 'x-test-secret': secret };
+    } else {
+      headers = undefined;
+    }
+    const res = await request.get(`${API_BASE}/__test/emails`, { headers });
+    if (!res.ok()) {
+      throw new Error('Failed to fetch test email outbox');
+    }
+    const outbox = (await res.json()) as Array<{ to: string; subject: string; text: string }>;
+
+    expect(Array.isArray(outbox)).toBeTruthy();
+    const found = outbox.find(
+      e =>
+        e.to === 'unverified@example.com' &&
+        /Confirm your Resume Builder 9000 account/.test(e.subject)
+    );
+    expect(found).toBeTruthy();
   });
 });

@@ -1,5 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import fs from 'node:fs';
+import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 
 import applicationsRoutes from './routes/applications.js';
@@ -13,8 +15,21 @@ import { openApiSpec } from './utils/openapi.js';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables. Prefer the repository root .env when present so
+// a developer can set ENABLE_TEST_ROUTES / TEST_ROUTE_SECRET at the repo level
+// and have all workspace packages pick it up in development.
+try {
+  const repoRoot = path.resolve(__dirname, '../../..');
+  const rootEnv = path.join(repoRoot, '.env');
+  if (fs.existsSync(rootEnv)) {
+    dotenv.config({ path: rootEnv });
+  } else {
+    dotenv.config();
+  }
+} catch (err) {
+  // Fallback to default behavior
+  dotenv.config();
+}
 
 // Create Express app
 const app = express();
@@ -38,6 +53,7 @@ if (!port || Number.isNaN(port)) {
 // Middleware
 app.use(httpLogger); // HTTP request logging
 app.use(cors());
+import testSupportRoutes from './routes/test-support.js';
 app.use(express.json());
 app.use('/auth', authRoutes);
 
@@ -82,6 +98,14 @@ app.use(
  *                   type: string
  *                   example: 2025-09-13T00:00:00.000Z
  */
+
+// Mount test-support routes when running in test mode or when explicitly enabled.
+// These routes expose test helpers (e.g., clearing or reading the in-memory email outbox)
+const enableTestRoutes =
+  process.env.NODE_ENV === 'test' || process.env.ENABLE_TEST_ROUTES === 'true';
+if (enableTestRoutes) {
+  app.use('/', testSupportRoutes);
+}
 
 // Error handling middleware (must be after routes)
 app.use(errorLogger);

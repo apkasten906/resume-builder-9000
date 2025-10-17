@@ -68,15 +68,23 @@ test.describe('User registration flow', () => {
   test('completes the multi-step registration process', async ({ page }) => {
     const uniqueEmail = `playwright-${Date.now()}@example.com`;
 
-    await page.goto(`${WEB_BASE}/register`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${WEB_BASE}/register`, { waitUntil: 'networkidle' });
+
+    // Wait for the registration form to be fully loaded and interactive
+    await page.waitForSelector('input[name="email"]', { state: 'visible', timeout: 10000 });
+
     await page.getByLabel('Email').fill(uniqueEmail);
     await page.getByRole('button', { name: 'Continue' }).click();
 
+    // Wait for step 2 (security/password) to render
+    await page.waitForSelector('input[name="password"]', { state: 'visible', timeout: 10000 });
     await page.getByLabel('Password', { exact: true }).fill('ValidPassword1!');
     await page.getByLabel('Confirm Password').fill('ValidPassword1!');
     await expect(page.getByText('Password must include:')).toBeVisible();
     await page.getByRole('button', { name: 'Continue' }).click();
 
+    // Wait for step 3 (profile/full name) to render
+    await page.waitForSelector('input[name="fullName"]', { state: 'visible', timeout: 10000 });
     await page.getByLabel('Full Name').fill('Playwright User');
 
     // Submit via the client so the UI shows the "Check your email" screen
@@ -88,8 +96,8 @@ test.describe('User registration flow', () => {
     // Confirm that the outbox contains the verification email and obtain token
     const token = await waitForVerificationToken(uniqueEmail);
 
-    await page.goto(`${WEB_BASE}/confirm-email?token=${token}`, { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText(/We confirmed/i)).toBeVisible();
+    await page.goto(`${WEB_BASE}/confirm-email?token=${token}`, { waitUntil: 'networkidle' });
+    await expect(page.getByText(/We confirmed/i)).toBeVisible({ timeout: 10000 });
     await page.getByRole('link', { name: 'Go to login' }).click();
 
     await page.getByLabel('Email').fill(uniqueEmail);
@@ -102,10 +110,16 @@ test.describe('User registration flow', () => {
   });
 
   test('surfaces validation errors for weak passwords and duplicate emails', async ({ page }) => {
-    await page.goto(`${WEB_BASE}/register`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${WEB_BASE}/register`, { waitUntil: 'networkidle' });
+
+    // Wait for the registration form to be fully loaded and interactive
+    await page.waitForSelector('input[name="email"]', { state: 'visible', timeout: 10000 });
+
     await page.getByLabel('Email').fill('user@example.com');
     await page.getByRole('button', { name: 'Continue' }).click();
 
+    // Wait for step 2 (security/password) to render
+    await page.waitForSelector('input[name="password"]', { state: 'visible', timeout: 10000 });
     await page.getByLabel('Password', { exact: true }).fill('short');
     await page.getByLabel('Confirm Password').fill('short');
     await page.getByRole('button', { name: 'Continue' }).click();
