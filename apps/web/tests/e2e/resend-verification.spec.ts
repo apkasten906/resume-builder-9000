@@ -14,13 +14,14 @@ test.describe('Resend verification flow (real email outbox)', () => {
       headers = undefined;
     }
 
-    // Seed an unverified user for testing
+    // Seed an unverified user for testing (idempotent: creates or updates existing user)
     const seedRes = await request.post(`${API_BASE}/__test/seed-unverified-user`, {
       headers,
       data: { email: 'unverified@example.com', password: 'password123' },
     });
     if (!seedRes.ok()) {
-      throw new Error('Failed to seed unverified test user');
+      const body = await seedRes.text();
+      throw new Error(`Failed to seed unverified test user: ${seedRes.status()} - ${body}`);
     }
 
     // Clear server-side email outbox before starting
