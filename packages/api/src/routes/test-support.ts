@@ -56,7 +56,17 @@ function ensureTestAccess(req: Request, res: Response, next: NextFunction): void
   const secret = process.env.TEST_ROUTE_SECRET || '';
   const provided = req.get('x-test-secret') || '';
 
-  const ip = (req.ip || req.connection?.remoteAddress || '').toString();
+  // Extract client IP, considering proxy headers and socket remote address
+  let ip =
+    req.headers['x-forwarded-for']
+      ?.toString()
+      .split(',')
+      .map(s => s.trim())[0] ||
+    req.headers['x-real-ip']?.toString() ||
+    req.ip ||
+    req.socket?.remoteAddress ||
+    '';
+  ip = ip.toString();
   const isLocal =
     ip === '127.0.0.1' || ip === '::1' || ip.startsWith('::ffff:127.') || ip.startsWith('127.');
 

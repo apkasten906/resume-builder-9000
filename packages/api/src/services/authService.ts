@@ -100,7 +100,25 @@ function createToken(user: Pick<AuthenticatedUser, 'id' | 'email'>): string {
 }
 
 const VERIFICATION_TOKEN_BYTES = 32;
-const VERIFICATION_TOKEN_TTL_MINUTES = Number(process.env.EMAIL_VERIFICATION_TTL_MINUTES ?? '30');
+
+function getVerificationTokenTTLMinutes(): number {
+  const raw = process.env.EMAIL_VERIFICATION_TTL_MINUTES;
+  const DEFAULT_MINUTES = 30;
+  const MIN_MINUTES = 5;
+  const MAX_MINUTES = 1440; // 24 hours
+  const parsed = Number(raw);
+  if (
+    typeof raw === 'undefined' ||
+    !Number.isFinite(parsed) ||
+    parsed < MIN_MINUTES ||
+    parsed > MAX_MINUTES
+  ) {
+    return DEFAULT_MINUTES;
+  }
+  return parsed;
+}
+
+const VERIFICATION_TOKEN_TTL_MINUTES = getVerificationTokenTTLMinutes();
 
 function normalizeBaseUrl(url: string): string {
   return url.endsWith('/') ? url.slice(0, -1) : url;

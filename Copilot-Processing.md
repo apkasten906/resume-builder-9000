@@ -1647,7 +1647,67 @@ Backed up as `.bak` files for future restoration when auth system is enhanced.
 
 ---
 
-## NEW REQUEST: Issue #48 - PR Review Suggestions Implementation
+## COMPLETED: Issue #48 - PR Review Suggestions Implementation
+
+All 6 PR review suggestions completed + Test Explorer race condition fixed
+Commit: 1288741
+Issue closed as completed
+
+---
+
+## NEW REQUEST: Issue #49 - PR #38 2nd Review (8 Comments)
+
+### User Request
+
+Work through all 8 Copilot review comments from PR #38 second review
+
+- Issue URL: https://github.com/apkasten906/resume-builder-9000/issues/49
+
+### Overview
+
+8 code quality and security improvements from Copilot's 2nd PR review:
+
+1. **Common Password Patterns** - Limited dictionary, suggest using more comprehensive list or HaveIBeenPwned API
+2. **Env Variable Validation** - Add bounds checking for EMAIL_VERIFICATION_TTL_MINUTES (min 5, max 1440)
+3. **Token Retrieval Architecture** - Tight coupling to email outbox, suggest refactoring for cleaner abstraction
+4. **Console.error in Production** - Remove from register/page.tsx or replace with proper logging
+5. **Console.log in Production** - Remove from ProtectedRoute.tsx or wrap in NODE_ENV check
+6. **Deprecated Connection Property** - Use req.socket.remoteAddress + proper proxy header handling
+7. **Env Variable Whitelist** - Consider whitelist of allowed env vars instead of just format validation
+8. **Already Fixed** - Password pattern, type interfaces, error handling, JSON logging, protected console, env regex (from issue #48)
+
+### Action Plan
+
+#### Phase 1: Security & Validation Improvements ✅
+
+- [x] Add bounds checking for EMAIL_VERIFICATION_TTL_MINUTES (5-1440 minutes)
+- [x] Update deprecated req.connection to req.socket.remoteAddress with proxy headers
+- [x] Document password dictionary limitation (defer HaveIBeenPwned integration to future issue)
+
+#### Phase 2: Production Code Cleanup ✅
+
+- [x] Remove/protect console.error in apps/web/src/app/register/page.tsx
+- [x] Remove/protect console.log in apps/web/src/components/auth/ProtectedRoute.tsx
+
+**Changes Made:**
+
+1. **authService.ts**: Added getVerificationTokenTTLMinutes() with bounds checking (5-1440 min)
+2. **test-support.ts**: Replaced req.connection with req.socket.remoteAddress + proxy headers
+3. **register/page.tsx**: Wrapped console.error in NODE_ENV === 'development' check
+4. **ProtectedRoute.tsx**: Wrapped console.log in NODE_ENV === 'development' check
+
+#### Phase 3: Architecture Review
+
+- [ ] Document token retrieval coupling issue (defer refactoring to future issue)
+- [ ] Document env variable whitelist suggestion (current validation is sufficient for now)
+
+#### Phase 4: Testing & Commit
+
+- [ ] Run unit tests for affected packages
+- [ ] Run E2E tests to verify no regressions
+- [ ] Update documentation
+- [ ] Stage and commit changes
+- [ ] Update issue #49 status on GitHub
 
 ### User Request
 
@@ -1716,8 +1776,8 @@ Note: According to issue comment, all changes were implemented in commit `8407e0
 - [x] Fix Test Explorer issue with registration-flow test
 - [x] Update test to use test-support endpoints instead of file I/O
 - [x] Stage changes
-- [x] Commit with detailed message
-- [ ] Update issue #48 status on GitHub
+- [x] Commit with detailed message (commit 1288741)
+- [x] Update issue #48 status on GitHub (closed as completed)
 
 **Additional Fix Applied:**
 
