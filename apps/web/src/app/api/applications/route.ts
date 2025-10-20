@@ -18,7 +18,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     headers['Authorization'] = `Bearer ${sessionCookie.value}`;
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/applications`, {
+  const res = await fetch(`${process.env.API_BASE}/applications`, {
     headers,
     credentials: 'include' as RequestCredentials,
   });
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     headers['Authorization'] = `Bearer ${sessionCookie.value}`;
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/applications`, {
+  const res = await fetch(`${process.env.API_BASE}/applications`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),

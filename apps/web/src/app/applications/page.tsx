@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { toast } from '@/components/ui/toaster';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 type AppRow = { id: string; company: string; role: string; stage: string; lastUpdated: string };
 
@@ -176,34 +177,36 @@ const ApplicationsPage: React.FC = () => {
   };
 
   return (
-    <div className="grid gap-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Applications</CardTitle>
-          <Button variant="secondary" size="sm" onClick={load}>
-            Refresh
-          </Button>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid md:grid-cols-3 gap-3">
-            <Input
-              label="Filter"
-              placeholder="Search company or role..."
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-            />
-            <Input label="Company" value={company} onChange={e => setCompany(e.target.value)} />
-            <div className="grid grid-cols-[1fr_auto] gap-2">
-              <Input label="Role" value={role} onChange={e => setRole(e.target.value)} />
-              <Button onClick={add} disabled={!company || !role}>
-                Add
-              </Button>
+    <ProtectedRoute>
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Applications</CardTitle>
+            <Button variant="secondary" size="sm" onClick={load}>
+              Refresh
+            </Button>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid md:grid-cols-3 gap-3">
+              <Input
+                label="Filter"
+                placeholder="Search company or role..."
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+              />
+              <Input label="Company" value={company} onChange={e => setCompany(e.target.value)} />
+              <div className="grid grid-cols-[1fr_auto] gap-2">
+                <Input label="Role" value={role} onChange={e => setRole(e.target.value)} />
+                <Button onClick={add} disabled={!company || !role}>
+                  Add
+                </Button>
+              </div>
             </div>
-          </div>
-          {renderContent()}
-        </CardContent>
-      </Card>
-    </div>
+            {renderContent()}
+          </CardContent>
+        </Card>
+      </div>
+    </ProtectedRoute>
   );
 };
 

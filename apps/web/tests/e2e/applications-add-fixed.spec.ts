@@ -1,4 +1,4 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { testWithAuth } from './test-setup';
 import { testLogger } from './utils/test-logger';
 
