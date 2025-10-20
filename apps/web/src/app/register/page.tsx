@@ -167,6 +167,15 @@ export default function RegisterPage(): ReactElement {
           return { error: 'Invalid response from server', parseError: true };
         });
 
+        // Handle malformed server response
+        if (data?.parseError) {
+          setErrors(prev => ({
+            ...prev,
+            general: 'Malformed server response. Please try again later.',
+          }));
+          return;
+        }
+
         if (!response.ok) {
           const message = typeof data?.error === 'string' ? data.error : 'Registration failed';
           const field = data?.field as keyof FormErrors | undefined;

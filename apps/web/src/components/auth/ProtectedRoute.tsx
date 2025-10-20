@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
@@ -24,12 +24,25 @@ export function ProtectedRoute({
 }): React.ReactElement | null {
   const { authenticated, checking } = useAuth();
   const router = useRouter();
+  const mountCheckDone = useRef(false);
 
+  // First useEffect: Check on mount (runs once)
+  useEffect(() => {
+    if (!mountCheckDone.current && !checking && !authenticated) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔒 ProtectedRoute: Mount check - redirecting unauthenticated user');
+      }
+      router.push('/');
+      mountCheckDone.current = true;
+    }
+  }, []); // Empty deps - only runs on mount
+
+  // Second useEffect: Watch for auth state changes
   useEffect(() => {
     // Only redirect once we've finished checking auth state
     if (!checking && !authenticated) {
       if (process.env.NODE_ENV !== 'production') {
-        console.log('🔒 ProtectedRoute: User not authenticated, redirecting to home page');
+        console.log('🔒 ProtectedRoute: Auth state changed - redirecting to home page');
       }
       router.push('/');
     }
