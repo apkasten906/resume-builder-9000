@@ -1,3 +1,6 @@
+// IMPORTANT: Load environment variables FIRST before any other imports
+import './env.js';
+
 import express from 'express';
 import dotenv from 'dotenv';
 import fs from 'node:fs';
@@ -15,21 +18,7 @@ import { openApiSpec } from './utils/openapi.js';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 
-// Load environment variables. Prefer the repository root .env when present so
-// a developer can set ENABLE_TEST_ROUTES / TEST_ROUTE_SECRET at the repo level
-// and have all workspace packages pick it up in development.
-try {
-  const repoRoot = path.resolve(__dirname, '../../..');
-  const rootEnv = path.join(repoRoot, '.env');
-  if (fs.existsSync(rootEnv)) {
-    dotenv.config({ path: rootEnv });
-  } else {
-    dotenv.config();
-  }
-} catch (err) {
-  // Fallback to default behavior
-  dotenv.config();
-}
+// Environment variables are now loaded via env.ts import above
 
 // Create Express app
 const app = express();
