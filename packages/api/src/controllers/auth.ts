@@ -57,6 +57,9 @@ export async function login(req: Request, res: Response): Promise<Response> {
         requiresEmailConfirmation: true,
       });
     }
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Login failed:', error);
+    }
     return res.status(500).json({ error: 'Login failed. Please try again.' });
   }
 }
@@ -137,6 +140,9 @@ export async function register(req: Request, res: Response): Promise<Response> {
         unmet: error.unmetRequirements,
       });
     }
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Registration failed:', error);
+    }
     return res.status(500).json({ error: 'Registration failed. Please try again.' });
   }
 }
@@ -172,6 +178,9 @@ export async function verifyEmail(req: Request, res: Response): Promise<Response
     if (error instanceof ExpiredVerificationTokenError) {
       return res.status(410).json({ error: 'Verification link has expired.' });
     }
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Email verification failed:', error);
+    }
     return res.status(500).json({ error: 'Email verification failed. Please try again.' });
   }
 }
@@ -192,6 +201,9 @@ export async function resendVerification(req: Request, res: Response): Promise<R
       }
       if (error.message === 'Email already confirmed') {
         return res.status(400).json({ error: 'Email already confirmed.' });
+      }
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Failed to resend verification email:', error.message);
       }
     }
     return res.status(500).json({ error: 'Failed to resend verification email.' });

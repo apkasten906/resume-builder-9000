@@ -57,7 +57,9 @@ const hashedPassword = bcrypt.hashSync('ValidPassword1!', saltRounds);
 const hasNameColumn = userColumns.some(col => col.name === 'name');
 const hasEmailConfirmedColumn = userColumns.some(col => col.name === 'email_confirmed');
 
-// Generate a UUID for the test user
+// Well-known test UUID for consistent E2E test data
+// This fixed UUID ensures predictable user IDs across all E2E tests,
+// making assertions and test data management reliable
 const userId = '00000000-0000-0000-0000-000000000001';
 
 let insert;
