@@ -252,7 +252,7 @@ describe('ProtectedRoute', () => {
 
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('ProtectedRoute: User not authenticated, redirecting to home page')
+        expect.stringContaining('ProtectedRoute: Auth state changed - redirecting to home page')
       );
     });
 
