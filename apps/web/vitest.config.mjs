@@ -5,6 +5,11 @@ import path from 'node:path';
 
 // Add comment to indicate ESM usage
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   esbuild: {
     jsxFactory: 'React.createElement',
     jsxFragment: 'React.Fragment',

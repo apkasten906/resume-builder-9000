@@ -1,5 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import fs from 'node:fs';
+import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 
 import applicationsRoutes from './routes/applications.js';
@@ -13,16 +15,49 @@ import { openApiSpec } from './utils/openapi.js';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables. Prefer the repository root .env when present so
+// a developer can set ENABLE_TEST_ROUTES / TEST_ROUTE_SECRET at the repo level
+// and have all workspace packages pick it up in development.
+try {
+  const repoRoot = path.resolve(__dirname, '../../..');
+  const rootEnv = path.join(repoRoot, '.env');
+  if (fs.existsSync(rootEnv)) {
+    dotenv.config({ path: rootEnv });
+  } else {
+    dotenv.config();
+  }
+} catch (err) {
+  // Fallback to default behavior
+  dotenv.config();
+}
 
 // Create Express app
 const app = express();
-const port = process.env.API_BASE || 4000;
+const defaultPort = 4000;
+const apiBase = process.env.API_BASE;
+let port = Number(process.env.PORT || process.env.API_PORT);
+
+if (!port || Number.isNaN(port)) {
+  if (apiBase) {
+    try {
+      const parsed = new URL(apiBase);
+      port = Number(parsed.port) || defaultPort;
+    } catch {
+      port = defaultPort;
+    }
+  } else {
+    port = defaultPort;
+  }
+}
 
 // Middleware
 app.use(httpLogger); // HTTP request logging
 app.use(cors());
+// NOTE: We purposely avoid a static import of test-support here because
+// ESM static imports are hoisted and would execute before dotenv.config()
+// runs above, causing process.env values such as NODE_ENV to be undefined
+// inside the test-support module. We'll dynamically import the module after
+// environment variables have been loaded and evaluated.
 app.use(express.json());
 app.use('/auth', authRoutes);
 
@@ -68,20 +103,44 @@ app.use(
  *                   example: 2025-09-13T00:00:00.000Z
  */
 
-// Error handling middleware (must be after routes)
-app.use(errorLogger);
+// Mount test-support routes when running in test mode or when explicitly enabled.
+// Use a dynamic import to ensure dotenv has already populated process.env.
+const enableTestRoutes =
+  process.env.NODE_ENV === 'test' || process.env.ENABLE_TEST_ROUTES === 'true';
 
-// Initialize database
-try {
-  connectDatabase();
+async function mountOptionalRoutesAndStart() {
+  if (enableTestRoutes) {
+    // dynamic import so the module sees the environment variables loaded above
+    // and so logs like NODE_ENV are accurate.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- dynamic import
+      const module = await import('./routes/test-support.js');
+      const testSupportRoutes = module.default;
+      app.use('/', testSupportRoutes);
+    } catch (err) {
+      // If test routes fail to load, log but continue startup (non-fatal)
+      console.warn('[index] Failed to load test-support routes:', err);
+    }
+  }
 
-  // Start server
-  app.listen(port, () => {
-    logger.info(`API server running on http://localhost:${port}`);
-  });
-} catch (err) {
-  logger.error('Failed to connect to database:', { error: err });
-  process.exit(1);
+  // Error handling middleware (must be after routes)
+  app.use(errorLogger);
+
+  // Initialize database and start server
+  try {
+    connectDatabase();
+
+    // Start server
+    app.listen(port, () => {
+      logger.info(`API server running on http://localhost:${port}`);
+    });
+  } catch (err) {
+    logger.error('Failed to connect to database:', { error: err });
+    process.exit(1);
+  }
 }
+
+// Execute mounting and startup
+mountOptionalRoutesAndStart();
 
 export default app;

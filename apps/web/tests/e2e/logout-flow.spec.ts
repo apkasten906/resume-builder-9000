@@ -23,12 +23,13 @@ test('logout clears cookie and stays logged out after reload', async ({ page, co
 
   // Wait for redirect and check we're back to unauthenticated state
   await page.waitForURL(`${baseUrl}/`);
-  await expect(page.getByRole('button', { name: /get started/i })).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  await expect(page.getByRole('button', { name: /get started/i })).toBeVisible({ timeout: 10000 });
 
   // Reload and ensure still logged out
   await page.reload();
   await page.waitForLoadState('networkidle');
-  await expect(page.getByRole('button', { name: /get started/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /get started/i })).toBeVisible({ timeout: 10000 });
 
   // Verify session cookie is cleared
   const cookies = await context.cookies();

@@ -233,3 +233,13 @@ export {
   testLogger,
   type TestLoggerOptions,
 } from './logger.js';
+
+// Authentication utilities
+export {
+  PASSWORD_POLICY_RULES,
+  evaluatePassword,
+  validatePassword,
+  type PasswordRequirement,
+  type PasswordRequirementStatus,
+  type PasswordValidationResult,
+} from './auth/passwordPolicy.js';
