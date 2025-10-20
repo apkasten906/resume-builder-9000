@@ -98,7 +98,13 @@ test.describe('User registration flow', () => {
 
     await page.goto(`${WEB_BASE}/confirm-email?token=${token}`, { waitUntil: 'networkidle' });
     await expect(page.getByText(/We confirmed/i)).toBeVisible({ timeout: 10000 });
-    await page.getByRole('link', { name: 'Go to login' }).click();
+    // Click the confirm-email return link. Prefer a stable test id if present.
+    const goLoginByTestId = page.locator('[data-testid="confirm-email-go-login"]');
+    if (await goLoginByTestId.count()) {
+      await goLoginByTestId.first().click();
+    } else {
+      await page.getByRole('link', { name: 'Go To Login' }).click();
+    }
 
     await page.getByLabel('Email').fill(uniqueEmail);
     await page.getByLabel('Password').fill('ValidPassword1!');

@@ -34,13 +34,11 @@ if (process.env.DEBUG_TEST_ROUTES === 'true') {
     '[test-support] DEBUG_TEST_ROUTES enabled: mounting unprotected /__test/debug/status'
   );
   router.get('/__test/debug/status', (_req, res) => {
-    return res
-      .status(200)
-      .json({
-        ok: true,
-        enabled: process.env.ENABLE_TEST_ROUTES === 'true',
-        nodeEnv: process.env.NODE_ENV,
-      });
+    return res.status(200).json({
+      ok: true,
+      enabled: process.env.ENABLE_TEST_ROUTES === 'true',
+      nodeEnv: process.env.NODE_ENV,
+    });
   });
 }
 
@@ -149,30 +147,79 @@ if (isTestEnvironment) {
       const bcrypt = await import('bcryptjs');
       const { randomUUID } = await import('crypto');
 
-      // Check if user already exists
-      const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email) as
-        | { id: string }
-        | undefined;
-      if (existing) {
-        // Update existing user to be unverified
-        db.prepare('UPDATE users SET email_confirmed = 0 WHERE email = ?').run(email);
-        return res.status(200).json({ ok: true, userId: existing.id, existed: true });
+      // Upsert behaviour: delete any existing test user with the same email, then insert a fresh
+      // unverified user record. This guarantees idempotent test state and resets password.
+      try {
+        const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email) as
+          | { id: string }
+          | undefined;
+
+        if (existing) {
+          // Remove existing record completely to avoid accumulating Playwright test users
+          db.prepare('DELETE FROM users WHERE id = ?').run(existing.id);
+        }
+
+        const userId = randomUUID();
+        const passwordHash = await bcrypt.hash(password, 10);
+        const createdAt = new Date().toISOString();
+
+        db.prepare(
+          'INSERT INTO users (id, email, password_hash, email_confirmed, created_at) VALUES (?, ?, ?, 0, ?)'
+        ).run(userId, email, passwordHash, createdAt);
+
+        return res.status(201).json({ ok: true, userId, existed: Boolean(existing) });
+      } catch (e) {
+        // eslint-disable-next-line no-console -- test route error visibility
+        console.warn('[test-support] Upsert failed in seed-unverified-user', e);
+        return res.status(500).json({ error: 'Failed to seed unverified user' });
       }
-
-      // Create new unverified user
-      const userId = randomUUID();
-      const passwordHash = await bcrypt.hash(password, 10);
-      const createdAt = new Date().toISOString();
-
-      db.prepare(
-        'INSERT INTO users (id, email, password_hash, email_confirmed, created_at) VALUES (?, ?, ?, 0, ?)'
-      ).run(userId, email, passwordHash, createdAt);
-
-      return res.status(201).json({ ok: true, userId, existed: false });
     } catch (err) {
       // eslint-disable-next-line no-console -- test route error visibility
       console.warn('[test-support] Failed to seed unverified user', err);
       return res.status(500).json({ error: 'Failed to seed unverified user' });
+    }
+  });
+
+  // Test-only endpoint to delete a user by email (secure: respects ensureTestAccess)
+  router.post('/__test/delete-user', async (req, res) => {
+    try {
+      // eslint-disable-next-line no-console -- debug visibility
+      console.info('[test-support] POST /__test/delete-user called');
+      const { email } = req.body || {};
+      if (!email) return res.status(400).json({ error: 'email is required' });
+
+      const db = connectDatabase();
+      const row = db.prepare('SELECT id FROM users WHERE email = ?').get(email) as
+        | { id: string }
+        | undefined;
+      if (!row) return res.status(404).json({ error: 'User not found' });
+
+      db.prepare('DELETE FROM users WHERE id = ?').run(row.id);
+      return res.status(200).json({ ok: true, deletedId: row.id });
+    } catch (err) {
+      // eslint-disable-next-line no-console -- test route error visibility
+      console.warn('[test-support] Failed to delete user', err);
+      return res.status(500).json({ error: 'Failed to delete user' });
+    }
+  });
+
+  // Test-only endpoint to cleanup Playwright/test users by email prefix (e.g. 'pw-' or 'playwright-')
+  router.post('/__test/cleanup-playwright-users', async (_req, res) => {
+    try {
+      // eslint-disable-next-line no-console -- debug visibility
+      console.info('[test-support] POST /__test/cleanup-playwright-users called');
+      const db = connectDatabase();
+      // Delete accounts where email starts with typical test prefixes
+      const prefixes = ['pw-', 'playwright-', 'test-'];
+      const likeClauses = prefixes.map(() => 'email LIKE ?').join(' OR ');
+      const params = prefixes.map(p => `${p}%`);
+      const stmt = db.prepare(`DELETE FROM users WHERE ${likeClauses}`);
+      const info = stmt.run(...params);
+      return res.status(200).json({ ok: true, changes: info.changes });
+    } catch (err) {
+      // eslint-disable-next-line no-console -- test route error visibility
+      console.warn('[test-support] Failed to cleanup playwright users', err);
+      return res.status(500).json({ error: 'Failed to cleanup playwright users' });
     }
   });
 }

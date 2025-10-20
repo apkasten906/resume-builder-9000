@@ -2,10 +2,15 @@ import { execSync } from 'node:child_process';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '../../../..');
+
+// Load repo root .env file before running setup
+dotenv.config({ path: path.join(repoRoot, '.env') });
+
 const defaultDbPath = path.join(repoRoot, 'packages/api/test-e2e.db');
 
 export default async function globalSetup(): Promise<void> {
@@ -23,25 +28,25 @@ export default async function globalSetup(): Promise<void> {
     APP_BASE_URL: process.env.APP_BASE_URL ?? 'http://localhost:3000',
   };
 
-  const skipBuild = sharedEnv.PLAYWRIGHT_SKIP_BUILD === '1';
+  // const skipBuild = sharedEnv.PLAYWRIGHT_SKIP_BUILD === '1';
 
-  if (!skipBuild) {
-    execSync('npm run build --workspace=packages/api', {
-      cwd: repoRoot,
-      stdio: 'inherit',
-      env: sharedEnv,
-    });
+  // if (!skipBuild) {
+  //   execSync('npm run build --workspace=packages/api', {
+  //     cwd: repoRoot,
+  //     stdio: 'inherit',
+  //     env: sharedEnv,
+  //   });
 
-    execSync('npm run build --workspace=apps/web', {
-      cwd: repoRoot,
-      stdio: 'inherit',
-      env: {
-        ...sharedEnv,
-        NEXT_PUBLIC_API_BASE: sharedEnv.NEXT_PUBLIC_API_BASE ?? 'http://localhost:4000',
-        API_BASE: sharedEnv.API_BASE ?? 'http://localhost:4000',
-      },
-    });
-  }
+  //   execSync('npm run build --workspace=apps/web', {
+  //     cwd: repoRoot,
+  //     stdio: 'inherit',
+  //     env: {
+  //       ...sharedEnv,
+  //       API_BASE: sharedEnv.API_BASE ?? 'http://localhost:4000',
+  //       API_BASE: sharedEnv.API_BASE ?? 'http://localhost:4000',
+  //     },
+  //   });
+  // }
 
   execSync('node scripts/seed-users.js', {
     cwd: repoRoot,

@@ -77,10 +77,11 @@ function ConfirmEmailContent(): ReactElement {
             . You can sign in right away.
           </p>
           <a
-            href="/"
+            href="/login"
+            data-testid="confirm-email-go-login"
             className="inline-flex rounded-2xl bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
           >
-            Go to home
+            Go To Login
           </a>
         </div>
       )}

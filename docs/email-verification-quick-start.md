@@ -93,7 +93,7 @@
 **Limitation:**
 If you try this with an unverified account, you'll get:
 
-```
+```powershell
 ERROR: Login failed
 Your account exists but is not verified yet - this is expected!
 The authenticated endpoint requires a verified account to login.
@@ -142,6 +142,7 @@ For unverified accounts, use the test endpoint method:
 
 - ✅ **FIXED**: Script now auto-loads from `.env` file
 - If still seeing this, check that `.env` exists in repository root with:
+
   ```bash
   TEST_ROUTE_SECRET=IPvfKSyfZOzJ1dnFNWAIOeHQCLUVrZEEutf1Y+ZLmhY=
   ```

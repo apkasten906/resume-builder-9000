@@ -1,4 +1,4 @@
-﻿import { test, expect } from './test-setup';
+import { test, expect } from './test-setup';
 import { testLogger } from './utils/test-logger';
 
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
@@ -37,11 +37,11 @@ test.describe('Authentication Flow Redirects', () => {
 
     expect(currentUrl).toBe(WEB_BASE + '/');
     expect(currentUrl).not.toContain('/applications');
-    testLogger.log('✅ Login correctly redirected to root page');
+    testLogger.log('? Login correctly redirected to root page');
 
     // 6. Verify we're logged in by checking for authenticated content
     await expect(page.getByText('Welcome back')).toBeVisible();
-    testLogger.log('✅ Confirmed user is logged in on root page');
+    testLogger.log('? Confirmed user is logged in on root page');
   });
 
   test('Logout redirects to root page from protected Applications page', async ({ page }) => {
@@ -74,11 +74,11 @@ test.describe('Authentication Flow Redirects', () => {
 
     expect(currentUrl).toBe(WEB_BASE + '/');
     expect(currentUrl).not.toContain('/applications');
-    testLogger.log('✅ Logout correctly redirected to root page');
+    testLogger.log('? Logout correctly redirected to root page');
 
     // 6. Verify we're logged out by checking for "Get Started" button
     await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
-    testLogger.log('✅ Confirmed user is logged out on root page');
+    testLogger.log('? Confirmed user is logged out on root page');
   });
 
   test('Logout from any protected page redirects to root (Settings example)', async ({ page }) => {
@@ -110,11 +110,11 @@ test.describe('Authentication Flow Redirects', () => {
     testLogger.log(`After logout redirect: ${currentUrl}`);
 
     expect(currentUrl).toBe(WEB_BASE + '/');
-    testLogger.log('✅ Logout from Settings correctly redirected to root page');
+    testLogger.log('? Logout from Settings correctly redirected to root page');
 
     // 6. Verify logged out state
     await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
-    testLogger.log('✅ Confirmed user is logged out and can see Get Started button');
+    testLogger.log('? Confirmed user is logged out and can see Get Started button');
   });
 
   test('No 401 errors appear after logout redirect', async ({ page }) => {
@@ -171,10 +171,10 @@ test.describe('Authentication Flow Redirects', () => {
 
     // We expect no lingering 401 errors since we redirected away from protected content
     expect(errorPages).toBe(0);
-    testLogger.log('✅ No 401 error pages displayed after logout redirect');
+    testLogger.log('? No 401 error pages displayed after logout redirect');
 
     // Verify we're on a clean root page
     await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
-    testLogger.log('✅ Root page displays correctly without errors');
+    testLogger.log('? Root page displays correctly without errors');
   });
 });

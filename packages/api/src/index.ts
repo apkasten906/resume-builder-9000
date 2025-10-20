@@ -53,7 +53,11 @@ if (!port || Number.isNaN(port)) {
 // Middleware
 app.use(httpLogger); // HTTP request logging
 app.use(cors());
-import testSupportRoutes from './routes/test-support.js';
+// NOTE: We purposely avoid a static import of test-support here because
+// ESM static imports are hoisted and would execute before dotenv.config()
+// runs above, causing process.env values such as NODE_ENV to be undefined
+// inside the test-support module. We'll dynamically import the module after
+// environment variables have been loaded and evaluated.
 app.use(express.json());
 app.use('/auth', authRoutes);
 
@@ -100,27 +104,43 @@ app.use(
  */
 
 // Mount test-support routes when running in test mode or when explicitly enabled.
-// These routes expose test helpers (e.g., clearing or reading the in-memory email outbox)
+// Use a dynamic import to ensure dotenv has already populated process.env.
 const enableTestRoutes =
   process.env.NODE_ENV === 'test' || process.env.ENABLE_TEST_ROUTES === 'true';
-if (enableTestRoutes) {
-  app.use('/', testSupportRoutes);
+
+async function mountOptionalRoutesAndStart() {
+  if (enableTestRoutes) {
+    // dynamic import so the module sees the environment variables loaded above
+    // and so logs like NODE_ENV are accurate.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- dynamic import
+      const module = await import('./routes/test-support.js');
+      const testSupportRoutes = module.default;
+      app.use('/', testSupportRoutes);
+    } catch (err) {
+      // If test routes fail to load, log but continue startup (non-fatal)
+      console.warn('[index] Failed to load test-support routes:', err);
+    }
+  }
+
+  // Error handling middleware (must be after routes)
+  app.use(errorLogger);
+
+  // Initialize database and start server
+  try {
+    connectDatabase();
+
+    // Start server
+    app.listen(port, () => {
+      logger.info(`API server running on http://localhost:${port}`);
+    });
+  } catch (err) {
+    logger.error('Failed to connect to database:', { error: err });
+    process.exit(1);
+  }
 }
 
-// Error handling middleware (must be after routes)
-app.use(errorLogger);
-
-// Initialize database
-try {
-  connectDatabase();
-
-  // Start server
-  app.listen(port, () => {
-    logger.info(`API server running on http://localhost:${port}`);
-  });
-} catch (err) {
-  logger.error('Failed to connect to database:', { error: err });
-  process.exit(1);
-}
+// Execute mounting and startup
+mountOptionalRoutesAndStart();
 
 export default app;

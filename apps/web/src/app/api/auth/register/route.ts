@@ -21,7 +21,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     fullName = formData.get('fullName') as string | undefined;
   }
 
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
+  const apiBase = process.env.API_BASE || 'http://localhost:4000';
   const response = await fetch(`${apiBase}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

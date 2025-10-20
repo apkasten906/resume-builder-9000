@@ -1,5 +1,14 @@
 import { test as base, expect, Page } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Load repo root .env so TEST_ROUTE_SECRET and other vars are available
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, '../../../..');
+dotenv.config({ path: path.join(repoRoot, '.env') });
 
 export const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 export const API_BASE = process.env.API_BASE || 'http://localhost:4000';

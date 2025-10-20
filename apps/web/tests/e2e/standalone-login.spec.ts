@@ -1,4 +1,4 @@
-﻿// Removed unused import
+// Removed unused import
 import { test, expect } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 

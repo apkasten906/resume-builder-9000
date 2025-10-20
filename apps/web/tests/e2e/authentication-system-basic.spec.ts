@@ -1,4 +1,4 @@
-﻿import { test, expect } from './test-setup';
+import { test, expect } from './test-setup';
 import { testLogger } from './utils/test-logger';
 
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
