@@ -229,7 +229,10 @@ export async function getVerificationToken(req: Request, res: Response): Promise
       expiresAt: tokenData.expiresAt,
       verificationUrl: tokenData.verificationUrl,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('Failed to retrieve verification token:', error.message);
+    }
     return res.status(500).json({ error: 'Failed to retrieve verification token' });
   }
 }

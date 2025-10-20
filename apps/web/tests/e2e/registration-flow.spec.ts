@@ -1,15 +1,8 @@
 import { test, expect } from './test-setup';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
-import { readFile, rm } from 'node:fs/promises';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, '../../../..');
-const EMAIL_OUTBOX_PATH = path.join(repoRoot, 'packages/api/.tmp/email-outbox.json');
 
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 const API_BASE = process.env.API_BASE || 'http://localhost:4000';
+const TEST_SECRET = process.env.TEST_ROUTE_SECRET || '';
 
 type OutboxEntry = { to: string; metadata?: { token?: string; type?: string } };
 
@@ -17,8 +10,14 @@ async function waitForVerificationToken(email: string): Promise<string> {
   const timeoutAt = Date.now() + 10000;
   while (Date.now() < timeoutAt) {
     try {
-      const raw = await readFile(EMAIL_OUTBOX_PATH, 'utf-8');
-      const emails = JSON.parse(raw) as OutboxEntry[];
+      // Use test-support endpoint to get emails from in-memory outbox
+      const response = await fetch(`${API_BASE}/__test/emails`, {
+        headers: { 'x-test-secret': TEST_SECRET },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch emails: ${response.status}`);
+      }
+      const emails = (await response.json()) as OutboxEntry[];
       const match = [...emails]
         .reverse()
         .find(message => message.to === email && message.metadata?.type === 'email-verification');
@@ -26,8 +25,9 @@ async function waitForVerificationToken(email: string): Promise<string> {
       if (typeof token === 'string' && token.length > 0) {
         return token;
       }
-    } catch {
-      // File may not exist yet, retry shortly
+    } catch (err) {
+      // Endpoint may not be ready yet, retry shortly
+      console.error('Error fetching emails:', err);
     }
     await new Promise(resolve => setTimeout(resolve, 150));
   }
@@ -42,7 +42,15 @@ test.describe('User registration flow', () => {
       // Ignore logout failures; the cookie clearing below guarantees an anonymous state
     }
     await page.context().clearCookies();
-    await rm(EMAIL_OUTBOX_PATH, { force: true });
+
+    // Clear email outbox using test-support endpoint
+    try {
+      await page.request.post(`${API_BASE}/__test/clear-emails`, {
+        headers: { 'x-test-secret': TEST_SECRET },
+      });
+    } catch (err) {
+      console.warn('Failed to clear email outbox:', err);
+    }
 
     // Seed the duplicate user for the duplicate email test by calling the backend API directly.
     // Use JSON POST so the backend receives the expected content-type.
