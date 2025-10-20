@@ -27,9 +27,17 @@ Run the following commands to set up the project:
    API_BASE=4000
    NEXT_PUBLIC_API_BASE=http://localhost:4000
    JWT_SECRET=your-secret-key-here
+
+   # Email Configuration (optional - for sending real verification emails)
+   # Get your API key from https://resend.com (free tier: 100 emails/day)
+   # For testing, use: onboarding@resend.dev (no domain verification needed)
+   RESEND_API_KEY=re_your_api_key_here
+   RESEND_FROM_EMAIL=onboarding@resend.dev
    ```
 
    > **Note:** The frontend expects the API to be available at `http://localhost:4000` via the `NEXT_PUBLIC_API_BASE` environment variable. Update this in all environments as needed. The JWT_SECRET is used for secure authentication.
+   >
+   > **Email Setup:** By default, verification emails are stored in `.tmp/email-outbox.json` for development. To send real emails during testing, configure the Resend API key. See `docs/user-guides/email-setup-resend.md` for detailed setup instructions.
 
 3. Start the development server (for local development):
 
