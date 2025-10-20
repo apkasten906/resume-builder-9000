@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test-setup';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
 const API_BASE = process.env.API_BASE || 'http://localhost:4000';
@@ -12,9 +12,7 @@ test.describe('Resend verification flow (real email outbox)', () => {
       headers = { 'x-test-secret': secret };
     } else {
       headers = undefined;
-    }
-
-    // Seed an unverified user for testing (idempotent: creates or updates existing user)
+    } // Seed an unverified user for testing (idempotent: creates or updates existing user)
     const seedRes = await request.post(`${API_BASE}/__test/seed-unverified-user`, {
       headers,
       data: { email: 'unverified@example.com', password: 'password123' },
@@ -32,12 +30,13 @@ test.describe('Resend verification flow (real email outbox)', () => {
   });
 
   test('shows resend link after 403 and actually records sent email', async ({ page, request }) => {
-    // Intercept login to respond with 403 and requiresEmailConfirmation
-    await page.route('**/api/auth/login', route => {
-      route.fulfill({
-        status: 403,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: 'Email not verified', requiresEmailConfirmation: true }),
+    // Set route to add test header to login requests
+    await page.route('**/api/auth/login', async route => {
+      await route.continue({
+        headers: {
+          ...route.request().headers(),
+          'x-test-mode': 'unverified-email',
+        },
       });
     });
 
@@ -49,7 +48,7 @@ test.describe('Resend verification flow (real email outbox)', () => {
     // Click submit and wait for the UI to show the resend link
     await page.click('button[type="submit"]');
 
-    await page.locator('text=Resend Verification Email').waitFor({ timeout: 30000 });
+    await page.locator('text=Resend Verification Email').waitFor({ timeout: 10000 });
 
     // Click resend which will call the real API endpoint on the server
     await page.click('text=Resend Verification Email');

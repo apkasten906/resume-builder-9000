@@ -1,4 +1,4 @@
-﻿import { test, Page, APIRequestContext, Cookie } from '@playwright/test';
+import { test, Page, APIRequestContext, Cookie } from '@playwright/test';
 import { testLogger } from './utils/test-logger';
 
 // Import constants for URLs

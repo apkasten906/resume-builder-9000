@@ -9,7 +9,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   // Forward to backend API for validation
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
+  const apiBase = process.env.API_BASE || 'http://localhost:4000';
 
   try {
     const res = await fetch(`${apiBase}/auth/me`, {
