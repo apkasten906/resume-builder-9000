@@ -160,7 +160,10 @@ export default function RegisterPage(): ReactElement {
         });
 
         const data = await response.json().catch(err => {
-          console.error('Failed to parse JSON response:', err);
+          // Only log parsing errors in non-production environments
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Failed to parse JSON response:', err);
+          }
           return { error: 'Invalid response from server', parseError: true };
         });
 

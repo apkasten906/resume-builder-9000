@@ -28,7 +28,9 @@ export function ProtectedRoute({
   useEffect(() => {
     // Only redirect once we've finished checking auth state
     if (!checking && !authenticated) {
-      console.log('🔒 ProtectedRoute: User not authenticated, redirecting to home page');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔒 ProtectedRoute: User not authenticated, redirecting to home page');
+      }
       router.push('/');
     }
   }, [authenticated, checking, router]);
