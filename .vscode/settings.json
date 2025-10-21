@@ -52,5 +52,8 @@
   },
   "[sql]": {
     "editor.defaultFormatter": "dbcode.dbcode"
+  },
+  "[powershell]": {
+    "editor.defaultFormatter": "ms-vscode.powershell"
   }
 }

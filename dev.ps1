@@ -55,7 +55,8 @@ function Test-ServiceHealth {
 function GetLocalEnvVariable {
   param (
     [string]$RequiredVar = "",
-    [string]$EnvFilePath = "./.env"
+    [string]$EnvFilePath = "./.env",
+    [switch]$Debug = $false
   )
 
   $value = $null
@@ -69,7 +70,7 @@ function GetLocalEnvVariable {
     Get-Content $EnvFilePath | ForEach-Object {
       if ($_ -match "^($RequiredVar)=(.*)$") {
         $value = $matches[2].Trim()
-        Write-Host "[DEBUG] Loaded $RequiredVar from .env" $value -ForegroundColor Green
+        if ($Debug) { Write-Host "[DEBUG] Loaded $RequiredVar from .env" $value -ForegroundColor Green }
       }
     }
   }
@@ -149,11 +150,11 @@ try {
   $env:WEB_BASE = if (-not $env:WEB_BASE) { GetLocalEnvVariable -RequiredVar "WEB_BASE" } else { "http://localhost:3000" }
   $env:API_BASE = if (-not $env:API_BASE) { GetLocalEnvVariable -RequiredVar "API_BASE" } else { "http://localhost:4000" }
 
-  Write-Host "Web frontend URL: $($env:WEB_BASE)"
-  Write-Host "API server URL: $($env:API_BASE)"
+  Write-Host "Detected Web frontend URL: $($env:WEB_BASE)"
+  Write-Host "Detected API server URL: $($env:API_BASE)"
 
-  # Copy example environment file if it exists
-  if (Test-Path ".env.example") { Copy-Item -Path ".env.example" -Destination ".env" -Force }
+  # Copy example environment file if .env does not exist
+  if (-not (Test-Path ".env")) { Copy-Item -Path ".env.example" -Destination ".env" -Force }
 
   # Display config
   Write-Host "Starting Resume Builder 9000 in development mode" -ForegroundColor Green
@@ -239,18 +240,33 @@ See console output above for details.
     }
   }
 
-  # Kill any existing dev servers on ports 3000 and 4000 (API and Web)
-  Write-Host "Ensuring no stale dev servers are running..." -ForegroundColor Cyan
-  Get-Process | Where-Object { $_.ProcessName -match 'node' } | ForEach-Object {
-    try {
-      $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine
-      if ($cmdLine -match 'npm run dev(:stable)?' -and ($cmdLine -match 'packages\\api' -or $cmdLine -match 'apps\\web')) {
-        Write-Host "Killing stale dev server process: $($_.Id)" -ForegroundColor Yellow
-        Stop-Process -Id $_.Id -Force
+
+  # --- Robust port/process cleanup before starting servers ---
+
+  function Stop-PortProcess {
+    param([int]$Port)
+    $netstat = netstat -ano | Select-String ":$Port "
+    foreach ($line in $netstat) {
+      if ($line -match '\s+(\d+)$') {
+        $procId = $matches[1]
+        try {
+          Write-Host "Killing process on port $Port (PID: $procId)" -ForegroundColor Yellow
+          Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+        }
+        catch {
+          Write-Host ("Failed to kill process {0} on port {1}: {2}" -f $procId, $Port, $_) -ForegroundColor Red
+        }
       }
     }
-    catch {}
   }
+
+  $apiPort = $env:API_BASE.Split(':')[-1]
+  $webPort = $env:WEB_BASE.Split(':')[-1]
+
+  Write-Host "Ensuring no stale dev servers are running on ports $apiPort and $webPort..." -ForegroundColor Cyan
+  Stop-PortProcess -Port $apiPort
+  Stop-PortProcess -Port $webPort
+  # --- End port/process cleanup ---
 
   # Track running processes so we can stop them if needed
   $apiProcess = $null
@@ -264,7 +280,17 @@ See console output above for details.
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
 
-    $apiHealth = Test-ServiceHealth -Url $env:API_BASE -ServiceName "API server" -RequireSuccess:$true
+    # Use a guaranteed 200 endpoint for health check
+    $apiHealthUrl = $env:API_BASE
+    if ($apiHealthUrl -notlike "*/api/health*") {
+      if ($apiHealthUrl.TrimEnd('/') -match '^https?://[^/]+(:\d+)?$') {
+        $apiHealthUrl = "$apiHealthUrl/api/health"
+      }
+      else {
+        $apiHealthUrl = "$apiHealthUrl/health"
+      }
+    }
+    $apiHealth = Test-ServiceHealth -Url $apiHealthUrl -ServiceName "API server" -RequireSuccess:$true
     if (-not $apiHealth) {
       throw "API server failed to start"
     }

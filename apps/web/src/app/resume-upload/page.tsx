@@ -5,19 +5,24 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { validateFile } from './resume-upload-utils';
 import { toast } from '@/components/ui/toaster';
-import {
-  API,
-  type ParseJobDescriptionRequest,
-  type ParseJobDescriptionResponse,
-} from '@/lib/api-client';
-
-type Parsed = { summary?: string; experience?: string[]; skills?: string[] };
+import { API } from '@/lib/api-client';
 
 export default function ResumeUploadPage(): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [parsed, setParsed] = useState<Parsed | null>(null);
+  const [parsed, setParsed] = useState<{
+    summary?: string;
+    experience?: string[];
+    skills?: string[];
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+  // Dashboard uploads state for refresh
+  const [uploads, setUploads] = useState<
+    Array<{ fileName: string; lastUpdated: string; id: string }>
+  >([]);
+  const [uploadsLoading, setUploadsLoading] = useState(false);
+  const [uploadsError, setUploadsError] = useState<string | null>(null);
 
   function onFiles(files: FileList | null): void {
     if (!files || files.length === 0) return;
@@ -34,25 +39,62 @@ export default function ResumeUploadPage(): React.ReactElement {
 
   async function parse(): Promise<void> {
     if (!file) return;
-    // Prevent reading very large files into memory
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    if (file.size > MAX_SIZE) {
-      setError('File is too large. Maximum allowed size is 5MB.');
-      setFile(null);
-      return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Prevent reading very large files into memory
+      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+      if (file.size > MAX_SIZE) {
+        setError('File is too large. Maximum allowed size is 5MB.');
+        setFile(null);
+        return;
+      }
+
+      // Upload file to backend (multipart/form-data)
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadRes = await fetch('/api/resume', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!uploadRes.ok) {
+        const errJson = await uploadRes.json().catch(() => ({}));
+        setError(errJson.error || 'Failed to upload/parse resume.');
+        setLoading(false);
+        return;
+      }
+      const data = await uploadRes.json();
+      setParsed({
+        summary: data.summary,
+        experience: data.experience ?? [],
+        skills: data.skills ?? [],
+      });
+      toast({ title: 'Resume parsed', description: 'Extracted summary, experience, skills' });
+
+      // Refresh dashboard uploads after successful upload
+      setUploadsLoading(true);
+      setUploadsError(null);
+      try {
+        const res = await API.uploads.get<{
+          items: Array<{ fileName: string; lastUpdated: string; id: string }>;
+        }>('');
+        setUploads(res.items || []);
+      } catch {
+        // Use user-friendly, actionable message from story
+        setUploadsError(
+          'Apologies! We are having trouble retrieving your uploaded resumes right now.'
+        );
+      } finally {
+        setUploadsLoading(false);
+      }
+    } catch (error) {
+      setError('Failed to parse resume. Please try again or check your file format.');
+      console.error('Parse error:', error);
+    } finally {
+      setLoading(false);
     }
-    // Call your JD parser via our proxy (reuses your existing API)
-    const text = await file.text();
-    const data = await API.jobDescription.post<
-      ParseJobDescriptionRequest,
-      ParseJobDescriptionResponse
-    >({ text }, '/parse');
-    setParsed({
-      summary: data.title,
-      experience: data.requirements ?? [],
-      skills: data.keywords ?? [],
-    });
-    toast({ title: 'Resume parsed', description: 'Extracted summary, experience, skills' });
   }
 
   function handleDragOver(e: DragEvent<HTMLButtonElement>): void {
@@ -91,13 +133,20 @@ export default function ResumeUploadPage(): React.ReactElement {
           {/* Accessible drop area: now a button for proper interactivity */}
           <button
             type="button"
-            tabIndex={0}
-            onKeyDown={handleKeyDown}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
+            tabIndex={loading ? -1 : 0}
+            onKeyDown={loading ? undefined : handleKeyDown}
+            onDragOver={loading ? undefined : handleDragOver}
+            onDrop={loading ? undefined : handleDrop}
             aria-describedby="resume-help"
-            className="border-2 border-dashed rounded-2xl p-8 text-center bg-white dark:bg-zinc-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-            onClick={() => inputRef.current?.click()}
+            className={`border-2 border-dashed rounded-2xl p-8 text-center bg-white dark:bg-zinc-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={
+              loading
+                ? undefined
+                : (): void => {
+                    inputRef.current?.click();
+                  }
+            }
+            disabled={loading}
           >
             <p className="mb-2">Drag &amp; drop your resume here,</p>
             <p className="mb-3">
@@ -123,12 +172,45 @@ export default function ResumeUploadPage(): React.ReactElement {
           </output>
 
           <div>
-            <Button onClick={parse} disabled={!file}>
-              Parse
+            <Button onClick={parse} disabled={!file || loading} data-testid="parse-button">
+              {loading ? 'Uploading...' : 'Upload Resume'}
             </Button>
+
+            {/* Live region for upload status so screen readers announce progress */}
+            <div aria-live="polite" className="sr-only">
+              {loading ? 'Uploading resume, please wait.' : ''}
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Optionally show dashboard uploads after parse */}
+      {(uploadsLoading || uploadsError || uploads.length > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Resume Uploads</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {uploadsLoading && <div className="text-gray-500">Loading uploads...</div>}
+            {uploadsError && <div className="text-red-600">{uploadsError}</div>}
+            {!uploadsLoading && !uploadsError && (
+              <ul className="list-disc pl-4">
+                {uploads.slice(0, 10).map(u => (
+                  <li key={u.id} className="text-sm">
+                    {u.fileName}{' '}
+                    <span className="text-xs text-gray-500">
+                      ({new Date(u.lastUpdated).toLocaleDateString()})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!uploadsLoading && !uploadsError && uploads.length === 0 && (
+              <div className="text-gray-500">No uploads found.</div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {parsed && (
         <Card>
