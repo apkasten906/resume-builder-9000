@@ -9,7 +9,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     console.log('🍪 Logout API: All cookies:', allCookies);
 
     // Forward the logout request to the backend API
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/auth/logout`;
+    const backendUrl = `${process.env.API_BASE || 'http://localhost:4000'}/auth/logout`;
     console.log('🔗 Logout API: Backend URL:', backendUrl);
 
     // Get the session cookie to forward to backend

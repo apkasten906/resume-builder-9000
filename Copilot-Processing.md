@@ -1645,6 +1645,153 @@ Backed up as `.bak` files for future restoration when auth system is enhanced.
 
 **FINAL STATUS: COMPLETE - All cleanup and implementation finished successfully!** ✨
 
-```
+---
 
-```
+## COMPLETED: Issue #48 - PR Review Suggestions Implementation
+
+All 6 PR review suggestions completed + Test Explorer race condition fixed
+Commit: 1288741
+Issue closed as completed
+
+---
+
+## NEW REQUEST: Issue #49 - PR #38 2nd Review (8 Comments)
+
+### User Request
+
+Work through all 8 Copilot review comments from PR #38 second review
+
+- Issue URL: https://github.com/apkasten906/resume-builder-9000/issues/49
+
+### Overview
+
+8 code quality and security improvements from Copilot's 2nd PR review:
+
+1. **Common Password Patterns** - Limited dictionary, suggest using more comprehensive list or HaveIBeenPwned API
+2. **Env Variable Validation** - Add bounds checking for EMAIL_VERIFICATION_TTL_MINUTES (min 5, max 1440)
+3. **Token Retrieval Architecture** - Tight coupling to email outbox, suggest refactoring for cleaner abstraction
+4. **Console.error in Production** - Remove from register/page.tsx or replace with proper logging
+5. **Console.log in Production** - Remove from ProtectedRoute.tsx or wrap in NODE_ENV check
+6. **Deprecated Connection Property** - Use req.socket.remoteAddress + proper proxy header handling
+7. **Env Variable Whitelist** - Consider whitelist of allowed env vars instead of just format validation
+8. **Already Fixed** - Password pattern, type interfaces, error handling, JSON logging, protected console, env regex (from issue #48)
+
+### Action Plan
+
+#### Phase 1: Security & Validation Improvements ✅
+
+- [x] Add bounds checking for EMAIL_VERIFICATION_TTL_MINUTES (5-1440 minutes)
+- [x] Update deprecated req.connection to req.socket.remoteAddress with proxy headers
+- [x] Document password dictionary limitation (defer HaveIBeenPwned integration to future issue)
+
+#### Phase 2: Production Code Cleanup ✅
+
+- [x] Remove/protect console.error in apps/web/src/app/register/page.tsx
+- [x] Remove/protect console.log in apps/web/src/components/auth/ProtectedRoute.tsx
+
+**Changes Made:**
+
+1. **authService.ts**: Added getVerificationTokenTTLMinutes() with bounds checking (5-1440 min)
+2. **test-support.ts**: Replaced req.connection with req.socket.remoteAddress + proxy headers
+3. **register/page.tsx**: Wrapped console.error in NODE_ENV === 'development' check
+4. **ProtectedRoute.tsx**: Wrapped console.log in NODE_ENV === 'development' check
+
+#### Phase 3: Architecture Review
+
+- [ ] Document token retrieval coupling issue (defer refactoring to future issue)
+- [ ] Document env variable whitelist suggestion (current validation is sufficient for now)
+
+#### Phase 4: Testing & Commit
+
+- [ ] Run unit tests for affected packages
+- [ ] Run E2E tests to verify no regressions
+- [ ] Update documentation
+- [ ] Stage and commit changes
+- [ ] Update issue #49 status on GitHub
+
+### User Request
+
+Implement changes for PR 48 - Copilot review suggestions for Pull Request #38
+
+- Run tests to verify changes
+- Issue URL: https://github.com/apkasten906/resume-builder-9000/issues/48
+
+### Overview
+
+This issue tracks 6 code quality improvements from Copilot's PR review:
+
+1. Simplified Password Pattern Matching
+2. Added Type Interface for DB Queries
+3. Proper Error Type Handling
+4. Enhanced JSON Parse Error Logging
+5. Protected Console Logging
+6. Environment Variable Validation
+
+Note: According to issue comment, all changes were implemented in commit `8407e06`
+
+### Action Plan
+
+#### Phase 1: Verification ✅
+
+- [x] Read and verify each of the 6 files mentioned in the review
+- [x] Check if changes from commit 8407e06 are present in current branch
+- [x] Identify any missing implementations
+
+**Findings:**
+
+1. ✅ Password Pattern Matching - Line 47 in passwordPolicy.ts uses direct literal strings
+2. ✅ Type Interface for DB Queries - Lines 32-38 in authService.ts defines VerificationTokenRecord
+3. ⚠️ Error Type Handling - Line 229 in auth.ts still had `error: any` instead of `error: unknown`
+4. ✅ JSON Parse Error Logging - Line 169 in register/page.tsx has console.error
+5. ✅ Protected Console Logging - Lines 14-23 in test-support.ts wraps in NODE_ENV check
+6. ✅ Environment Variable Validation - Line 81 in test-email-verification.ps1 has regex validation
+
+#### Phase 2: Implementation ✅
+
+- [x] Implement missing error type handling in getVerificationToken function
+- [x] Ensure all security best practices are followed
+- [x] Follow OWASP guidelines for security improvements
+
+**Changes Made:**
+
+- Fixed `getVerificationToken` function in `packages/api/src/controllers/auth.ts`:
+  - Changed `catch (error: any)` to `catch (error: unknown)`
+  - Added proper instanceof Error check
+  - Added error logging for debugging
+
+#### Phase 3: Testing ✅
+
+- [x] Run unit tests for affected packages
+- [x] Run E2E tests to verify registration flow still works
+- [x] Verify no regressions introduced
+
+**Test Results:**
+
+- ✅ Auth Service Unit Tests: 12/12 passed
+- ✅ Registration Flow E2E: 2/2 passed (2.6s, 1.3s)
+- ✅ Resend Verification E2E: 1/1 passed (624ms)
+
+#### Phase 4: Documentation & Commit ✅
+
+- [x] Fix Test Explorer issue with registration-flow test
+- [x] Update test to use test-support endpoints instead of file I/O
+- [x] Stage changes
+- [x] Commit with detailed message (commit 1288741)
+- [x] Update issue #48 status on GitHub (closed as completed)
+
+**Additional Fix Applied:**
+
+- Registration flow test was timing out in Test Explorer
+- Root cause: Test was reading email-outbox.json file directly, racing with async file writes
+- Solution: Use `/__test/emails` and `/__test/clear-emails` endpoints instead
+- This uses the in-memory outbox directly, eliminating filesystem race conditions
+- Tests now pass consistently in both terminal and Test Explorer (2/2 passed in 5.3s)
+
+### Files to Review
+
+1. `packages/core/src/auth/passwordPolicy.ts` - Password pattern simplification
+2. `packages/api/src/services/authService.ts` - Type interface for DB queries
+3. `packages/api/src/controllers/auth.ts` - Error type handling
+4. `apps/web/src/app/register/page.tsx` - JSON parse error logging
+5. `packages/api/src/routes/test-support.ts` - Protected console logging
+6. `scripts/test-email-verification.ps1` - Environment variable validation

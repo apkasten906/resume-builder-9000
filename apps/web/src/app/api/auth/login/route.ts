@@ -15,7 +15,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     password = formData.get('password') as string;
   }
 
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
+  // TEST MODE: Check for test header to simulate 403 unverified email response
+  const testMode = req.headers.get('x-test-mode');
+  if (testMode === 'unverified-email') {
+    return NextResponse.json(
+      { error: 'Email not verified', requiresEmailConfirmation: true },
+      { status: 403 }
+    );
+  }
+
+  const apiBase = process.env.API_BASE || 'http://localhost:4000';
   const res = await fetch(`${apiBase}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -39,8 +48,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       });
     }
     return response;
-  } else {
-    // Return JSON error for failed login
-    return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
   }
+
+  const status = res.status || 401;
+  const errorPayload =
+    typeof data === 'object' && data !== null ? data : { error: 'Invalid email or password.' };
+
+  return NextResponse.json(errorPayload, { status });
 }

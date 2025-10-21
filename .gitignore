@@ -5,6 +5,8 @@
 
 # Environment files
 /.env
+.env.local
+**/.env.local
 
 # TypeScript cache
 *.tsbuildinfo
@@ -29,6 +31,7 @@ apps/web/out/
 
 # Temporary files created by other processes
 *.tmp
+**/.tmp/
 *.temp
 .DS_Store
 Thumbs.db
@@ -36,6 +39,7 @@ Thumbs.db
 # SQLite temporary files
 packages/api/resume.db-shm
 packages/api/resume.db-wal
+packages/api/test-e2e.db
 
 # Build output
 /dist/

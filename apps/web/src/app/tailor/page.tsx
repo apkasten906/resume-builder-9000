@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { flags } from '@/lib/flags';
 import { toast } from '@/components/ui/toaster';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 const TailorPage: React.FC = () => {
   const sample = [
@@ -127,57 +128,59 @@ const TailorPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Tailor Your Resume</h1>
+    <ProtectedRoute>
+      <div className="container mx-auto py-6">
+        <h1 className="text-3xl font-bold mb-6">Tailor Your Resume</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {'Tailoring Engine '}
-            {flags.aiTailoring && <Badge className="ml-2 bg-blue-100 text-blue-800">AI</Badge>}
-          </CardTitle>
-          <div className="text-sm text-gray-500 mt-1">
-            Optimize your resume bullets to match job requirements
-          </div>
-        </CardHeader>
-        <CardContent className="grid md:grid-cols-[1fr_2fr] gap-6">
-          <div className="space-y-4">
-            <div>
-              <div className="text-sm font-semibold mb-2">Score threshold: {threshold}%</div>
-              <input
-                type="range"
-                className="w-full"
-                min={0}
-                max={100}
-                step={5}
-                value={threshold}
-                onChange={e => setThreshold(parseInt(e.target.value))}
-              />
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Filter bullets by relevance score
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {'Tailoring Engine '}
+              {flags.aiTailoring && <Badge className="ml-2 bg-blue-100 text-blue-800">AI</Badge>}
+            </CardTitle>
+            <div className="text-sm text-gray-500 mt-1">
+              Optimize your resume bullets to match job requirements
+            </div>
+          </CardHeader>
+          <CardContent className="grid md:grid-cols-[1fr_2fr] gap-6">
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm font-semibold mb-2">Score threshold: {threshold}%</div>
+                <input
+                  type="range"
+                  className="w-full"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={threshold}
+                  onChange={e => setThreshold(parseInt(e.target.value))}
+                />
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Filter bullets by relevance score
+                </div>
+              </div>
+
+              <Button onClick={runTailor} disabled={isLoading} className="w-full">
+                {isLoading ? 'Processing...' : 'Run Tailor'}
+              </Button>
+
+              <div className="text-sm mt-4">
+                <h3 className="font-medium mb-2">Current Keywords:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {keywords.map(keyword => (
+                    <Badge key={keyword} className="bg-gray-200">
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <Button onClick={runTailor} disabled={isLoading} className="w-full">
-              {isLoading ? 'Processing...' : 'Run Tailor'}
-            </Button>
-
-            <div className="text-sm mt-4">
-              <h3 className="font-medium mb-2">Current Keywords:</h3>
-              <div className="flex flex-wrap gap-2">
-                {keywords.map(keyword => (
-                  <Badge key={keyword} className="bg-gray-200">
-                    {keyword}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">{renderBullets()}</div>
-        </CardContent>
-      </Card>
-    </div>
+            <div className="space-y-3">{renderBullets()}</div>
+          </CardContent>
+        </Card>
+      </div>
+    </ProtectedRoute>
   );
 };
 

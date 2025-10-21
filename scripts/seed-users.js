@@ -55,14 +55,29 @@ const hashedPassword = bcrypt.hashSync('ValidPassword1!', saltRounds);
 
 // Dynamically build the SQL query based on available columns
 const hasNameColumn = userColumns.some(col => col.name === 'name');
+const hasEmailConfirmedColumn = userColumns.some(col => col.name === 'email_confirmed');
+
+// Well-known test UUID for consistent E2E test data
+// This fixed UUID ensures predictable user IDs across all E2E tests,
+// making assertions and test data management reliable
+const userId = '00000000-0000-0000-0000-000000000001';
 
 let insert;
-if (hasNameColumn) {
-  insert = db.prepare('INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)');
-  insert.run('user@example.com', hashedPassword, 'Test User');
+if (hasNameColumn && hasEmailConfirmedColumn) {
+  insert = db.prepare(
+    "INSERT INTO users (id, email, password_hash, name, created_at, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, ?, datetime('now'), 1, datetime('now'))"
+  );
+  insert.run(userId, 'user@example.com', hashedPassword, 'Test User');
+} else if (hasNameColumn) {
+  insert = db.prepare(
+    "INSERT INTO users (id, email, password_hash, name, created_at) VALUES (?, ?, ?, ?, datetime('now'))"
+  );
+  insert.run(userId, 'user@example.com', hashedPassword, 'Test User');
 } else {
-  insert = db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)');
-  insert.run('user@example.com', hashedPassword);
+  insert = db.prepare(
+    "INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, datetime('now'))"
+  );
+  insert.run(userId, 'user@example.com', hashedPassword);
 }
 
 console.log('Test user created:');

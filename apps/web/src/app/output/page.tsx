@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { toast } from '@/components/ui/toaster';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 type Resume = {
   id: string;
@@ -111,86 +112,88 @@ export default function OutputPage(): React.ReactElement {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Generate Output</h1>
+    <ProtectedRoute>
+      <div className="container mx-auto py-6">
+        <h1 className="text-3xl font-bold mb-6">Generate Output</h1>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle>Resume Generation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-6">
-              <label htmlFor="resumeSelect" className="block text-sm font-medium mb-2">
-                Select Resume
-              </label>
-              <select
-                id="resumeSelect"
-                name="resumeId"
-                value={selectedResumeId}
-                onChange={e => setSelectedResumeId(e.target.value)}
-                className="w-full p-2 border rounded-md bg-white dark:bg-zinc-900 dark:border-zinc-700"
-              >
-                {resumes.map(resume => (
-                  <option key={resume.id} value={resume.id}>
-                    {resume.name} (Created: {new Date(resume.dateCreated).toLocaleDateString()})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <Button onClick={handleGenerateOutput} disabled={isGenerating || !selectedResumeId}>
-              {isGenerating ? 'Generating...' : 'Generate Resume'}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {generatedFiles.length > 0 && (
-          <Card className="col-span-2 md:col-span-1">
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="col-span-2">
             <CardHeader>
-              <CardTitle>Generated Files</CardTitle>
+              <CardTitle>Resume Generation</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {generatedFiles.map(file => (
-                  <div key={file.name} className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Badge className="mr-2">{file.format}</Badge>
-                      <span>{file.name}</span>
-                    </div>
-                    <Button onClick={() => handleDownload(file.url, file.name)} className="ml-4">
-                      Download
-                    </Button>
-                  </div>
-                ))}
+              <div className="mb-6">
+                <label htmlFor="resumeSelect" className="block text-sm font-medium mb-2">
+                  Select Resume
+                </label>
+                <select
+                  id="resumeSelect"
+                  name="resumeId"
+                  value={selectedResumeId}
+                  onChange={e => setSelectedResumeId(e.target.value)}
+                  className="w-full p-2 border rounded-md bg-white dark:bg-zinc-900 dark:border-zinc-700"
+                >
+                  {resumes.map(resume => (
+                    <option key={resume.id} value={resume.id}>
+                      {resume.name} (Created: {new Date(resume.dateCreated).toLocaleDateString()})
+                    </option>
+                  ))}
+                </select>
               </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {redFlags.length > 0 && (
-          <Card className="col-span-2 md:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <span>Red Flags</span>
-                <Badge className="ml-2 bg-red-100 text-red-800">{redFlags.length}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {redFlags.map(flag => (
-                  <li
-                    key={flag}
-                    className="flex items-start rounded-md p-2 bg-red-50 dark:bg-red-900/20"
-                  >
-                    <span className="text-red-600 dark:text-red-400">{flag}</span>
-                  </li>
-                ))}
-              </ul>
+              <Button onClick={handleGenerateOutput} disabled={isGenerating || !selectedResumeId}>
+                {isGenerating ? 'Generating...' : 'Generate Resume'}
+              </Button>
             </CardContent>
           </Card>
-        )}
+
+          {generatedFiles.length > 0 && (
+            <Card className="col-span-2 md:col-span-1">
+              <CardHeader>
+                <CardTitle>Generated Files</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {generatedFiles.map(file => (
+                    <div key={file.name} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Badge className="mr-2">{file.format}</Badge>
+                        <span>{file.name}</span>
+                      </div>
+                      <Button onClick={() => handleDownload(file.url, file.name)} className="ml-4">
+                        Download
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {redFlags.length > 0 && (
+            <Card className="col-span-2 md:col-span-1">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <span>Red Flags</span>
+                  <Badge className="ml-2 bg-red-100 text-red-800">{redFlags.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {redFlags.map(flag => (
+                    <li
+                      key={flag}
+                      className="flex items-start rounded-md p-2 bg-red-50 dark:bg-red-900/20"
+                    >
+                      <span className="text-red-600 dark:text-red-400">{flag}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

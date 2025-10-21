@@ -1,4 +1,4 @@
-﻿// Removed unused imports
+// Removed unused imports
 import { test, expect } from '@playwright/test';
 const WEB_BASE = process.env['WEB_BASE'] || 'http://localhost:3000';
 

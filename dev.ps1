@@ -5,6 +5,7 @@ param(
   [string]$LLMModel = "",
   [switch]$ApiOnly,
   [switch]$WebOnly,
+  [switch]$PersistTestSecret,
   [switch]$Help
 )
 
@@ -54,9 +55,9 @@ function Test-ServiceHealth {
 
 function GetLocalEnvVariable {
   param (
-    [string]$RequiredVar = "",
-    [string]$EnvFilePath = "./.env",
-    [switch]$Debug = $false
+    [string]$RequiredVar = "", # Name of the environment variable to retrieve
+    [string]$EnvFilePath = "./.env", # Path to the .env file
+    [switch]$Debug = $false # If set, enables debug output for this function
   )
 
   $value = $null
@@ -70,16 +71,20 @@ function GetLocalEnvVariable {
     Get-Content $EnvFilePath | ForEach-Object {
       if ($_ -match "^($RequiredVar)=(.*)$") {
         $value = $matches[2].Trim()
-        if ($Debug) { Write-Host "[DEBUG] Loaded $RequiredVar from .env" $value -ForegroundColor Green }
+        if ($Debug) { Write-Host "[DEBUG] Loaded $RequiredVar from .env: $value" -ForegroundColor Green }
       }
     }
   }
-  else {
-    Write-Warning ".env file not found and $RequiredVar not set."
+
+  # Normalize empty values to $null and strip surrounding quotes (use char array to avoid quoting/escape pitfalls)
+  if ($value -and ($value.StartsWith("'") -or $value.StartsWith('"'))) {
+    $trimChars = @("'", '"', '`')
+    $value = $value.Trim($trimChars)
   }
 
   return $value
 }
+
 
 # Function to kill all dev server processes
 function Stop-AllDevServers {
@@ -102,6 +107,7 @@ function Stop-AllDevServers {
 
   Write-Host "All development servers have been stopped." -ForegroundColor Yellow
 }
+
 
 if ($Help) {
   Write-Host "Resume Builder 9000 Development Script"
@@ -156,6 +162,55 @@ try {
   # Copy example environment file if .env does not exist
   if (-not (Test-Path ".env")) { Copy-Item -Path ".env.example" -Destination ".env" -Force }
 
+
+  # If test routes are enabled but no TEST_ROUTE_SECRET is provided, generate a
+  # secure secret for the current session and persist it to .env (development only).
+  # This makes local runs easier while keeping the secret out of source control.
+  if ([string]::IsNullOrEmpty($env:ENABLE_TEST_ROUTES)) {
+    $env:ENABLE_TEST_ROUTES = GetLocalEnvVariable -RequiredVar "ENABLE_TEST_ROUTES"
+  }
+  if ([string]::IsNullOrEmpty($env:ENABLE_TEST_ROUTES)) { $env:ENABLE_TEST_ROUTES = 'false' }
+
+  if ([string]::IsNullOrEmpty($env:TEST_ROUTE_SECRET)) {
+    $env:TEST_ROUTE_SECRET = GetLocalEnvVariable -RequiredVar "TEST_ROUTE_SECRET"
+  }
+
+  if ($env:ENABLE_TEST_ROUTES -eq 'true' -and [string]::IsNullOrEmpty($env:TEST_ROUTE_SECRET)) {
+    # Generate 32 bytes of cryptographically secure random data and base64-encode it.
+    $bytes = New-Object 'System.Byte[]' 32
+    [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+    $generatedSecret = [Convert]::ToBase64String($bytes)
+    Write-Host "Generating secure TEST_ROUTE_SECRET for this development session." -ForegroundColor Green
+    $envFile = ".env"
+    try {
+      if ($PersistTestSecret) {
+        if (Test-Path $envFile) {
+          $content = Get-Content -Raw -Path $envFile
+          if ($content -match '(?im)^TEST_ROUTE_SECRET\s*=') {
+            $newContent = $content -replace '(?im)^TEST_ROUTE_SECRET\s*=.*$', "TEST_ROUTE_SECRET=$generatedSecret"
+            Set-Content -Path $envFile -Value $newContent
+          }
+          else {
+            Add-Content -Path $envFile -Value "`nTEST_ROUTE_SECRET=$generatedSecret"
+          }
+        }
+        else {
+          Set-Content -Path $envFile -Value "TEST_ROUTE_SECRET=$generatedSecret"
+        }
+        Write-Host ".env updated with TEST_ROUTE_SECRET (do not commit .env)" -ForegroundColor Yellow
+      }
+      else {
+        Write-Host "TEST_ROUTE_SECRET generated for session only (use -PersistTestSecret to persist to .env)" -ForegroundColor Yellow
+      }
+      $env:TEST_ROUTE_SECRET = $generatedSecret
+    }
+    catch {
+      Write-Host "Failed to persist TEST_ROUTE_SECRET to .env: $_" -ForegroundColor Yellow
+      $env:TEST_ROUTE_SECRET = $generatedSecret
+    }
+  }
+
+
   # Display config
   Write-Host "Starting Resume Builder 9000 in development mode" -ForegroundColor Green
   Write-Host "External LLM: $($env:ALLOW_EXTERNAL_LLM)"
@@ -200,7 +255,7 @@ try {
       $nextConfig = Get-Content -Path ".\apps\web\next.config.js" -Raw
 
       if (-not ($nextConfig -match "swcMinify: false")) {
-        $nextConfig = $nextConfig -replace "const nextConfig = \{", "const nextConfig = {`n  swcMinify: false,`n  experimental: {`n    forceSwcTransforms: false,`n  },"
+        $nextConfig = $nextConfig -replace "const nextConfig = \ { ", "const nextConfig = { `n  swcMinify: false, `n  experimental: { `n    forceSwcTransforms: false, `n }, "
         Set-Content -Path ".\apps\web\next.config.js" -Value $nextConfig
       }
     }
@@ -230,16 +285,29 @@ try {
     if ($LASTEXITCODE -ne 0) {
       Write-Host "[ERROR] Unit tests failed. Stopping script." -ForegroundColor Red
       $errorDetails = @"
-Unit test failure at $(Get-Date)
-Script: dev.ps1
-Exit code: $LASTEXITCODE
-See console output above for details.
+          Unit test failure at $(Get-Date)
+          Script: dev.ps1
+          Exit code: $LASTEXITCODE
+          See console output above for details.
 "@
       Add-Content -Path "$PSScriptRoot\dev-error.log" -Value $errorDetails
       throw "Unit tests failed. See output above."
     }
   }
 
+
+  # Kill any existing dev servers on ports 3000 and 4000 (API and Web)
+  Write-Host "Ensuring no stale dev servers are running..." -ForegroundColor Cyan
+  Get-Process | Where-Object { $_.ProcessName -match 'node' } | ForEach-Object {
+    try {
+      $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine
+      if ($cmdLine -match 'npm run dev(:stable)?' -and ($cmdLine -match 'packages\\api' -or $cmdLine -match 'apps\\web')) {
+        Write-Host "Killing stale dev server process: $($_.Id)" -ForegroundColor Yellow
+        Stop-Process -Id $_.Id -Force
+      }
+    }
+    catch {}
+  }
 
   # --- Robust port/process cleanup before starting servers ---
 
@@ -254,7 +322,7 @@ See console output above for details.
           Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
         catch {
-          Write-Host ("Failed to kill process {0} on port {1}: {2}" -f $procId, $Port, $_) -ForegroundColor Red
+          Write-Host ("Failed to kill process { 0 } on port { 1 }: { 2 }" -f $procId, $Port, $_) -ForegroundColor Red
         }
       }
     }
@@ -275,7 +343,8 @@ See console output above for details.
   # Start development servers
   if (-not $WebOnly) {
     Write-Host "Starting API server..." -ForegroundColor Cyan
-    $apiProcess = Start-Process -NoNewWindow -PassThru powershell -ArgumentList "-Command cd $PSScriptRoot\packages\api; npm run dev"
+    # Start npm in the packages/api working directory using cmd.exe so the npm.cmd shim is invoked correctly on Windows
+    $apiProcess = Start-Process -NoNewWindow -PassThru -FilePath "cmd.exe" -ArgumentList "/c npm run dev" -WorkingDirectory "$PSScriptRoot\packages\api"
 
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
@@ -301,7 +370,8 @@ See console output above for details.
   if (-not $ApiOnly) {
     Write-Host "Starting Web frontend..." -ForegroundColor Cyan
     Write-Host "Using stable build mode to avoid Next.js file watcher issues..." -ForegroundColor Yellow
-    $webProcess = Start-Process -NoNewWindow -PassThru powershell -ArgumentList "-Command cd $PSScriptRoot\apps\web; npm run dev:stable"
+    # Start npm run dev:stable in the web working directory using cmd.exe so the npm shim is invoked correctly
+    $webProcess = Start-Process -NoNewWindow -PassThru -FilePath "cmd.exe" -ArgumentList "/c npm run dev:stable" -WorkingDirectory "$PSScriptRoot\apps\web"
 
     # Wait a bit before checking health
     Start-Sleep -Seconds 5
@@ -350,10 +420,10 @@ catch {
 
   # Log error to file
   $errorDetails = @"
-Error occurred at $(Get-Date)
-Message: $_
-Stack trace:
-$($_.ScriptStackTrace)
+          Error occurred at $(Get-Date)
+          Message: $_
+          Stack trace:
+          $($_.ScriptStackTrace)
 "@
   Add-Content -Path "$PSScriptRoot\dev-error.log" -Value $errorDetails
 

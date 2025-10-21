@@ -1,4 +1,4 @@
-﻿import { test } from '@playwright/test';
+import { test } from '@playwright/test';
 // Removed unused import
 import { decode } from 'jsonwebtoken'; // This should be available in the project
 import { testLogger } from './utils/test-logger';

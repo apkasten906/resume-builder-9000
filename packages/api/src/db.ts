@@ -51,6 +51,53 @@ export function connectDatabase(): SQLiteDatabase {
     )
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      name TEXT,
+      email_confirmed INTEGER NOT NULL DEFAULT 0,
+      email_confirmed_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS email_verification_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user_id
+    ON email_verification_tokens(user_id)
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
+  `);
+
+  const userColumns = db.prepare('PRAGMA table_info(users)').all() as Array<{ name: string }>;
+  const columnNames = new Set(userColumns.map(col => col.name));
+  if (!columnNames.has('name')) {
+    db.exec('ALTER TABLE users ADD COLUMN name TEXT');
+  }
+  if (!columnNames.has('created_at')) {
+    db.exec("ALTER TABLE users ADD COLUMN created_at TEXT DEFAULT (datetime('now'))");
+  }
+  if (!columnNames.has('email_confirmed')) {
+    db.exec('ALTER TABLE users ADD COLUMN email_confirmed INTEGER NOT NULL DEFAULT 0');
+  }
+  if (!columnNames.has('email_confirmed_at')) {
+    db.exec('ALTER TABLE users ADD COLUMN email_confirmed_at TEXT');
+  }
+
   logger.info('Database initialized successfully');
   return db;
 }

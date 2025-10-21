@@ -41,6 +41,19 @@ vi.mock('better-sqlite3', () => {
   return {
     default: vi.fn().mockImplementation(() => ({
       prepare: vi.fn().mockImplementation(query => {
+        if (query.includes('PRAGMA table_info(users)')) {
+          return {
+            all: vi
+              .fn()
+              .mockReturnValue([
+                { name: 'id' },
+                { name: 'email' },
+                { name: 'password_hash' },
+                { name: 'name' },
+                { name: 'created_at' },
+              ]),
+          };
+        }
         if (query.includes('SELECT * FROM resumes ORDER BY created_at DESC')) {
           return {
             all: vi.fn().mockReturnValue([
@@ -307,8 +320,23 @@ describe('Resume Database Operations', () => {
       });
 
       // Create a mock prepare function that returns an object with the mock run function
-      const mockPrepare = vi.fn().mockReturnValue({
-        run: mockRun,
+      const mockPrepare = vi.fn().mockImplementation(query => {
+        if (query.includes('PRAGMA table_info(users)')) {
+          return {
+            all: vi
+              .fn()
+              .mockReturnValue([
+                { name: 'id' },
+                { name: 'email' },
+                { name: 'password_hash' },
+                { name: 'name' },
+                { name: 'created_at' },
+              ]),
+          };
+        }
+        return {
+          run: mockRun,
+        };
       });
 
       // Create the mock database
