@@ -72,6 +72,44 @@ test.describe('Resume Upload Flow', () => {
     // Wait for parse to finish and button to be enabled again
     await expect(parseButton).not.toBeDisabled({ timeout: 10000 });
   });
+
+  test('uploads list shows max 10 items and displays friendly error on API failure', async ({
+    page,
+  }) => {
+    await page.goto(`${BASE_URL}/resume-upload`);
+
+    // Mock the uploads API to return 12 items
+    await page.route('**/api/uploads', route =>
+      route.fulfill({
+        status: 200,
+        body: JSON.stringify({
+          items: Array.from({ length: 12 }).map((_, i) => ({
+            id: `id-${i}`,
+            fileName: `resume-${i}.pdf`,
+            lastUpdated: new Date().toISOString(),
+          })),
+        }),
+      })
+    );
+
+    await page.reload();
+    // Wait for the first item to render
+    await page.waitForSelector('text=resume-0.pdf');
+    const items = await page.locator('ul.list-disc li').count();
+    expect(items).toBe(10);
+
+    // Now mock failure and check the user-facing message
+    await page.route('**/api/uploads', route =>
+      route.fulfill({ status: 500, body: JSON.stringify({ error: 'backend error' }) })
+    );
+    await page.reload();
+    await page.waitForSelector(
+      'text=Apologies! We are having trouble retrieving your uploaded resumes right now.'
+    );
+    await expect(
+      page.getByText('Apologies! We are having trouble retrieving your uploaded resumes right now.')
+    ).toBeVisible();
+  });
 });
 
 test.beforeAll(async () => {

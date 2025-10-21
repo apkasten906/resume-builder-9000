@@ -1,22 +1,46 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { API, Application } from '../lib/api-client';
 import { Table, TRow, TCell } from '../components/ui/Table';
 import { useAuth } from '../context/AuthContext';
 import { useApplications } from '../hooks/useApplications';
-import { Application } from '../lib/api-client';
 
 type User = {
   id?: string;
   name?: string;
   email?: string;
 };
-type ResumeUpload = { fileName: string; lastUpdated: string };
+type ResumeUpload = { fileName: string; lastUpdated: string; id: string };
 
 export default function Home(): React.ReactElement {
   const { authenticated, checking } = useAuth();
   const { applications } = useApplications();
   const [user] = useState<User | null>({ name: 'User' }); // Simplified for now
-  const [uploads] = useState<ResumeUpload[]>([]);
+  const [uploads, setUploads] = useState<ResumeUpload[]>([]);
+  const [uploadsLoading, setUploadsLoading] = useState(true);
+  const [uploadsError, setUploadsError] = useState<string | null>(null);
+  // Fetch uploads from API
+  useEffect((): void => {
+    let ignore = false;
+    async function fetchUploads(): Promise<void> {
+      setUploadsLoading(true);
+      setUploadsError(null);
+      try {
+        const res = await API.uploads.get<{ items: ResumeUpload[] }>('');
+        if (!ignore) {
+          setUploads(res.items || []);
+        }
+      } catch {
+        if (!ignore) {
+          setUploadsError('Failed to load uploads.');
+        }
+      } finally {
+        if (!ignore) setUploadsLoading(false);
+      }
+    }
+    fetchUploads();
+    // No cleanup needed
+  }, []);
   const [insights, setInsights] = useState<string[]>([]);
 
   // Compute insights when applications change
@@ -144,38 +168,40 @@ export default function Home(): React.ReactElement {
 
           <div>
             <h3 className="text-xl font-bold mb-2">Recent Resume Uploads</h3>
-            <div className="bg-white rounded-lg shadow p-4">
-              {((): React.ReactNode => {
-                return (
-                  <Table>
-                    {uploads.slice(0, 10).map(upload => (
-                      <TRow key={upload.fileName}>
-                        <TCell className="font-semibold">
-                          <button
-                            type="button"
-                            disabled
-                            className="text-blue-600 underline cursor-not-allowed bg-transparent p-0 border-none"
-                            title="Resume details page coming soon"
-                            aria-label="Resume details link placeholder"
-                          >
-                            {upload.fileName}
-                          </button>
-                        </TCell>
-                        <TCell className="text-xs text-gray-500">
-                          {new Date(upload.lastUpdated).toLocaleDateString()}
-                        </TCell>
-                      </TRow>
-                    ))}
-                    {uploads.length === 0 && (
-                      <TRow>
-                        <td colSpan={2} className="text-gray-500">
-                          No uploads found.
-                        </td>
-                      </TRow>
-                    )}
-                  </Table>
-                );
-              })()}
+            <div className="bg-white rounded-lg shadow p-4 min-h-[120px]">
+              {uploadsLoading && <div className="text-gray-500">Loading uploads...</div>}
+              {!uploadsLoading && uploadsError && (
+                <div className="text-red-600">{uploadsError}</div>
+              )}
+              {!uploadsLoading && !uploadsError && (
+                <Table>
+                  {uploads.slice(0, 10).map(upload => (
+                    <TRow key={upload.id}>
+                      <TCell className="font-semibold">
+                        <button
+                          type="button"
+                          disabled
+                          className="text-blue-600 underline cursor-not-allowed bg-transparent p-0 border-none"
+                          title="Resume details page coming soon"
+                          aria-label="Resume details link placeholder"
+                        >
+                          {upload.fileName}
+                        </button>
+                      </TCell>
+                      <TCell className="text-xs text-gray-500">
+                        {new Date(upload.lastUpdated).toLocaleDateString()}
+                      </TCell>
+                    </TRow>
+                  ))}
+                  {uploads.length === 0 && (
+                    <TRow>
+                      <td colSpan={2} className="text-gray-500">
+                        No uploads found.
+                      </td>
+                    </TRow>
+                  )}
+                </Table>
+              )}
             </div>
           </div>
         </div>
