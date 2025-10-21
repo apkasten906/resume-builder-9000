@@ -19,6 +19,8 @@ test-results/
 **/test-results/
 playwright-report/
 **/playwright-report/
+reports/cucumber/
+playwright-traces/
 apps/web/out/
 apps/web/.vercel/
 packages/api/logs/combined.log
