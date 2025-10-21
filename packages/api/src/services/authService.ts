@@ -2,7 +2,10 @@
 import jwt from 'jsonwebtoken';
 import type { Request } from 'express';
 import bcrypt from 'bcryptjs';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import { connectDatabase } from '../db.js';
+import { evaluatePassword } from '@rb9k/core';
+import { sendVerificationEmail } from './emailService.js';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
@@ -22,16 +25,133 @@ interface UserRow {
   id: string;
   email: string;
   password_hash: string;
+  name: string | null;
+  email_confirmed: number;
+  email_confirmed_at: string | null;
+}
+
+// Verification token record interface for database queries
+interface VerificationTokenRecord {
+  token_id: string;
+  user_id: string;
+  expires_at: string;
+  email: string;
+  name: string | null;
+  email_confirmed: number;
+}
+
+export class DuplicateEmailError extends Error {
+  constructor() {
+    super('Email already registered');
+    this.name = 'DuplicateEmailError';
+  }
+}
+
+export class PasswordPolicyError extends Error {
+  readonly unmetRequirements: readonly string[];
+
+  constructor(unmetRequirements: readonly string[]) {
+    super('Password does not meet security requirements');
+    this.name = 'PasswordPolicyError';
+    this.unmetRequirements = unmetRequirements;
+  }
+}
+
+export class EmailNotConfirmedError extends Error {
+  readonly email: string;
+
+  constructor(email: string) {
+    super('Email not confirmed');
+    this.name = 'EmailNotConfirmedError';
+    this.email = email;
+  }
+}
+
+export class InvalidVerificationTokenError extends Error {
+  constructor() {
+    super('Invalid verification token');
+    this.name = 'InvalidVerificationTokenError';
+  }
+}
+
+export class ExpiredVerificationTokenError extends Error {
+  constructor() {
+    super('Verification token has expired');
+    this.name = 'ExpiredVerificationTokenError';
+  }
+}
+
+export interface AuthenticatedUser {
+  readonly id: string;
+  readonly email: string;
+  readonly name?: string;
+}
+
+function mapRowToUser(row: Pick<UserRow, 'id' | 'email' | 'name'>): AuthenticatedUser {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name ?? undefined,
+  };
+}
+
+function createToken(user: Pick<AuthenticatedUser, 'id' | 'email'>): string {
+  return jwt.sign({ sub: user.id, email: user.email }, SECRET, { expiresIn: '7d' });
+}
+
+const VERIFICATION_TOKEN_BYTES = 32;
+
+function getVerificationTokenTTLMinutes(): number {
+  const raw = process.env.EMAIL_VERIFICATION_TTL_MINUTES;
+  const DEFAULT_MINUTES = 30;
+  const MIN_MINUTES = 5;
+  const MAX_MINUTES = 1440; // 24 hours
+  const parsed = Number(raw);
+  if (
+    typeof raw === 'undefined' ||
+    !Number.isFinite(parsed) ||
+    parsed < MIN_MINUTES ||
+    parsed > MAX_MINUTES
+  ) {
+    return DEFAULT_MINUTES;
+  }
+  return parsed;
+}
+
+const VERIFICATION_TOKEN_TTL_MINUTES = getVerificationTokenTTLMinutes();
+
+function normalizeBaseUrl(url: string): string {
+  return url.endsWith('/') ? url.slice(0, -1) : url;
+}
+
+function hashVerificationToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+function createVerificationRecord(): {
+  token: string;
+  tokenHash: string;
+  expiresAt: string;
+} {
+  const token = randomBytes(VERIFICATION_TOKEN_BYTES).toString('hex');
+  const tokenHash = hashVerificationToken(token);
+  const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MINUTES * 60 * 1000).toISOString();
+  return { token, tokenHash, expiresAt };
 }
 
 export const authService = {
-  async login(email: string, password: string): Promise<{ token: string } | null> {
+  async login(
+    email: string,
+    password: string
+  ): Promise<{ token: string; user: AuthenticatedUser } | null> {
     // Get database connection from shared pool
     const db = connectDatabase();
 
     // Use prepared statement for security (prevent SQL injection)
     const user = db
-      .prepare('SELECT id, email, password_hash FROM users WHERE email = ?')
+      .prepare(
+        'SELECT id, email, password_hash, name, email_confirmed, email_confirmed_at FROM users WHERE email = ?'
+      )
       .get(email) as UserRow | undefined;
 
     if (!user) {
@@ -44,10 +164,105 @@ export const authService = {
       return null; // Password doesn't match
     }
 
-    // Generate JWT token with user info
-    const token = jwt.sign({ sub: user.id, email: user.email }, SECRET, { expiresIn: '7d' });
+    if (!user.email_confirmed) {
+      throw new EmailNotConfirmedError(user.email);
+    }
 
-    return { token };
+    // Generate JWT token with user info
+    const profile = mapRowToUser(user);
+    const token = createToken(profile);
+
+    return { token, user: profile };
+  },
+  async register({
+    email,
+    password,
+    name,
+  }: {
+    email: string;
+    password: string;
+    name?: string | null;
+  }): Promise<{
+    user: AuthenticatedUser;
+    verification: { sentTo: string; expiresAt: string };
+  }> {
+    const db = connectDatabase();
+
+    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email) as
+      | { id: string }
+      | undefined;
+
+    if (existing) {
+      throw new DuplicateEmailError();
+    }
+
+    const evaluation = evaluatePassword(password);
+    if (!evaluation.valid) {
+      const unmet = evaluation.requirements.filter(req => !req.met).map(req => req.id);
+      throw new PasswordPolicyError(unmet);
+    }
+
+    const userId = randomUUID();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const trimmedName = name?.trim() || null;
+    const createdAt = new Date().toISOString();
+
+    db.prepare(
+      'INSERT INTO users (id, email, password_hash, name, created_at, email_confirmed, email_confirmed_at) VALUES (?, ?, ?, ?, ?, 0, NULL)'
+    ).run(userId, email, hashedPassword, trimmedName, createdAt);
+
+    const user = mapRowToUser({ id: userId, email, name: trimmedName });
+    const verification = createVerificationRecord();
+
+    db.prepare(
+      'INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)'
+    ).run(randomUUID(), userId, verification.tokenHash, verification.expiresAt, createdAt);
+
+    const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const verificationUrl = `${normalizeBaseUrl(appBaseUrl)}/confirm-email?token=${verification.token}`;
+
+    await sendVerificationEmail({
+      to: email,
+      verificationUrl,
+      expiresAt: verification.expiresAt,
+      token: verification.token,
+    });
+
+    return { user, verification: { sentTo: email, expiresAt: verification.expiresAt } };
+  },
+  async resendVerification(email: string): Promise<{ sentTo: string; expiresAt: string }> {
+    const db = connectDatabase();
+
+    const user = db.prepare('SELECT id, email_confirmed FROM users WHERE email = ?').get(email) as
+      | { id: string; email_confirmed: number }
+      | undefined;
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.email_confirmed) {
+      throw new Error('Email already confirmed');
+    }
+
+    const verification = createVerificationRecord();
+    const createdAt = new Date().toISOString();
+
+    db.prepare(
+      'INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)'
+    ).run(randomUUID(), user.id, verification.tokenHash, verification.expiresAt, createdAt);
+
+    const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const verificationUrl = `${normalizeBaseUrl(appBaseUrl)}/confirm-email?token=${verification.token}`;
+
+    await sendVerificationEmail({
+      to: email,
+      verificationUrl,
+      expiresAt: verification.expiresAt,
+      token: verification.token,
+    });
+
+    return { sentTo: email, expiresAt: verification.expiresAt };
   },
   async getUserFromRequest(
     req: Request
@@ -59,9 +274,127 @@ export const authService = {
         return null;
       }
       const payload = jwt.verify(token, SECRET) as { sub: string; email: string };
-      return { id: payload.sub, email: payload.email };
+      const db = connectDatabase();
+      const user = db
+        .prepare('SELECT id, email, name FROM users WHERE id = ? AND email_confirmed = 1')
+        .get(payload.sub) as Pick<UserRow, 'id' | 'email' | 'name'> | undefined;
+
+      if (!user) {
+        return null;
+      }
+
+      return mapRowToUser(user);
     } catch {
       return null;
     }
+  },
+  async verifyEmail(token: string): Promise<{ token: string; user: AuthenticatedUser }> {
+    if (!token) {
+      throw new InvalidVerificationTokenError();
+    }
+
+    const db = connectDatabase();
+    const tokenHash = hashVerificationToken(token);
+
+    const record = db
+      .prepare(
+        `SELECT evt.id as token_id, evt.user_id, evt.expires_at, u.email, u.name, u.email_confirmed
+         FROM email_verification_tokens evt
+         JOIN users u ON u.id = evt.user_id
+         WHERE evt.token_hash = ?`
+      )
+      .get(tokenHash) as VerificationTokenRecord | undefined;
+
+    if (!record) {
+      throw new InvalidVerificationTokenError();
+    }
+
+    const now = Date.now();
+    if (new Date(record.expires_at).getTime() < now) {
+      db.prepare('DELETE FROM email_verification_tokens WHERE user_id = ?').run(record.user_id);
+      throw new ExpiredVerificationTokenError();
+    }
+
+    if (!record.email_confirmed) {
+      const confirmedAt = new Date().toISOString();
+      db.prepare('UPDATE users SET email_confirmed = 1, email_confirmed_at = ? WHERE id = ?').run(
+        confirmedAt,
+        record.user_id
+      );
+    }
+
+    db.prepare('DELETE FROM email_verification_tokens WHERE user_id = ?').run(record.user_id);
+
+    const user = mapRowToUser({ id: record.user_id, email: record.email, name: record.name });
+    const sessionToken = createToken(user);
+
+    return { token: sessionToken, user };
+  },
+  /**
+   * Get the current verification token for a user (development/testing only).
+   * Returns the raw token, expiration time, and verification URL.
+   * This should only be used in non-production environments.
+   */
+  async getVerificationToken(
+    userId: string
+  ): Promise<{ token: string; expiresAt: string; verificationUrl: string } | null> {
+    const db = connectDatabase();
+
+    // Get the most recent verification token for this user
+    const record = db
+      .prepare(
+        `SELECT token_hash, expires_at
+         FROM email_verification_tokens
+         WHERE user_id = ?
+         ORDER BY created_at DESC
+         LIMIT 1`
+      )
+      .get(userId) as
+      | {
+          token_hash: string;
+          expires_at: string;
+        }
+      | undefined;
+
+    if (!record) {
+      return null;
+    }
+
+    // Check if token is expired
+    const now = Date.now();
+    if (new Date(record.expires_at).getTime() < now) {
+      return null;
+    }
+
+    // We can't reverse the hash, so we need to look it up from the email outbox
+    // This is only possible because we're using the in-memory email service for dev/test
+    const { getEmailOutbox } = await import('./emailService.js');
+    const emails = getEmailOutbox();
+
+    // Find the verification email with matching expiration time (most recent match)
+    const verificationEmail = [...emails]
+      .reverse() // Get most recent first
+      .find(
+        email =>
+          email.metadata?.type === 'email-verification' &&
+          email.metadata?.expiresAt === record.expires_at
+      );
+
+    if (
+      !verificationEmail?.metadata?.token ||
+      typeof verificationEmail.metadata.token !== 'string'
+    ) {
+      return null;
+    }
+
+    const token = verificationEmail.metadata.token as string;
+    const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const verificationUrl = `${normalizeBaseUrl(appBaseUrl)}/confirm-email?token=${token}`;
+
+    return {
+      token,
+      expiresAt: record.expires_at,
+      verificationUrl,
+    };
   },
 };

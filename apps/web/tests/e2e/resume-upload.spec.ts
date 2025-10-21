@@ -1,4 +1,4 @@
-﻿// NOTE: The large file (>5MB) error scenario should be manually tested.
+// NOTE: The large file (>5MB) error scenario should be manually tested.
 // Playwright cannot easily generate or upload a >5MB file in CI environments.
 // The UI will show a user-friendly error: "File is too large. Maximum allowed size is 5MB."
 // Removed unused imports

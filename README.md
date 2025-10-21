@@ -24,12 +24,20 @@ Run the following commands to set up the project:
 
    ```env
    # API Configuration
-   PORT=4000
+   API_BASE=4000
    NEXT_PUBLIC_API_BASE=http://localhost:4000
    JWT_SECRET=your-secret-key-here
+
+   # Email Configuration (optional - for sending real verification emails)
+   # Get your API key from https://resend.com (free tier: 100 emails/day)
+   # For testing, use: onboarding@resend.dev (no domain verification needed)
+   RESEND_API_KEY=re_your_api_key_here
+   RESEND_FROM_EMAIL=onboarding@resend.dev
    ```
 
    > **Note:** The frontend expects the API to be available at `http://localhost:4000` via the `NEXT_PUBLIC_API_BASE` environment variable. Update this in all environments as needed. The JWT_SECRET is used for secure authentication.
+   >
+   > **Email Setup:** By default, verification emails are stored in `.tmp/email-outbox.json` for development. To send real emails during testing, configure the Resend API key. See `docs/user-guides/email-setup-resend.md` for detailed setup instructions.
 
 3. Start the development server (for local development):
 
@@ -60,10 +68,6 @@ Run the following commands to set up the project:
    Password: ValidPassword1!
    ```
 
-   ```
-
-   ```
-
 ## Running the Environment
 
 ### Local Setup
@@ -75,6 +79,19 @@ To run the environment locally without Docker, use the following script:
 ```powershell
 ./dev.ps1
 ```
+
+### Persisting test secret (optional)
+
+The development script can generate a secure `TEST_ROUTE_SECRET` used to protect test-only endpoints (for example `/__test/emails`). By default the script sets the secret for the current session only. If you want the generated secret to be persisted into your local `.env` file (not committed), run the script with the `-PersistTestSecret` flag:
+
+```powershell
+./dev.ps1 -PersistTestSecret
+```
+
+Notes:
+
+- The script will only write the `TEST_ROUTE_SECRET` into `.env` if `.env` exists in the repository root. Do NOT commit `.env`.
+- For CI/E2E runs, set `ENABLE_TEST_ROUTES=true` and add `TEST_ROUTE_SECRET` to your CI secret store (for GitHub Actions: Repository → Settings → Secrets → Actions).
 
 #### Linux/Mac
 
@@ -102,7 +119,7 @@ We use **Playwright** for integration and E2E testing. To run these tests:
 npm run test:e2e
 ```
 
-> **Important**: Always use the npm script `test:e2e` instead of running Playwright directly with `npx playwright test`.  
+> **Important**: Always use the npm script `test:e2e` instead of running Playwright directly with `npx playwright test`.
 > Our project includes warning systems that remind you about this practice to ensure consistent test configuration and environment setup.
 > For Playwright CLI access, use `npm run playwright -- <command>` instead of `npx playwright <command>`.
 > See [Playwright Testing Guidelines](./docs/testing/playwright-guidelines.md) for more information.
@@ -164,3 +181,28 @@ Feel free to submit issues and pull requests. We welcome contributions from the 
 ## License
 
 This project is licensed under the MIT License.
+
+## Dev tasks (VS Code)
+
+We provide two convenient VS Code tasks (in `.vscode/tasks.json`) to start the development environment. Use the VS Code Command Palette → "Tasks: Run Task" to pick one.
+
+### Run Dev Script (session secret)
+
+Uses: `./scripts/run-e2e-with-temp-secret.ps1`
+
+Behavior: Generates a secure, in-session `TEST_ROUTE_SECRET`, starts `dev.ps1` with the repository as the working directory, and leaves the secret in-memory only (safer for local runs).
+
+When to use: Quick dev runs and one-off E2E tests where you don't want to persist secrets to disk.
+
+### Run Dev Script (direct)
+
+Uses: `./dev.ps1 -PersistTestSecret`
+
+Behavior: Runs the main `dev.ps1` script and (optionally) persists the generated `TEST_ROUTE_SECRET` to `.env` when `-PersistTestSecret` is passed.
+
+When to use: Repeated local sessions where you want the secret persisted across terminal sessions. Do NOT commit the `.env` file.
+
+### Security note
+
+- The `TEST_ROUTE_SECRET` exists to protect test-only endpoints. Only enable `ENABLE_TEST_ROUTES=true` and set `TEST_ROUTE_SECRET` in CI/CD environments using secure secrets storage (GitHub Actions Secrets, Vault, etc.).
+- Never commit `.env` that contains sensitive secrets. The tasks and scripts will warn you when they persist a secret.
