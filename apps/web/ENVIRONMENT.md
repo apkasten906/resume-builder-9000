@@ -11,7 +11,7 @@ Recommended vars for local dev
 - `ENABLE_TEST_ROUTES=true`
 - `TEST_ROUTE_SECRET=<generated-by-dev-script-or-manual>`
 - `API_BASE=http://localhost:4000`
-- `BASE_URL=http://localhost:3000`
+- `WEB_BASE=http://localhost:3000`
 
 CI / Production
 

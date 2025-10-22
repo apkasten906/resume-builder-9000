@@ -1,7 +1,7 @@
 import { test, expect } from './test-setup';
 
 test('logout clears cookie and stays logged out after reload', async ({ page, context }) => {
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  const baseUrl = process.env.WEB_BASE || 'http://localhost:3000';
 
   // User is already logged in via test-setup, so start from authenticated state
   await page.goto(baseUrl);
