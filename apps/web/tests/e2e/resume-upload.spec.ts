@@ -35,7 +35,7 @@ test.describe('Resume Upload Flow', () => {
       .getByTestId('resume-upload-input')
       .setInputFiles('apps/web/tests/assets/sample_resume.pdf');
     // Click the Parse button to trigger upload/parse
-    await page.getByRole('button', { name: /parse/i }).click();
+    await page.getByTestId('parse-button').click();
     // Assert that the parsed results are visible
     await expect(page.getByRole('heading', { name: /Parsed Results/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Summary/i })).toBeVisible();

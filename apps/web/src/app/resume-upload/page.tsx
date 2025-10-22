@@ -1,15 +1,11 @@
 'use client';
-import React, { useRef, useState, DragEvent, KeyboardEvent } from 'react';
+import React, { useRef, useState, useEffect, DragEvent, KeyboardEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { validateFile } from './resume-upload-utils';
 import { toast } from '@/components/ui/toaster';
-import {
-  API,
-  type ParseJobDescriptionRequest,
-  type ParseJobDescriptionResponse,
-} from '@/lib/api-client';
+import { API } from '@/lib/api-client';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 type Parsed = { summary?: string; experience?: string[]; skills?: string[] };
@@ -81,21 +77,7 @@ export default function ResumeUploadPage(): React.ReactElement {
       toast({ title: 'Resume parsed', description: 'Extracted summary, experience, skills' });
 
       // Refresh dashboard uploads after successful upload
-      setUploadsLoading(true);
-      setUploadsError(null);
-      try {
-        const res = await API.uploads.get<{
-          items: Array<{ fileName: string; lastUpdated: string; id: string }>;
-        }>('');
-        setUploads(res.items || []);
-      } catch {
-        // Use user-friendly, actionable message from story
-        setUploadsError(
-          'Apologies! We are having trouble retrieving your uploaded resumes right now.'
-        );
-      } finally {
-        setUploadsLoading(false);
-      }
+      await fetchUploads();
     } catch (error) {
       setError('Failed to parse resume. Please try again or check your file format.');
       console.error('Parse error:', error);
@@ -103,6 +85,32 @@ export default function ResumeUploadPage(): React.ReactElement {
       setLoading(false);
     }
   }
+
+  // Fetch uploads (used on mount and after successful upload)
+  async function fetchUploads(): Promise<void> {
+    setUploadsLoading(true);
+    setUploadsError(null);
+    try {
+      const res = await API.uploads.get<{
+        items: Array<{ fileName: string; lastUpdated: string; id: string }>;
+      }>('');
+      setUploads(res.items || []);
+    } catch (err) {
+      console.error('Failed to fetch uploads:', err);
+      setUploadsError(
+        'Apologies! We are having trouble retrieving your uploaded resumes right now.'
+      );
+      setUploads([]);
+    } finally {
+      setUploadsLoading(false);
+    }
+  }
+
+  // Load uploads on mount
+  useEffect(() => {
+    fetchUploads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleDragOver(e: DragEvent<HTMLButtonElement>): void {
     e.preventDefault();
@@ -173,8 +181,13 @@ export default function ResumeUploadPage(): React.ReactElement {
             </output>
 
             <div>
-              <Button onClick={parse} disabled={!file}>
-                Parse
+              <Button
+                data-testid="parse-button"
+                aria-label="Upload Resume (Parse)"
+                onClick={parse}
+                disabled={!file || loading}
+              >
+                {loading ? 'Uploading...' : 'Upload Resume'}
               </Button>
             </div>
           </CardContent>
@@ -211,6 +224,28 @@ export default function ResumeUploadPage(): React.ReactElement {
             </CardContent>
           </Card>
         )}
+
+        {/* Recent uploads dashboard card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Uploads</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {uploadsLoading ? (
+              <div role="status" aria-live="polite">
+                Loading uploads...
+              </div>
+            ) : uploadsError ? (
+              <div className="text-red-600">{uploadsError}</div>
+            ) : (
+              <ul className="list-disc pl-6">
+                {uploads.slice(0, 10).map(u => (
+                  <li key={u.id}>{u.fileName}</li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </ProtectedRoute>
   );

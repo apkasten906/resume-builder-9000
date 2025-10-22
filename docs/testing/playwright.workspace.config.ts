@@ -7,11 +7,10 @@ dotenv.config();
 export const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 
 /**
- * Workspace-level Playwright configuration for VS Code Test Explorer
- * This file helps VS Code discover Playwright tests in the monorepo
+ * Workspace-level Playwright metadata for maintainers (moved to docs/testing)
+ * The application-level config is at `apps/web/tests/e2e/playwright.config.ts`.
  */
 export default defineConfig({
-  // Point to the actual config in the web app
   projects: [
     {
       name: 'web-e2e',
