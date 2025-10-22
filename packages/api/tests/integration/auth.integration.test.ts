@@ -17,7 +17,7 @@ function createTestApp(): express.Express {
 describe('POST /auth/register', () => {
   beforeEach(async () => {
     process.env.DB_PATH = ':memory:';
-    process.env.APP_BASE_URL = 'http://localhost:3000';
+    process.env.WEB_BASE = 'http://localhost:3000';
     const db = connectDatabase();
     db.prepare('DELETE FROM users').run();
     db.prepare('DELETE FROM email_verification_tokens').run();
@@ -39,7 +39,7 @@ describe('POST /auth/register', () => {
   afterEach(() => {
     closeDatabase();
     delete process.env.DB_PATH;
-    delete process.env.APP_BASE_URL;
+    delete process.env.WEB_BASE;
     clearEmailOutbox();
   });
 

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "dev:stable": "next build && next start -p 3000",
+    "dev:stable": "next build && next start",
     "dev:polling": "WATCHPACK_POLLING=true next dev",
     "dev:production": "next build && next start",
     "build": "next build",

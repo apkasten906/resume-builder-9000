@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const webUrl = process.env.WEB_BASE || 'http://localhost:3000';
 
 test.describe('Dashboard Resume Uploads API', () => {
   test('should return uploaded resumes from /api/uploads', async ({ request }) => {
-    const res = await request.get(`${BASE_URL}/api/uploads`);
+    const res = await request.get(`${webUrl}/api/uploads`);
     expect(res.ok()).toBeTruthy();
     const data = await res.json();
     expect(Array.isArray(data.items)).toBe(true);

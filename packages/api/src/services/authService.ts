@@ -218,7 +218,7 @@ export const authService = {
       'INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)'
     ).run(randomUUID(), userId, verification.tokenHash, verification.expiresAt, createdAt);
 
-    const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const appBaseUrl = process.env.WEB_BASE || 'http://localhost:3000';
     const verificationUrl = `${normalizeBaseUrl(appBaseUrl)}/confirm-email?token=${verification.token}`;
 
     await sendVerificationEmail({
@@ -252,7 +252,7 @@ export const authService = {
       'INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)'
     ).run(randomUUID(), user.id, verification.tokenHash, verification.expiresAt, createdAt);
 
-    const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const appBaseUrl = process.env.WEB_BASE || 'http://localhost:3000';
     const verificationUrl = `${normalizeBaseUrl(appBaseUrl)}/confirm-email?token=${verification.token}`;
 
     await sendVerificationEmail({
@@ -388,7 +388,7 @@ export const authService = {
     }
 
     const token = verificationEmail.metadata.token as string;
-    const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const appBaseUrl = process.env.WEB_BASE || 'http://localhost:3000';
     const verificationUrl = `${normalizeBaseUrl(appBaseUrl)}/confirm-email?token=${token}`;
 
     return {

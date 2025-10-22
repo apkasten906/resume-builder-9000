@@ -46,7 +46,7 @@ test.describe('Module E2E Tests', () => {
     testLogger.info('Setting up E2E test case');
 
     // Navigate to base URL for each test
-    await page.goto(process.env.BASE_URL || 'http://localhost:3000');
+    await page.goto(process.env.WEB_BASE || 'http://localhost:3000');
 
     // Wait for page to be ready
     await page.waitForLoadState('networkidle');
@@ -64,7 +64,7 @@ test.describe('Module E2E Tests', () => {
       testLogger.info('Testing primary user flow');
 
       // Step 1: Navigate to starting page
-      await page.goto(`${process.env.BASE_URL || 'http://localhost:3000'}/start-page`);
+      await page.goto(`${process.env.WEB_BASE || 'http://localhost:3000'}/start-page`);
       await expect(page.locator('[data-testid="page-title"]')).toHaveText('Expected Page Title');
 
       testLogger.debug('Navigated to start page');
@@ -95,7 +95,7 @@ test.describe('Module E2E Tests', () => {
       testLogger.info('Testing input validation');
 
       // Navigate to form page
-      await page.goto(`${process.env.BASE_URL || 'http://localhost:3000'}/form-page`);
+      await page.goto(`${process.env.WEB_BASE || 'http://localhost:3000'}/form-page`);
 
       // Test invalid input
       const invalidInput: string = '';

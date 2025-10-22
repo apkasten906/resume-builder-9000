@@ -66,7 +66,7 @@ export default defineConfig({
   fullyParallel: false,
   globalSetup: './global-setup.ts',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.WEB_BASE || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -75,7 +75,7 @@ export default defineConfig({
     {
       command: 'npm run dev',
       cwd: path.join(repoRoot, 'packages/api'),
-      url: 'http://localhost:4000/api/health',
+      url: (process.env.API_BASE || 'http://localhost:4000') + '/api/health',
       reuseExistingServer: !process.env.CI,
       stdout: 'pipe',
       stderr: 'pipe',
@@ -89,7 +89,7 @@ export default defineConfig({
     {
       command: 'npm run dev',
       cwd: path.join(repoRoot, 'apps/web'),
-      url: 'http://localhost:3000',
+      url: process.env.WEB_BASE || 'http://localhost:3000',
       reuseExistingServer: !process.env.CI,
       stdout: 'pipe',
       stderr: 'pipe',
@@ -99,7 +99,7 @@ export default defineConfig({
         NODE_ENV: 'development',
         DB_PATH: dbPath,
         API_BASE: process.env.API_BASE || 'http://localhost:4000',
-        PORT: process.env.PORT || '3000',
+        PORT: process.env.WEB_PORT || '3000',
       },
     },
   ],

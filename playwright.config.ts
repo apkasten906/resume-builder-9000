@@ -1,5 +1,11 @@
 import { defineConfig } from '@playwright/test';
 
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+export const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
+
 /**
  * Workspace-level Playwright configuration for VS Code Test Explorer
  * This file helps VS Code discover Playwright tests in the monorepo
@@ -25,7 +31,7 @@ export default defineConfig({
         '**/auth-redirect-flow.spec.ts',
       ],
       use: {
-        baseURL: 'http://localhost:3000',
+        baseURL: WEB_BASE,
       },
     },
   ],

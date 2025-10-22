@@ -9,7 +9,7 @@ type ResumeUploadItem = {
 };
 
 export async function GET(): Promise<NextResponse> {
-  const API_BASE = process.env.API_BASE_URL || 'http://localhost:4000';
+  const API_BASE = process.env.API_BASE || 'http://localhost:4000';
   try {
     // Call backend API endpoint for resume uploads
     const res = await fetch(`${API_BASE}/api/resumes`, {

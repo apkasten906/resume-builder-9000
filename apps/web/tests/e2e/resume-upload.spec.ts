@@ -4,17 +4,17 @@
 // Removed unused imports
 import { test, expect } from '@playwright/test';
 
-// Use BASE_URL from environment or default to localhost
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+// Use WEB_BASE from environment or default to localhost
+const webUrl = process.env.WEB_BASE || 'http://localhost:3000';
 
 test.describe('Resume Upload Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/resume-upload`);
+    await page.goto(`${webUrl}/resume-upload`);
     // Optionally clear file input if needed (handled by reload)
   });
   test('should upload a resume and show parsed data', async ({ page }) => {
     test.setTimeout(30000);
-    await page.goto(`${BASE_URL}/resume-upload`);
+    await page.goto(`${webUrl}/resume-upload`);
     // Intercept the fetch and set the header
     await page.route('/api/resumes', async (route, request) => {
       const headers = {
@@ -45,7 +45,7 @@ test.describe('Resume Upload Flow', () => {
   });
 
   test('should show error for unsupported file type', async ({ page }) => {
-    await page.goto(`${BASE_URL}/resume-upload`);
+    await page.goto(`${webUrl}/resume-upload`);
     await page
       .getByTestId('resume-upload-input')
       .setInputFiles('apps/web/tests/assets/invalid_file.exe');
@@ -60,7 +60,7 @@ test.describe('Resume Upload Flow', () => {
   // The UI will show a user-friendly error: "File is too large. Maximum allowed size is 5MB."
 
   test('shows loading state and disables controls during parse', async ({ page }) => {
-    await page.goto(`${BASE_URL}/resume-upload`);
+    await page.goto(`${webUrl}/resume-upload`);
     await page
       .getByTestId('resume-upload-input')
       .setInputFiles('apps/web/tests/assets/sample_resume.pdf');
@@ -76,7 +76,7 @@ test.describe('Resume Upload Flow', () => {
   test('uploads list shows max 10 items and displays friendly error on API failure', async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}/resume-upload`);
+    await page.goto(`${webUrl}/resume-upload`);
 
     // Mock the uploads API to return 12 items
     await page.route('**/api/uploads', route =>

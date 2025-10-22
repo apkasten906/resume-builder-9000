@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const webUrl = process.env.WEB_BASE || 'http://localhost:3000';
 
 test.describe('Resume Upload UI states', () => {
   test('button label and uploading state, uploads loading and error states, and 10-item limit', async ({
     page,
   }) => {
     // Navigate to resume upload
-    await page.goto(`${BASE_URL}/resume-upload`);
+    await page.goto(`${webUrl}/resume-upload`);
 
     // Ensure the upload button label is visible
     const parseButton = page.getByTestId('parse-button');
