@@ -72,6 +72,31 @@ import { test, expect } from './test-setup';
 
 When you add or modify environment variables in `.env`, **restart your dev servers** so they pick up the new values. The API server needs `TEST_ROUTE_SECRET` and `ENABLE_TEST_ROUTES` to be set when it starts.
 
+### Playwright run modes and DB lifecycle
+
+There are two common ways to run E2E tests and they behave differently with regards to server lifecycle and database cleanup:
+
+- Local / Test Explorer mode (reuse existing servers):
+  - Playwright will reuse existing dev servers if `reuseExistingServer` is true in `playwright.config.ts` (the default when `CI` is not set).
+  - In this mode the test runner will _not_ delete the repository DB file. Deleting the DB while a local server is running causes `EBUSY` on Windows because the server keeps the DB file open.
+  - If you change Playwright configs or move/rename a workspace-level config, reload VS Code to clear the Test Explorer discovery cache.
+
+- Isolated / CI mode (Playwright starts servers):
+  - When `CI=true` (for example via `npm run test:e2e`), Playwright will not reuse existing servers and will start fresh servers for the test run.
+  - In this mode `global-setup.ts` will remove the test DB (e.g., `packages/api/test-e2e.db`) so each run starts with a clean database.
+
+To run an isolated, reproducible E2E job locally use the provided script which sets `CI=true`:
+
+```powershell
+npm run test:e2e
+```
+
+If you need to force DB removal in local runs where Playwright is reusing servers, set the override environment variable (not recommended while dev servers are running):
+
+```powershell
+cross-env PLAYWRIGHT_REMOVE_DB=1 CI=true npx playwright test --config=apps/web/tests/e2e/playwright.config.ts
+```
+
 ## Verification
 
 Debug output in `playwright.config.ts` will show if `TEST_ROUTE_SECRET` loaded correctly:

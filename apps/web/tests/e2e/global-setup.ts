@@ -19,7 +19,17 @@ export default async function globalSetup(): Promise<void> {
       ? process.env.DB_PATH
       : defaultDbPath;
 
-  await rm(dbPath, { force: true });
+  // Only remove the database file when running in CI or when explicitly requested.
+  // If Playwright is reusing an existing dev server (local test-explorer workflow),
+  // deleting the repo DB may fail with EBUSY because the running server holds the file open.
+  const shouldRemoveDb = process.env.CI === 'true' || process.env.PLAYWRIGHT_REMOVE_DB === '1';
+  if (shouldRemoveDb) {
+    await rm(dbPath, { force: true });
+  } else {
+    console.warn(
+      `Skipping removal of database at ${dbPath} (CI=${process.env.CI}). Set PLAYWRIGHT_REMOVE_DB=1 to force removal.`
+    );
+  }
 
   const sharedEnv = {
     ...process.env,

@@ -9,32 +9,34 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import { testLogger } from '../utils/test-logger';
 
-// Use the same database as the application
-// By default, this is resume.db in the project root
-
-// Get the database connection
+// Get the database connection (respects process.env.DB_PATH when provided)
 let db: InstanceType<typeof Database> | null = null;
 
 /**
  * Connect to the application database
+ *
+ * This helper will prefer a DB path provided via process.env.DB_PATH so that
+ * Playwright and other test runners can point tests at an isolated database
+ * (for example: packages/api/test-e2e.db). If DB_PATH is not set it falls
+ * back to the repository root resume.db for backwards compatibility.
  */
 function getTestDb(): InstanceType<typeof Database> {
-  if (db) {
-    return db;
-  }
+  if (db) return db;
 
   // Find project root by going up 5 directories from this file
   const projectRoot = path.resolve(__dirname, '../../../../../');
-  const dbPath = path.join(projectRoot, 'resume.db');
+
+  // Respect DB_PATH if set (Playwright sets this when spawning the servers)
+  const envDbPath =
+    process.env.DB_PATH && process.env.DB_PATH.trim().length > 0 ? process.env.DB_PATH : null;
+  const dbPath = envDbPath || path.join(projectRoot, 'resume.db');
+
   testLogger.log(`Opening application database at ${dbPath}`);
 
-  db = new Database(dbPath, { fileMustExist: true });
-
-  // Use the actual database that the app is using
-  // Don't create tables as they should already exist
-
-  // No need to create the test user here as we're just adding records
-  // directly for an existing user
+  // Allow the database file to be created if it doesn't exist; the API server
+  // will normally initialize schema when started. Using fileMustExist: false
+  // avoids crashes when tests run before the server has created the DB file.
+  db = new Database(dbPath, { fileMustExist: false });
 
   return db;
 }

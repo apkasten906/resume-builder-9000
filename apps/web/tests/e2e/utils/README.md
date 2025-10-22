@@ -61,3 +61,8 @@ Add the environment variable to your CI/CD pipeline configuration:
 env:
   PLAYWRIGHT_VERBOSE: 'true'
 ```
+
+## Notes & Links
+
+- If you use VS Code Test Explorer, see `docs/testing/test-explorer-environment-setup.md` and `docs/playwright-test-execution.md` for guidance on the two Playwright run modes (Test Explorer / reuse existing servers vs CLI/CI isolated runs).
+- Avoid having multiple files named `playwright.config.ts` in the workspace; if you move or rename configs, reload VS Code (Developer: Reload Window) to clear discovery cache.
