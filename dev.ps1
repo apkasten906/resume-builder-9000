@@ -255,7 +255,8 @@ try {
       $nextConfig = Get-Content -Path ".\apps\web\next.config.js" -Raw
 
       if (-not ($nextConfig -match "swcMinify: false")) {
-        $nextConfig = $nextConfig -replace "const nextConfig = \ { ", "const nextConfig = { `n  swcMinify: false, `n  experimental: { `n    forceSwcTransforms: false, `n }, "
+        # Use a regex that tolerates spaces between tokens when matching the object start
+        $nextConfig = $nextConfig -replace 'const\s+nextConfig\s*=\s*\{', "const nextConfig = { `n  swcMinify: false, `n  experimental: { `n    forceSwcTransforms: false, `n  },"
         Set-Content -Path ".\apps\web\next.config.js" -Value $nextConfig
       }
     }
@@ -322,7 +323,7 @@ try {
           Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         }
         catch {
-          Write-Host ("Failed to kill process { 0 } on port { 1 }: { 2 }" -f $procId, $Port, $_) -ForegroundColor Red
+          Write-Host ("Failed to kill process {0} on port {1}: {2}" -f $procId, $Port, $_) -ForegroundColor Red
         }
       }
     }
