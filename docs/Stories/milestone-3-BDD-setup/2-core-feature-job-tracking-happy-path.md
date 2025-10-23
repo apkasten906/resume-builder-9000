@@ -94,6 +94,7 @@ Cover the most valuable user journey end-to-end in BDD: create job → parse job
 
 2. **PO stubs (adjust selectors to app)**
    - `tests/bdd/pages/JobFormPage.ts`
+
    ```ts
    import type { Page, Locator } from 'playwright';
    export class JobFormPage {
@@ -114,6 +115,7 @@ Cover the most valuable user journey end-to-end in BDD: create job → parse job
    ```
 
    - `tests/bdd/pages/ResumePreviewPage.ts`
+
    ```ts
    import type { Page, Locator } from 'playwright';
    export class ResumePreviewPage {
@@ -131,6 +133,7 @@ Cover the most valuable user journey end-to-end in BDD: create job → parse job
    ```
 
    - Update `tests/bdd/pages/DashboardPage.ts` to include helpers
+
    ```ts
    import type { Page, Locator } from 'playwright';
    export class DashboardPage {
@@ -150,6 +153,7 @@ Cover the most valuable user journey end-to-end in BDD: create job → parse job
      }
    }
    ```
+
 3. **Steps** `tests/bdd/steps/job-tracking.steps.ts`
 
    ```ts

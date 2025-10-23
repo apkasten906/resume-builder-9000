@@ -57,7 +57,7 @@ export default function AppShell({
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-gray-100">
       <div className={showNavigation ? 'grid lg:grid-cols-[260px_1fr]' : 'grid grid-cols-1'}>
         {showNavigation && (
-          <aside className="hidden lg:block border-r border-gray-200 dark:border-zinc-800 p-4">
+          <aside className="hidden lg:block border-r border-gray-200 dark:border-zinc-800 p-3">
             <Link
               href="/"
               className="text-xl font-bold mb-6 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -108,7 +108,7 @@ export default function AppShell({
               </div>
             </div>
           </header>
-          <div className="p-4 lg:p-6 max-w-6xl mx-auto">{children}</div>
+          <div className="p-4 lg:p-6 max-w-5xl mx-auto">{children}</div>
         </main>
       </div>
     </div>
