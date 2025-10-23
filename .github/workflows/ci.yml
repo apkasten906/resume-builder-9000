@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [dev, main]
+    branches: [dev, main, milestone/**, feat/**]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [dev, main]
