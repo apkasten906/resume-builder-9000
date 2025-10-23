@@ -71,38 +71,44 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  webServer: [
-    {
-      command: 'npm run dev',
-      cwd: path.join(repoRoot, 'packages/api'),
-      url: (process.env.API_BASE || 'http://localhost:4000') + '/api/health',
-      reuseExistingServer: !process.env.CI,
-      stdout: 'pipe',
-      stderr: 'pipe',
-      timeout: 120000,
-      env: {
-        ...process.env,
-        NODE_ENV: 'development',
-        DB_PATH: dbPath,
-      },
-    },
-    {
-      command: 'npm run dev',
-      cwd: path.join(repoRoot, 'apps/web'),
-      url: process.env.WEB_BASE || 'http://localhost:3000',
-      reuseExistingServer: !process.env.CI,
-      stdout: 'pipe',
-      stderr: 'pipe',
-      timeout: 180000,
-      env: {
-        ...process.env,
-        NODE_ENV: 'development',
-        DB_PATH: dbPath,
-        API_BASE: process.env.API_BASE || 'http://localhost:4000',
-        PORT: process.env.WEB_PORT || '3000',
-      },
-    },
-  ],
+  // When PLAYWRIGHT_REUSE_EXISTING_SERVERS=1 is set, tests should run against
+  // dev servers started externally (for example via the repository dev.ps1).
+  // In that mode we omit webServer entries so Playwright won't start/stop servers.
+  webServer:
+    process.env.PLAYWRIGHT_REUSE_EXISTING_SERVERS === '1'
+      ? undefined
+      : [
+          {
+            command: 'npm run dev',
+            cwd: path.join(repoRoot, 'packages/api'),
+            url: (process.env.API_BASE || 'http://localhost:4000') + '/api/health',
+            reuseExistingServer: !process.env.CI,
+            stdout: 'pipe',
+            stderr: 'pipe',
+            timeout: 120000,
+            env: {
+              ...process.env,
+              NODE_ENV: 'development',
+              DB_PATH: dbPath,
+            },
+          },
+          {
+            command: 'npm run dev',
+            cwd: path.join(repoRoot, 'apps/web'),
+            url: process.env.WEB_BASE || 'http://localhost:3000',
+            reuseExistingServer: !process.env.CI,
+            stdout: 'pipe',
+            stderr: 'pipe',
+            timeout: 180000,
+            env: {
+              ...process.env,
+              NODE_ENV: 'development',
+              DB_PATH: dbPath,
+              API_BASE: process.env.API_BASE || 'http://localhost:4000',
+              PORT: process.env.WEB_PORT || '3000',
+            },
+          },
+        ],
   projects: [
     {
       name: 'chromium',

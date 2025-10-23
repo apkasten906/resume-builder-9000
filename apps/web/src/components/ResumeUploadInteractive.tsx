@@ -34,13 +34,23 @@ function RecentUploadsClient(): React.ReactElement {
   useEffect(() => {
     // fetch on mount
     fetchUploads();
+
+    // Listen for custom event when a new upload is completed
+    function handleUploadsChanged(): void {
+      fetchUploads();
+    }
+    window.addEventListener('rb9k:uploads:changed', handleUploadsChanged);
+
+    return (): void => {
+      window.removeEventListener('rb9k:uploads:changed', handleUploadsChanged);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Uploads</CardTitle>
+        <CardTitle>All Uploaded Resumes</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-hidden">
@@ -77,7 +87,7 @@ function RecentUploadsClient(): React.ReactElement {
                   </td>
                 </tr>
               ) : (
-                uploads.slice(0, 10).map(u => (
+                uploads.map(u => (
                   <tr key={u.id} role="row">
                     <td role="cell" className="py-2">
                       <a
