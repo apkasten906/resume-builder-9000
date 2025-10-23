@@ -35,7 +35,7 @@ test.describe('Dashboard Resume Uploads API', () => {
     // With dynamic='force-dynamic', both should reflect current DB state
     expect(data1.items.length).toBeGreaterThanOrEqual(0);
     expect(data2.items.length).toBeGreaterThanOrEqual(0);
-    
+
     // The key test: both requests should return the same current data
     // (not one stale and one fresh)
     expect(data1.items.length).toBe(data2.items.length);
