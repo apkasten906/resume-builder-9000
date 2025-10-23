@@ -22,7 +22,7 @@ const BASE_USER = {
 describe('authService', () => {
   beforeEach(async () => {
     process.env.DB_PATH = ':memory:';
-    process.env.APP_BASE_URL = 'http://localhost:3000';
+    process.env.WEB_BASE = 'http://localhost:3000';
     const db = connectDatabase();
     db.prepare('DELETE FROM users').run();
     db.prepare('DELETE FROM email_verification_tokens').run();
@@ -44,7 +44,7 @@ describe('authService', () => {
   afterEach(() => {
     closeDatabase();
     delete process.env.DB_PATH;
-    delete process.env.APP_BASE_URL;
+    delete process.env.WEB_BASE;
     clearEmailOutbox();
   });
 

@@ -5,6 +5,9 @@
  */
 
 import http from 'http';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
 const API_BASE = process.env.API_BASE || 'http://localhost:4000';
