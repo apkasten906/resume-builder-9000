@@ -2,10 +2,13 @@ import React from 'react';
 export function Table({
   children,
   className = '',
-}: React.PropsWithChildren<{ className?: string }>): React.ReactElement {
+  tableClassName = '',
+}: React.PropsWithChildren<{ className?: string; tableClassName?: string }>): React.ReactElement {
+  // `className` is applied to the wrapper (controls overflow behavior)
+  // `tableClassName` is applied to the <table> element (layout/truncation)
   return (
     <div className={['overflow-x-auto', className].join(' ')}>
-      <table className="min-w-full text-sm">
+      <table className={[`min-w-full text-sm`, tableClassName].join(' ')}>
         <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">{children}</tbody>
       </table>
     </div>

@@ -16,6 +16,10 @@ npm run test:e2e:standalone
 
 These scripts use the correct configuration files and ensure that all dependencies and environment settings are properly configured.
 
+### Note about VS Code Test Explorer discovery
+
+If you use VS Code Test Explorer, be aware that Playwright will discover any file named `playwright.config.ts` at the repository root or in workspace folders. If multiple configs exist with overlapping `testDir` patterns, the Test Explorer may discover and run the same tests more than once. If you move or rename a workspace-level config, reload VS Code (Developer: Reload Window) so the Test Explorer cache is cleared.
+
 ### ❌ Avoid: Running Playwright directly
 
 **Do not** run Playwright tests directly from the command line within a package directory:

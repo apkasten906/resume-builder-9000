@@ -330,6 +330,8 @@ try {
 
   $apiPort = $env:API_BASE.Split(':')[-1]
   $webPort = $env:WEB_BASE.Split(':')[-1]
+  $env:WEB_PORT = $webPort
+  $env:API_PORT = $apiPort
 
   Write-Host "Ensuring no stale dev servers are running on ports $apiPort and $webPort..." -ForegroundColor Cyan
   Stop-PortProcess -Port $apiPort
@@ -342,7 +344,7 @@ try {
 
   # Start development servers
   if (-not $WebOnly) {
-    Write-Host "Starting API server..." -ForegroundColor Cyan
+    Write-Host "Starting API server on port $env:API_PORT..." -ForegroundColor Cyan
     # Start npm in the packages/api working directory using cmd.exe so the npm.cmd shim is invoked correctly on Windows
     $apiProcess = Start-Process -NoNewWindow -PassThru -FilePath "cmd.exe" -ArgumentList "/c npm run dev" -WorkingDirectory "$PSScriptRoot\packages\api"
 
@@ -368,9 +370,10 @@ try {
   }
 
   if (-not $ApiOnly) {
-    Write-Host "Starting Web frontend..." -ForegroundColor Cyan
+    Write-Host "Starting Web frontend on port $env:WEB_PORT..." -ForegroundColor Cyan
     Write-Host "Using stable build mode to avoid Next.js file watcher issues..." -ForegroundColor Yellow
     # Start npm run dev:stable in the web working directory using cmd.exe so the npm shim is invoked correctly
+    # $webProcess = Start-Process -NoNewWindow -PassThru -FilePath "cmd.exe" -ArgumentList "/c next build && next start -p $env:WEB_PORT" -WorkingDirectory "$PSScriptRoot\apps\web"
     $webProcess = Start-Process -NoNewWindow -PassThru -FilePath "cmd.exe" -ArgumentList "/c npm run dev:stable" -WorkingDirectory "$PSScriptRoot\apps\web"
 
     # Wait a bit before checking health

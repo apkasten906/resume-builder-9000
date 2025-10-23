@@ -7,7 +7,7 @@ import { testLogger } from '../utils/test-logger';
 // Simple test that doesn't rely on database connections
 test('Basic page rendering test - No auth needed', async ({ page }: { page: Page }) => {
   // Visit the public pages that don't require authentication
-  await page.goto('http://localhost:3000/');
+  await page.goto(process.env.WEB_BASE || 'http://localhost:3000/');
   testLogger.log('Visited home page');
 
   // Take screenshots for debugging

@@ -16,6 +16,7 @@ module.exports = {
   extends: ['eslint:recommended', 'plugin:@next/next/recommended', 'plugin:prettier/recommended'],
   rules: {
     'no-unused-vars': 'off',
+    '@next/next/no-html-link-for-pages': 'off',
     '@typescript-eslint/no-unused-vars': ['warn'],
     '@typescript-eslint/explicit-function-return-type': 'warn',
     '@typescript-eslint/explicit-module-boundary-types': 'warn',

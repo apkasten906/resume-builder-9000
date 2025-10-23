@@ -44,6 +44,14 @@ We created comprehensive documentation for the test suite:
 - Added detailed comments to key test files
 - Added logging statements throughout tests for better debugging
 
+### 5. Test discovery and VS Code
+
+Be aware that VS Code Test Explorer discovers Playwright configs by filename. If multiple files named `playwright.config.ts` exist in the workspace (for example, a root-level config and an app-level config), the Test Explorer may discover the same tests more than once and run tests twice. To avoid this:
+
+- Keep a single canonical Playwright config for test execution (we use `apps/web/tests/e2e/playwright.config.ts`).
+- If workspace-level metadata is useful, store it under a non-standard name (we moved it to `docs/testing/playwright.workspace.config.ts`).
+- After renaming or moving config files, reload VS Code (Developer: Reload Window) to clear the Test Explorer discovery cache.
+
 ## Current Status
 
 - **20 tests passing** - Basic functionality tests, authentication, and UI rendering
