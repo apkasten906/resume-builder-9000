@@ -1,8 +1,8 @@
 # ADR 0011: Next.js API Route Caching Prevention for Dynamic Data
 
-**Status:** Accepted  
-**Date:** 2025-10-23  
-**Deciders:** Development Team  
+**Status:** Accepted
+**Date:** 2025-10-23
+**Deciders:** Development Team
 **Context:** Resume upload feature enhancement
 
 ---
@@ -63,16 +63,16 @@ const res = await fetch(`${API_BASE}/api/resumes`, {
 
 ### Positive
 
-✅ **Immediate data freshness** - Users see new uploads instantly  
-✅ **Predictable behavior** - Consistent across dev and prod environments  
-✅ **Better UX** - No confusion about missing uploads  
-✅ **Explicit intent** - Code clearly communicates caching strategy  
+✅ **Immediate data freshness** - Users see new uploads instantly
+✅ **Predictable behavior** - Consistent across dev and prod environments
+✅ **Better UX** - No confusion about missing uploads
+✅ **Explicit intent** - Code clearly communicates caching strategy
 ✅ **Minimal code** - Simple configuration, no complex cache invalidation logic
 
 ### Negative
 
-⚠️ **Slightly increased latency** - Every request hits the backend (acceptable for dynamic data)  
-⚠️ **Higher backend load** - No request-level caching relief (mitigated by backend's ability to handle load)  
+⚠️ **Slightly increased latency** - Every request hits the backend (acceptable for dynamic data)
+⚠️ **Higher backend load** - No request-level caching relief (mitigated by backend's ability to handle load)
 ⚠️ **Must remember pattern** - Developers must apply this to new dynamic routes
 
 ### Neutral
@@ -88,7 +88,7 @@ const res = await fetch(`${API_BASE}/api/resumes`, {
 ### 1. Client-side cache busting with query parameters
 
 ```typescript
-fetch(`/api/uploads?t=${Date.now()}`)
+fetch(`/api/uploads?t=${Date.now()}`);
 ```
 
 **Rejected:** Band-aid solution that doesn't address root cause. Still requires users to manually trigger refresh in some scenarios.
