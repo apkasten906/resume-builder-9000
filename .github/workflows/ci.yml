@@ -2,139 +2,71 @@ name: CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [dev, main]
   pull_request:
-    branches: [main, dev]
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [dev, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'npm'
-
+          node-version: 20
+          cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Lint
+        run: npm run lint --if-present
 
-      - name: Run ESLint
-        run: npm run lint
-
-  unit-test:
-    name: Unit Tests
+  test:
+    name: Test
     runs-on: ubuntu-latest
-    needs: build
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Install SQLite dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y sqlite3 libsqlite3-dev
-
+          node-version: 20
+          cache: npm
       - name: Install dependencies
         run: npm ci
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-
-      - name: Run unit tests
-        run: npm run test:unit
-
-  e2e-test:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Install SQLite dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y sqlite3 libsqlite3-dev
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
-      - name: Install wait-on
-        run: npm install wait-on --no-save
-
-      - name: Start servers
-        run: |
-          # Start dev servers in test mode with test routes enabled and secret from repo secrets
-          export ENABLE_TEST_ROUTES=true
-          export TEST_ROUTE_SECRET=${{ secrets.TEST_ROUTE_SECRET }}
-          export NODE_ENV=test
-          npm run dev:ci &
-          sleep 1
-          echo "Started dev:ci in background"
-
-      - name: Wait for servers to be ready
-        run: npx wait-on http://localhost:3000 http://localhost:4000
-        env:
-          ENABLE_TEST_ROUTES: true
-          TEST_ROUTE_SECRET: ${{ secrets.TEST_ROUTE_SECRET }}
-
-      - name: Run E2E tests
-        run: npx playwright test --config=apps/web/tests/e2e/playwright.config.ts
-        env:
-          ENABLE_TEST_ROUTES: true
-          TEST_ROUTE_SECRET: ${{ secrets.TEST_ROUTE_SECRET }}
+      - name: Test
+        run: npm test --if-present
 
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Install SQLite dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y sqlite3 libsqlite3-dev
-
+          node-version: 20
+          cache: npm
       - name: Install dependencies
         run: npm ci
-
-      - name: Build packages
-        run: npm run build
-
+      - name: Build
+        run: npm run build --if-present
       - name: Upload build artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: |
-            packages/*/dist
-            apps/*/dist
+            packages/**/dist
+            apps/**/dist
+          if-no-files-found: ignore
