@@ -168,25 +168,33 @@ export default function Home(): React.ReactElement {
 
           <div>
             <h3 className="text-xl font-bold mb-2">Recent Resume Uploads</h3>
-            <div className="bg-white rounded-lg shadow p-4 min-h-[120px]">
+            <div className="bg-white rounded-lg shadow p-4 min-h-[120px] overflow-hidden">
               {uploadsLoading && <div className="text-gray-500">Loading uploads...</div>}
               {!uploadsLoading && uploadsError && (
                 <div className="text-red-600">{uploadsError}</div>
               )}
               {!uploadsLoading && !uploadsError && (
-                <Table>
+                <Table tableClassName="w-full table-fixed">
+                  <colgroup>
+                    <col style={{ width: '72%' }} />
+                    <col style={{ width: '28%' }} />
+                  </colgroup>
                   {uploads.slice(0, 10).map(upload => (
                     <TRow key={upload.id}>
-                      <TCell className="font-semibold">
-                        <button
-                          type="button"
-                          disabled
-                          className="text-blue-600 underline cursor-not-allowed bg-transparent p-0 border-none"
-                          title="Resume details page coming soon"
-                          aria-label="Resume details link placeholder"
+                      <TCell className="font-semibold truncate">
+                        <a
+                          href={`/resume-upload?id=${upload.id}`}
+                          title={upload.fileName}
+                          className="text-blue-600 underline block truncate"
+                          style={{
+                            display: 'inline-block',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
                         >
                           {upload.fileName}
-                        </button>
+                        </a>
                       </TCell>
                       <TCell className="text-xs text-gray-500">
                         {new Date(upload.lastUpdated).toLocaleDateString()}
