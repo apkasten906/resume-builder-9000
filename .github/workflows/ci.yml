@@ -70,3 +70,38 @@ jobs:
             packages/**/dist
             apps/**/dist
           if-no-files-found: ignore
+
+  commit-msg-check:
+    name: Commit message validation
+    runs-on: ubuntu-latest
+    # Only run on pull requests where commit messages should be validated
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate commit messages (conventional commits)
+        uses: wagoid/commitlint-github-action@v4
+        with:
+          # default behavior checks commits in the PR
+          configFile: .commitlintrc.js
+
+  secret-scan:
+    name: Secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run gitleaks scan
+        # Use the community action to run gitleaks; run in warn-only mode initially
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          args: "--redact --report-path=gitleaks-report.json"
+      - name: Upload gitleaks report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+      - name: Continue on findings (warn)
+        if: always()
+        run: |
+          echo "Gitleaks scan complete. Review the uploaded artifact 'gitleaks-report' for details."
