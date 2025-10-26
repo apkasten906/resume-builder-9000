@@ -1,7 +1,9 @@
-import { describe, test, expect, vi, beforeAll } from 'vitest';
+import { describe, test, expect, vi, beforeAll, beforeEach } from 'vitest';
 import supertest from 'supertest';
 import { default as app } from '../src/index.js';
 import { disableTestLogging, enableTestLogging } from './utils/test-logger.js';
+import { authService } from '../src/services/authService.js';
+import { getParsedResumeByUser } from '../src/repositories/parsedResumeRepository.js';
 
 // Disable verbose logging for all tests by default
 beforeAll(() => {
@@ -25,6 +27,40 @@ vi.mock('../src/db', () => ({
   }),
   insertResume: vi.fn(resumeData => 'test-resume-id'),
 }));
+
+vi.mock('../src/repositories/parsedResumeRepository', () => ({
+  upsertParsedResume: vi.fn((userId, uploadId, payload) => ({
+    id: 'parsed-id',
+    userId,
+    uploadId,
+    parsedSummary: payload.parsedSummary,
+    personalInfo: payload.personalInfo ?? {
+      name: undefined,
+      emails: [],
+      phones: [],
+      addresses: [],
+      websites: [],
+    },
+    experience: payload.experience ?? [],
+    skills: payload.skills ?? [],
+    education: payload.education ?? [],
+    certifications: payload.certifications ?? [],
+    awards: payload.awards ?? [],
+    hobbies: payload.hobbies ?? [],
+    createdAt: '2025-10-23T00:00:00.000Z',
+    updatedAt: '2025-10-23T00:00:00.000Z',
+  })),
+  getParsedResumeByUser: vi.fn(),
+}));
+
+vi.mock('../src/services/authService', () => ({
+  authService: {
+    getUserFromRequest: vi.fn(),
+  },
+}));
+
+const mockedAuthService = vi.mocked(authService);
+const mockedGetParsedResumeByUser = vi.mocked(getParsedResumeByUser);
 
 // Mock the resume generator service
 vi.mock('../src/services/resume-generator', () => ({
@@ -50,6 +86,11 @@ vi.mock('../src/utils/logger', () => ({
 }));
 
 describe('API Routes', () => {
+  beforeEach(() => {
+    mockedAuthService.getUserFromRequest.mockReset();
+    mockedGetParsedResumeByUser.mockReset();
+  });
+
   // Test health check endpoint
   test('GET /api/health should return status 200', async () => {
     const response = await supertest(app).get('/api/health');
@@ -118,5 +159,49 @@ describe('API Routes', () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('id', 'test-resume-id');
+  });
+
+  test('GET /api/resumes/:id/parsed-fields requires authentication', async () => {
+    mockedAuthService.getUserFromRequest.mockResolvedValueOnce(null);
+
+    const response = await supertest(app).get('/api/resumes/test-resume-id/parsed-fields');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty('error', 'Unauthorized');
+  });
+
+  test('GET /api/resumes/:id/parsed-fields returns parsed data when authenticated', async () => {
+    mockedAuthService.getUserFromRequest.mockResolvedValueOnce({
+      id: 'user-1',
+      email: 'user@example.com',
+      name: 'User',
+    });
+
+    mockedGetParsedResumeByUser.mockReturnValueOnce({
+      id: 'parsed-id',
+      userId: 'user-1',
+      uploadId: 'test-resume-id',
+      parsedSummary: 'Summary',
+      personalInfo: {
+        name: 'User',
+        emails: ['user@example.com'],
+        phones: [],
+        addresses: [],
+        websites: [],
+      },
+      experience: [],
+      skills: [],
+      education: [],
+      certifications: [],
+      awards: [],
+      hobbies: [],
+      createdAt: '2025-10-23T00:00:00.000Z',
+      updatedAt: '2025-10-23T00:00:00.000Z',
+    });
+
+    const response = await supertest(app).get('/api/resumes/test-resume-id/parsed-fields');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('parsedSummary', 'Summary');
   });
 });

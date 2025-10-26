@@ -8,6 +8,11 @@ import { parseFileText } from '../services/fileParser.js';
 import { getResumeById } from '../services/resumeService.js';
 import { handleJsonResume } from './testResume.js';
 import { isTestEnvironment } from '../utils/testUtils.js';
+import { authService } from '../services/authService.js';
+import { upsertParsedResume } from '../repositories/parsedResumeRepository.js';
+import type { ParsedExperience } from '../types/parsedResume.js';
+import { requireAuth } from '../middleware/requireAuth.js';
+import { getResumeParsedFields, updateResumeParsedFields } from './resumeParsedFields.js';
 
 // Express router for resume endpoints
 const resumeRoutes = Router();
@@ -187,6 +192,37 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
         createdAt,
       });
 
+      const authenticatedUser = await authService.getUserFromRequest(req);
+      if (authenticatedUser) {
+        const experienceEntries: ParsedExperience[] = resumeDataTyped.experience.map((exp, index) => ({
+          id: `${storedId}-exp-${index}`,
+          title: exp.title,
+          company: exp.company,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          description: exp.responsibilities.join('\n'),
+        }));
+
+        upsertParsedResume(authenticatedUser.id, storedId, {
+          parsedSummary: summary,
+          personalInfo: {
+            name: '',
+            emails: [],
+            phones: [],
+            addresses: [],
+            websites: [],
+          },
+          experience: experienceEntries,
+          skills,
+          education: [],
+          certifications: [],
+          awards: [],
+          hobbies: [],
+        });
+      } else {
+        logger.warn('Resume parsed without authenticated user context; skipping parsed field storage');
+      }
+
       // Return parsed data with id and createdAt so the client can refresh Recent Uploads
       res.status(201).json({ id: storedId, summary, experience, skills, createdAt });
       return;
@@ -250,6 +286,14 @@ resumeRoutes.post('/', parseResumeHandler, postResumeHandler);
  */
 resumeRoutes.get('/:id', async (req: Request, res: Response) => {
   await getResumeById(req, res);
+});
+
+resumeRoutes.get('/:id/parsed-fields', requireAuth, async (req: Request, res: Response) => {
+  await getResumeParsedFields(req, res);
+});
+
+resumeRoutes.put('/:id/parsed-fields', requireAuth, async (req: Request, res: Response) => {
+  await updateResumeParsedFields(req, res);
 });
 
 /**

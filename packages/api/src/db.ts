@@ -38,6 +38,8 @@ export function connectDatabase(): SQLiteDatabase {
     fileMustExist: false,
   });
 
+  db.pragma('foreign_keys = ON');
+
   // Note: verbose logging removed due to type compatibility issues with newer better-sqlite3 versions
 
   // Create tables if they don't exist
@@ -49,6 +51,36 @@ export function connectDatabase(): SQLiteDatabase {
       job_details TEXT NOT NULL,
       created_at TEXT NOT NULL
     )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS profile_parsed_fields (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      upload_id TEXT,
+      parsed_summary TEXT,
+      personal_info TEXT,
+      experience TEXT,
+      skills TEXT,
+      education TEXT,
+      certifications TEXT,
+      awards TEXT,
+      hobbies TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (upload_id) REFERENCES resumes(id) ON DELETE SET NULL
+    )
+  `);
+
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_profile_parsed_fields_user_upload
+    ON profile_parsed_fields(user_id, upload_id)
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_profile_parsed_fields_upload
+    ON profile_parsed_fields(upload_id)
   `);
 
   db.exec(`

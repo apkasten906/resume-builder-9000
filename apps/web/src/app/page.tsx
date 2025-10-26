@@ -183,7 +183,7 @@ export default function Home(): React.ReactElement {
                     <TRow key={upload.id}>
                       <TCell className="font-semibold truncate">
                         <a
-                          href={`/resume-upload?id=${upload.id}`}
+                          href={`/resume-details?id=${upload.id}`}
                           title={upload.fileName}
                           className="text-blue-600 underline block truncate"
                           style={{
