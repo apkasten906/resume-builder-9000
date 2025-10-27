@@ -3,6 +3,8 @@ description = "Conservative rules to reduce noise; whitelist known test token pa
 
 [allowlist]
 description = "Allow short test-only tokens"
+# This regex whitelists test-only secret names used in local tests.
+# Example matched value: test_secret_1a2b3c4d
 regexes = ["^test_secret_[0-9a-f]{8}$"]
 
 [[rules]]
