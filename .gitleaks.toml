@@ -12,7 +12,7 @@ id = "generic-high-entropy"
 description = "Generic high entropy strings (default)"
 regex = '''[A-Za-z0-9_\-]{20,}'''
 entropy = 4.5
-exclude = ['^docs/', '^.github/', '^apps/web/test-results/', '^.tmp/', '^playwright-report/']
+exclude = ['^docs/', '^.github/', '^apps/web/test-results/', '^.tmp/', '^playwright-report/', '(^|/)(package-lock.json)$']
 
 [[rules]]
 id = "resend-api-key"
