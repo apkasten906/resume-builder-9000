@@ -128,13 +128,9 @@ jobs:
       - name: Run gitleaks (warn-only)
         id: gitleaks
         run: |
-          /tmp/gitleaks/gitleaks detect --redact --report-path=gitleaks-report.json --report-format=sarif --config .gitleaks.toml
-          EXIT_CODE=$?
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "gitleaks exited with $EXIT_CODE (warn-only)"
-          fi
-          # warn-only: do not fail the job even if leaks were found
-          exit 0
+          # Ensure gitleaks never fails the step by forcing exit-code 0 when leaks are found
+          /tmp/gitleaks/gitleaks detect --redact --report-path=gitleaks-report.json --report-format=sarif --config .gitleaks.toml --exit-code 0
+          echo "gitleaks completed (warn-only). Report at gitleaks-report.json"
 
       - name: Upload gitleaks report
         if: always()
