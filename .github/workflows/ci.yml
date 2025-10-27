@@ -98,7 +98,11 @@ jobs:
     # Only run on pull requests where commit messages should be validated
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository (full history for commitlint)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Validate commit messages (conventional commits)
         uses: wagoid/commitlint-github-action@v4
         with:
@@ -124,7 +128,7 @@ jobs:
       - name: Run gitleaks (warn-only)
         id: gitleaks
         run: |
-          /tmp/gitleaks/gitleaks detect --redact --report-path=gitleaks-report.json --report-format=sarif --config-path=.gitleaks.toml
+          /tmp/gitleaks/gitleaks detect --redact --report-path=gitleaks-report.json --report-format=sarif --config .gitleaks.toml
           EXIT_CODE=$?
           if [ $EXIT_CODE -ne 0 ]; then
             echo "gitleaks exited with $EXIT_CODE (warn-only)"
