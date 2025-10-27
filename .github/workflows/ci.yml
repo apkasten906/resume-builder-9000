@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  GITLEAKS_VERSION: '8.24.3'
+
 on:
   push:
     branches: [dev, main, milestone/**, feat/**]
@@ -96,7 +99,7 @@ jobs:
 
       - name: Install gitleaks
         run: |
-          GL_VER=8.24.3
+          GL_VER=${GITLEAKS_VERSION}
           curl -sSL -o /tmp/gitleaks.tar.gz "https://github.com/zricethezav/gitleaks/releases/download/v${GL_VER}/gitleaks_${GL_VER}_linux_x64.tar.gz"
           mkdir -p /tmp/gitleaks && tar -xzf /tmp/gitleaks.tar.gz -C /tmp/gitleaks
 
