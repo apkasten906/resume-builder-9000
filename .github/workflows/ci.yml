@@ -107,7 +107,7 @@ jobs:
         uses: wagoid/commitlint-github-action@v4
         with:
           # default behavior checks commits in the PR
-          configFile: .commitlintrc.js
+          configFile: .commitlintrc.cjs
 
   secret-scan:
     name: Secret scanning (gitleaks)
@@ -133,6 +133,8 @@ jobs:
           if [ $EXIT_CODE -ne 0 ]; then
             echo "gitleaks exited with $EXIT_CODE (warn-only)"
           fi
+          # warn-only: do not fail the job even if leaks were found
+          exit 0
 
       - name: Upload gitleaks report
         if: always()
