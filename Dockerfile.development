@@ -1,0 +1,97 @@
+# Development Dockerfile for Resume Builder 9000
+# Includes development tools and hot reload capabilities
+
+# ============================================================================
+# Stage 1: Base development image
+# ============================================================================
+FROM node:22-alpine AS base-dev
+
+# Install development tools
+RUN apk add --no-cache \
+    dumb-init \
+    git \
+    curl \
+    bash
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/api/package.json ./packages/api/
+COPY apps/web/package.json ./apps/web/
+
+# Install all dependencies (including dev dependencies)
+RUN npm install
+
+# Copy patches and apply them
+COPY patches ./patches
+RUN npm run postinstall
+
+# ============================================================================
+# Stage 2: API Development Runtime
+# ============================================================================
+FROM base-dev AS api-dev
+
+# Copy source code
+COPY packages/core ./packages/core
+COPY packages/api ./packages/api
+
+# Build core package
+WORKDIR /app/packages/core
+RUN npm run build
+
+# Set up API development environment
+WORKDIR /app/packages/api
+
+# Expose API port and debugging port
+EXPOSE 4000 9229
+
+# Enable Node.js debugging
+ENV NODE_OPTIONS="--inspect=0.0.0.0:9229"
+
+# Create non-root user for development
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S api -u 1001 -G nodejs && \
+    chown -R api:nodejs /app
+
+USER api
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["npm", "run", "dev"]
+
+# ============================================================================
+# Stage 3: Web Development Runtime
+# ============================================================================
+FROM base-dev AS web-dev
+
+# Copy source code
+COPY packages/core ./packages/core
+COPY apps/web ./apps/web
+
+# Build core package
+WORKDIR /app/packages/core
+RUN npm run build
+
+# Set up web development environment
+WORKDIR /app/apps/web
+
+# Next.js development configuration
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV WATCHPACK_POLLING=true
+
+# Expose web port
+EXPOSE 3000
+
+# Create non-root user for development
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 -G nodejs && \
+    chown -R nextjs:nodejs /app
+
+USER nextjs
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["npm", "run", "dev"]

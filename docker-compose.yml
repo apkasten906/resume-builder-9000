@@ -1,32 +1,147 @@
+# Resume Builder 9000 - Production Docker Compose
+# Optimized for production deployment without Playwright dependencies
+
 services:
-  resumebuilder-frontend:
-    image: resumebuilder-frontend
+  # ============================================================================
+  # API Service
+  # ============================================================================
+  api:
+    image: rb9k-api:latest
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.production
+      target: api-runtime
+      args:
+        - NODE_ENV=production
+    container_name: rb9k-api
     ports:
-      - '3000:3000'
-    volumes:
-      - .:/app
-      - /app/node_modules
+      - '8081:4000'
     environment:
-      - NODE_ENV=development
-    command: npm run dev
-  resumebuilder-api:
-    image: resumebuilder-api
-    build:
-      context: .
-      dockerfile: ./packages/api/Dockerfile
-    ports:
-      - '4000:4000'
-    environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
+      - PORT=4000
       - API_BASE=4000
-    restart: always
-    # We'll use a simple healthcheck that just verifies the node process is running
+      # Database configuration
+      - DATABASE_URL=/app/data/resume_builder.db
+      # JWT configuration (use secrets management in production)
+      - JWT_SECRET=${JWT_SECRET:-changeme-use-strong-secret}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
+      # CORS configuration
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080}
+      # Logging configuration
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      # Persistent storage for SQLite database
+      - api_data:/app/data
+      # Optional: Upload storage (if file uploads are persisted)
+      - upload_data:/app/uploads
+    networks:
+      - rb9k-network
+    restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'pgrep', '-f', 'node']
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:4000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
+    # Security: run as non-root user
+    user: '1001:1001'
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ============================================================================
+  # Web Frontend Service
+  # ============================================================================
+  web:
+    image: rb9k-web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: web-runtime
+      args:
+        - NODE_ENV=production
+    container_name: rb9k-web
+    ports:
+      - '8080:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_TELEMETRY_DISABLED=1
+      # API configuration
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8081}
+      - API_URL=${API_URL:-http://api:4000}
+      # Authentication configuration
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:8080}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-changeme-use-strong-secret}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - rb9k-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    # Security: run as non-root user
+    user: '1001:1001'
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  rb9k-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ============================================================================
+# Volumes for persistent data
+# ============================================================================
+volumes:
+  # SQLite database storage
+  api_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/api
+
+  # File upload storage (if needed)
+  upload_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/uploads
