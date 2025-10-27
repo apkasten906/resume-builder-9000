@@ -195,7 +195,6 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
       res.status(500).json({ error: 'Failed to save resume' });
       return;
     }
-    return;
   } catch (error) {
     logger.error('Error processing resume upload', { error });
     res.status(500).json({ error: 'Failed to process resume' });
