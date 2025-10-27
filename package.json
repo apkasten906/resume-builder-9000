@@ -27,6 +27,7 @@
     "test:e2e:standalone": "npx playwright test --config=apps/web/tests/e2e/playwright.standalone.config.ts",
     "test:all": "npm run test:unit && npm run test:e2e",
     "postinstall": "patch-package",
+    "prepare": "husky install",
     "format": "prettier --write .",
     "clear-ts-cache:win": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/clear-ts-cache.ps1 -All",
     "clear-ts-cache:unix": "bash ./scripts/clear-ts-cache.sh --all",
@@ -113,7 +114,10 @@
     "playwright": "^1.55.0",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "husky": "^8.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
+    "@commitlint/cli": "^17.0.0"
   },
   "type": "module"
 }
