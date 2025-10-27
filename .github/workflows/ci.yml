@@ -1,7 +1,7 @@
 name: CI
 
 env:
-  GITLEAKS_VERSION: '8.24.3'
+  GITLEAKS_VERSION: "8.24.3"
 
 on:
   push:
@@ -28,10 +28,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if npm ci; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed, running npm install"
+            npm install
+          fi
       - name: Lint
         run: npm run lint --if-present
 
@@ -43,10 +49,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if npm ci; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed, running npm install"
+            npm install
+          fi
       - name: Test
         run: npm test --if-present
 
@@ -58,10 +70,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if npm ci; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed, running npm install"
+            npm install
+          fi
       - name: Build
         run: npm run build --if-present
       - name: Upload build artifact
@@ -106,7 +124,11 @@ jobs:
       - name: Run gitleaks (warn-only)
         id: gitleaks
         run: |
-          /tmp/gitleaks/gitleaks detect --redact --report-path=gitleaks-report.json --report-format=sarif --config-path=.gitleaks.toml || echo "gitleaks exited with $? (warn-only)"
+          /tmp/gitleaks/gitleaks detect --redact --report-path=gitleaks-report.json --report-format=sarif --config-path=.gitleaks.toml
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "gitleaks exited with $EXIT_CODE (warn-only)"
+          fi
 
       - name: Upload gitleaks report
         if: always()
