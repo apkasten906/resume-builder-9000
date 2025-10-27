@@ -1,0 +1,20 @@
+title = "resume-builder-9000 gitleaks rules"
+description = "Conservative rules to reduce noise; whitelist known test token patterns and ignore test/build artifacts"
+
+[allowlist]
+description = "Allow short test-only tokens"
+regexes = ["^test_secret_[0-9a-f]{8}$"]
+
+[[rules]]
+id = "generic-high-entropy"
+description = "Generic high entropy strings (default)"
+regex = '''[A-Za-z0-9_\-]{20,}'''
+entropy = 4.5
+exclude = ['^docs/', '^.github/', '^apps/web/test-results/', '^.tmp/', '^playwright-report/']
+
+[[rules]]
+id = "resend-api-key"
+description = "Resend API key pattern (re_ prefix)"
+regex = '''re_[A-Za-z0-9_-]{16,}'''
+entropy = 3.5
+exclude = ['^docs/', '^.github/']
