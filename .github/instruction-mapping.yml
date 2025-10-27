@@ -1,0 +1,172 @@
+# Instruction mapping for Resume Builder 9000
+# Machine-readable mapping: instruction file -> category, key_rules, enforcement_suggestions
+# Generated: 2025-10-24
+
+.github/instructions/security-and-owasp.instructions.md:
+  category: security
+  key_rules:
+    - never_hardcode_secrets: 'Use environment variables or secrets manager; never commit keys'
+    - parameterized_queries: 'Use prepared statements/ORM query builders to avoid SQL injection'
+    - strong_hashing: 'Argon2 or bcrypt for passwords; avoid MD5/SHA1'
+    - https_by_default: 'Network requests must use HTTPS'
+    - ssrf_and_path_validation: 'Validate/whitelist incoming URLs and sanitize file paths'
+    - security_headers: 'Recommend CSP, HSTS, X-Content-Type-Options'
+    - secure_cookies: 'HttpOnly, Secure, SameSite=Strict for session cookies'
+  enforcement_suggestions:
+    - name: secret_scanning
+      type: ci_job
+      description: 'Run GitHub secret scanning / TruffleHog; fail PRs with detected secrets'
+    - name: static_sql_analysis
+      type: linting
+      description: 'Static analysis to detect string-based SQL concatenation'
+    - name: security_tests
+      type: integration_test
+      description: 'Automated checks for security headers and cookie flags in staging'
+
+.github/instructions/devops-core-principles.instructions.md:
+  category: devops
+  key_rules:
+    - automation: 'Automate builds, tests, deploys, security scans'
+    - measure: 'Collect DORA metrics and expose dashboards'
+    - small_prs: 'Prefer small, frequent PRs and require reviews'
+  enforcement_suggestions:
+    - name: ci_lint_test
+      type: ci_job
+      description: 'Enforce lint + test in CI; required by branch protection'
+    - name: metrics_instrumentation
+      type: monitoring
+      description: 'Add metrics collection (Prometheus/Grafana) for LTFC, DF, CFR, MTTR'
+
+.github/instructions/containerization-docker-best-practices.instructions.md:
+  category: containerization
+  key_rules:
+    - multi_stage_builds: 'Use multi-stage Docker builds to separate build/runtime deps'
+    - minimal_base_images: 'Use slim/alpine/distroless; pin versions (avoid latest)'
+    - non_root_user: 'Run processes as non-root inside containers'
+    - no_secrets_in_layers: 'Do not bake secrets into image layers'
+    - health_checks: 'Define HEALTHCHECK, liveness/readiness probes for orchestration'
+  enforcement_suggestions:
+    - name: hadolint
+      type: ci_job
+      description: 'Run Hadolint on Dockerfiles; fail on high-severity warnings'
+    - name: trivy_scan
+      type: ci_job
+      description: 'Scan built images with Trivy or Snyk; fail on critical vulns'
+
+.github/instructions/conventional-commit.instructions.md:
+  category: repo_hygiene
+  key_rules:
+    - conventional_commits: 'Use Conventional Commits (feat, fix, docs, chore, etc.)'
+  enforcement_suggestions:
+    - name: commit_msg_validation
+      type: pre_commit_or_ci
+      description: 'Validate commit message format with commit-msg hook or CI check'
+
+docs/playwright-test-execution.md:
+  category: testing
+  key_rules:
+    - run_from_root: 'Always execute Playwright via root-level npm scripts (npm run test:e2e)'
+    - use_dot_reporter: 'Use dot reporter in CI to ensure process exits cleanly'
+    - do_not_run_npx_in_package: 'Avoid running npx playwright test inside package folders'
+  enforcement_suggestions:
+    - name: playwright_ci_job
+      type: ci_job
+      description: 'CI job that runs `npm run test:e2e -- --reporter=dot` from repo root'
+
+docs/test-standards-configuration.md:
+  category: testing
+  key_rules:
+    - require_test_logger: 'Enforce testLogger usage in tests'
+    - no_hardcoded_test_data: 'Prevent hardcoded test data in tests'
+    - explicit_test_types: 'Require explicit TypeScript types in test files'
+  enforcement_suggestions:
+    - name: eslint_tests_rules
+      type: ci_job
+      description: 'Run ESLint with local-rules plugin in CI; fail on violations'
+
+docs/CI_CD.md:
+  category: ci_cd
+  key_rules:
+    - ci_on_push_pr: 'Run lint/test/build on push and PR to main/dev'
+    - deploy_on_main: 'Deploy workflow triggered on main merges'
+  enforcement_suggestions:
+    - name: ci_workflow
+      type: ci_workflow
+      description: 'GitHub Actions workflows defined for CI, PR validation, and deploy'
+
+docs/adr/0002-sqlite.md:
+  category: architecture
+  key_rules:
+    - use_sqlite: 'SQLite chosen for local, lightweight DB storage; note concurrency/scaling limits'
+  enforcement_suggestions:
+    - name: migration_checks
+      type: test
+      description: 'Include DB migration sanity checks in CI and local dev setup scripts'
+
+docs/adr/0001-monorepo-structure.md:
+  category: architecture
+  key_rules:
+    - monorepo_workspaces: 'Monorepo using workspaces (packages, apps, shared core)'
+    - centralized_scripts: 'Centralized dev scripts (`dev.ps1`, `setup.ps1`, scripts/) to start services'
+    - build_isolation: 'Per-package builds and path mapping required to avoid TypeScript cross-package conflicts'
+  enforcement_suggestions:
+    - name: workspace_build_job
+      type: ci_job
+      description: 'Build each workspace/package in CI and verify TypeScript compilation; fail on path mapping issues'
+    - name: dev_script_docs
+      type: docs
+      description: 'Document recommended dev workflow (use provided dev.ps1 / Run Dev Script task) in CONTRIBUTING.md'
+
+docs/adr/0009-jwt-environment-based-security.md:
+  category: security
+  key_rules:
+    - jwt_env_exposure: 'Only expose JWT tokens in responses for non-production/test environments; use httpOnly cookies in production'
+  enforcement_suggestions:
+    - name: env_based_token_policy
+      type: ci_rule
+      description: 'Lint or code-review checklist ensuring tokens are not returned in production responses'
+
+docs/adr/0010-e2e-auth-test-pattern.md:
+  category: testing
+  key_rules:
+    - global_auth_seed: 'Global test setup seeds authenticated session by default; tests opt-out explicitly for anonymous scenarios'
+    - cookie_check_stability: 'Prefer cookie presence checks over UI hydration assertions for auth verification'
+  enforcement_suggestions:
+    - name: test_auth_pattern_doc
+      type: docs
+      description: 'Document test pattern and add guidance to test templates; ensure CI e2e jobs use the root test setup'
+
+# Test & scripting helpers (resend / __test endpoints)
+scripts/test-email-verification.ps1:
+  category: testing-scripts
+  key_rules:
+    - resend_call_sequence: 'Test script calls /auth/resend-verification then reads /__test/emails to assert outbox results'
+    - use_test_secret_header: 'Scripts send `x-test-secret` header to authenticate with __test endpoints'
+  enforcement_suggestions:
+    - name: redact_env
+      type: ci_check
+      description: 'Ensure .env with RESEND_API_KEY is not committed; add .env.example and use repo secrets for CI'
+
+scripts/run-e2e-with-temp-secret.ps1:
+  category: testing-scripts
+  key_rules:
+    - temp_test_secret: 'Runner sets a temporary test secret and runs Playwright against resend-verification spec'
+  enforcement_suggestions:
+    - name: secret_management
+      type: ci_job
+      description: 'Use GitHub Actions secrets or ephemeral secrets in CI rather than storing API keys in repo .env'
+
+scripts/debug-clear-email.ps1:
+  category: testing-scripts
+  key_rules:
+    - clear_outbox_endpoint: 'Calls POST /__test/clear-emails with `x-test-secret` to clear in-memory test outbox'
+  enforcement_suggestions:
+    - name: test_endpoint_docs
+      type: docs
+      description: 'Document available __test endpoints and the required test-secret header for local dev and CI'
+
+# Metadata and how-to
+_mapping_metadata:
+  generated_on: 2025-10-24
+  generator: copilot-assisted-ingest
+  notes: 'This file is intended to be machine-readable. Use it to power CI jobs or automated enforcement tooling. If you want more fields (severity, tags), tell me and I can extend it.'

@@ -1795,3 +1795,22 @@ Note: According to issue comment, all changes were implemented in commit `8407e0
 4. `apps/web/src/app/register/page.tsx` - JSON parse error logging
 5. `packages/api/src/routes/test-support.ts` - Protected console logging
 6. `scripts/test-email-verification.ps1` - Environment variable validation
+
+## INGEST: Automated Ingestion Log
+
+- Date: 2025-10-24
+- Ingested locations (representative):
+  - `.github/copilot-instructions.md`
+  - `.github/instructions/` (security-and-owasp, devops-core-principles, containerization, conventional-commit, etc.)
+  - `docs/` (CI_CD.md, playwright-test-execution.md, test-standards-configuration.md, ADRs, index.md)
+
+- Artifacts created by ingestion pass:
+  - `docs/INGEST_SUMMARY.md` — high-level summary and pointer to sources
+  - `docs/INGEST_POLICIES.md` — extracted policies and enforcement suggestions
+
+- Next steps (recommended):
+  1.  Generate a machine-readable mapping (YAML/JSON) of instruction file → enforcement rules for CI consumption.
+  2.  Add CI jobs or pre-commit hooks for mandatory rules (conventional commit validation, ESLint test rules, secret scanning, Dockerfile scanning).
+  3.  Optionally, produce an automated PR that wires these checks into `.github/workflows/` for review.
+
+Summary: Ingestion complete for primary instruction files and docs. Created summary & policy artifacts; recommended next step is to create machine-readable rule mapping and integrate automated checks into CI.

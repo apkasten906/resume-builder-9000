@@ -1,0 +1,362 @@
+# Extended instruction mapping for Resume Builder 9000
+# Includes severity, tags, notes and recommended enforcement actions
+# Generated: 2025-10-24
+
+metadata:
+  generated_on: 2025-10-24
+  generator: copilot-assisted-ingest
+  contact: 'maintainers@rb9k.local'
+
+# .github/instructions — governance & dev guidance
+.github/instructions/security-and-owasp.instructions.md:
+  category: security
+  severity: critical
+  tags: [security, owasp, sast, sast-ci]
+  key_rules:
+    - never_hardcode_secrets
+    - parameterized_queries
+    - strong_hashing
+    - https_by_default
+    - ssrf_and_path_validation
+    - security_headers
+    - secure_cookies
+  enforcement_suggestions:
+    - secret_scanning:
+        {
+          type: ci_job,
+          desc: 'Run GitHub secret scanning (or TruffleHog) and fail PRs with secrets',
+        }
+    - static_sql_analysis:
+        { type: linting, desc: 'Add static checks for SQL concatenation/potential injection' }
+    - security_tests: { type: integration_test, desc: 'Check CSP/HSTS and cookie flags on staging' }
+  notes: 'Foundational security rules — treat as blocking for PRs touching auth, DB, or network code.'
+
+.github/instructions/devops-core-principles.instructions.md:
+  category: devops
+  severity: important
+  tags: [devops, metrics, ci]
+  key_rules:
+    - automation
+    - measure
+    - small_prs
+  enforcement_suggestions:
+    - ci_lint_test:
+        { type: ci_job, desc: 'Run lint and tests in CI; required by branch protection' }
+    - metrics_instrumentation:
+        { type: monitoring, desc: 'Collect DORA metrics and expose dashboards' }
+  notes: 'Advise on DORA + CALMS; not code-blocking but strongly recommended for continuity.'
+
+.github/instructions/containerization-docker-best-practices.instructions.md:
+  category: containerization
+  severity: important
+  tags: [docker, container, security]
+  key_rules:
+    - multi_stage_builds
+    - minimal_base_images
+    - non_root_user
+    - no_secrets_in_layers
+    - health_checks
+  enforcement_suggestions:
+    - hadolint: { type: ci_job, desc: 'Run Hadolint on Dockerfiles; fail on critical issues' }
+    - trivy_scan: { type: ci_job, desc: 'Scan built images with Trivy; fail on critical vulns' }
+  notes: 'Recommend adding hadolint and trivy into CI; avoid baking secrets into images.'
+
+.github/instructions/conventional-commit.instructions.md:
+  category: repo_hygiene
+  severity: important
+  tags: [git, conventional-commits]
+  key_rules:
+    - conventional_commits
+  enforcement_suggestions:
+    - commit_msg_validation:
+        { type: pre_commit_or_ci, desc: 'Validate commit messages via commit-msg hook or CI' }
+  notes: 'Useful for release automation and changelog generation.'
+
+.github/instructions/powershell.instructions.md:
+  category: scripting
+  severity: info
+  tags: [powershell, scripts]
+  key_rules:
+    - no_special_chars_in_output
+  enforcement_suggestions:
+    - ps_lint:
+        {
+          type: ci_job,
+          desc: 'Run simple PS script linting (pester or linters) for script hygiene',
+        }
+  notes: 'PowerShell scripts must avoid special characters — helpful for CI logs on Windows agents.'
+
+.github/instructions/github-actions-ci-cd-best-practices.instructions.md:
+  category: ci_cd
+  severity: important
+  tags: [github-actions, ci, cd]
+  key_rules:
+    - automated_pipeline
+    - security_scans_in_pipeline
+  enforcement_suggestions:
+    - ci_workflow_templates:
+        { type: ci_workflow, desc: 'Provide canonical CI workflow templates for repo' }
+  notes: 'Align pipelines to tested patterns in CI_CD.md and existing workflows/ directory.'
+
+.github/instructions/nodejs-javascript-vitest.instructions.md:
+  category: testing
+  severity: info
+  tags: [vitest, nodejs, test]
+  key_rules:
+    - separate_unit_and_e2e
+    - vitest_config
+  enforcement_suggestions:
+    - vitest_ci: { type: ci_job, desc: 'Run unit test jobs using vitest config in CI' }
+  notes: 'Covers unit test conventions; non-blocking but recommended to keep tests stable.'
+
+# Docs — project-level documentation (selected high-value docs)
+
+docs/index.md:
+  category: docs_index
+  severity: info
+  tags: [docs, index]
+  key_rules:
+    - documentation_structure
+  enforcement_suggestions:
+    - docs_updates: { type: docs, desc: 'Keep index up-to-date when adding major docs' }
+  notes: 'Top-level index — include links to important docs for discoverability.'
+
+docs/CI_CD.md:
+  category: ci_cd
+  severity: important
+  tags: [ci, deploy, workflow]
+  key_rules:
+    - ci_on_push_pr
+    - deploy_on_main
+  enforcement_suggestions:
+    - ci_workflow: { type: ci_workflow, desc: 'Define CI/pull request checks as described' }
+  notes: 'Map to .github/workflows/ and ensure branch protection requires passing CI.'
+
+docs/playwright-test-execution.md:
+  category: testing
+  severity: important
+  tags: [playwright, e2e]
+  key_rules:
+    - run_from_root
+    - use_dot_reporter
+    - do_not_run_npx_in_package
+  enforcement_suggestions:
+    - playwright_ci_job:
+        { type: ci_job, desc: 'Run E2E via repo root script and dot reporter in CI' }
+  notes: 'E2E runner conventions to avoid dependency collisions (Vitest vs Playwright).'
+
+docs/test-standards-configuration.md:
+  category: testing
+  severity: important
+  tags: [eslint, test-standards]
+  key_rules:
+    - require_test_logger
+    - no_hardcoded_test_data
+    - explicit_test_types
+  enforcement_suggestions:
+    - eslint_tests_rules: { type: ci_job, desc: 'Run ESLint with local-rules in CI' }
+  notes: 'Enforce test-specific ESLint rules in CI to maintain quality.'
+
+docs/authentication-system.md:
+  category: architecture
+  severity: critical
+  tags: [auth, jwt, security]
+  key_rules:
+    - session_cookie_usage
+    - login_flow
+    - resend_verification
+  enforcement_suggestions:
+    - auth_test_suite: { type: test, desc: 'Run auth-related unit and e2e tests in CI' }
+  notes: 'Includes resend verification behavior — ensure secret management for RESEND API key.'
+
+docs/email-verification-testing.md:
+  category: testing
+  severity: important
+  tags: [email, resend, testing]
+  key_rules:
+    - resend_flow_tests
+    - __test_endpoints_usage
+  enforcement_suggestions:
+    - avoid_committing_api_keys:
+        { type: ci_check, desc: 'Scan repo for API keys; move to GitHub secrets' }
+  notes: 'Covers resend and test endpoints; scripts use `x-test-secret` and `/__test` endpoints — document in README.'
+
+# ADRs — architectural decision records (include all ADRs)
+
+# Automatically add ADRs from docs/adr
+docs/adr/0001-monorepo-structure.md:
+  category: architecture
+  severity: important
+  tags: [monorepo, workspaces, build]
+  key_rules:
+    - monorepo_workspaces
+    - centralized_scripts
+    - build_isolation
+  enforcement_suggestions:
+    - workspace_build_job:
+        {
+          type: ci_job,
+          desc: 'Build and type-check each package in CI; fail on path mapping issues',
+        }
+  notes: 'Monorepo decisions affect dev workflow and CI. Ensure per-package builds and path mappings are respected.'
+
+docs/adr/0002-sqlite.md:
+  category: architecture
+  severity: info
+  tags: [database, sqlite]
+  key_rules:
+    - use_sqlite
+  enforcement_suggestions:
+    - migration_checks: { type: test, desc: 'Add DB migration checks for CI and local dev setup' }
+
+docs/adr/0003-nextjs-frontend.md:
+  category: architecture
+  severity: info
+  tags: [frontend, nextjs]
+  key_rules:
+    - use_nextjs
+  notes: 'Next.js chosen for SSR/SSG. Ensure frontend ADR is reflected in deployment docs.'
+
+docs/adr/0004-nextjs-node-versions.md:
+  category: architecture
+  severity: info
+  tags: [node, versions, nextjs]
+  key_rules:
+    - pinned_node_next_versions
+  notes: 'Document required Node/Next versions in README and CI matrix.'
+
+docs/adr/0005-strict-typescript.md:
+  category: architecture
+  severity: important
+  tags: [typescript, strict]
+  key_rules:
+    - strict_types
+  enforcement_suggestions:
+    - tsconfig_checks:
+        { type: ci_job, desc: 'Fail CI if TypeScript strict rules are relaxed unintentionally' }
+
+docs/adr/0006-eslint-monorepo-plugin.md:
+  category: architecture
+  severity: important
+  tags: [eslint, monorepo]
+  key_rules:
+    - eslint_plugin_local_rules
+  enforcement_suggestions:
+    - eslint_plugin_ci: { type: ci_job, desc: 'Run ESLint with local rules in CI' }
+
+docs/adr/0007-typescript-testing.md:
+  category: testing
+  severity: important
+  tags: [typescript, testing]
+  key_rules:
+    - test_ts_config
+  notes: 'Ensure vitest/playwright configs coexist without conflicts.'
+
+docs/adr/0008-null-vs-undefined-optional-values.md:
+  category: architecture
+  severity: info
+  tags: [types, conventions]
+  key_rules:
+    - null_vs_undefined_guideline
+
+docs/adr/0009-jwt-environment-based-security.md:
+  category: security
+  severity: important
+  tags: [jwt, auth, security]
+  key_rules:
+    - jwt_env_exposure
+  enforcement_suggestions:
+    - env_based_token_policy:
+        { type: ci_rule, desc: 'Code-review checks to prevent token in production responses' }
+
+docs/adr/0010-e2e-auth-test-pattern.md:
+  category: testing
+  severity: important
+  tags: [e2e, playwright, auth]
+  key_rules:
+    - global_auth_seed
+    - cookie_check_stability
+  enforcement_suggestions:
+    - test_auth_pattern_doc: { type: docs, desc: 'Document and include in test templates' }
+
+docs/adr/0011-nextjs-api-route-caching-prevention.md:
+  category: architecture
+  severity: info
+  tags: [nextjs, api, cache]
+  key_rules:
+    - prevent_route_caching
+  notes: 'API route caching prevention recommendations for Next.js app routes.'
+
+# Additional docs and guides
+docs/app-workflow.md:
+  category: docs
+  severity: info
+  tags: [workflow, developer]
+  notes: 'Developer workflow and feature branching guidance.'
+
+docs/dev-script-enhancements.md:
+  category: dev-tools
+  severity: info
+  tags: [dev-scripts]
+  notes: 'Details about `dev.ps1`, `setup.ps1`, and running dev servers.'
+
+docs/OPENAPI_FIXES.md:
+  category: api
+  severity: info
+  tags: [openapi, api]
+  notes: 'Notes about OpenAPI fixes and API contract changes.'
+
+docs/playwright-enhancements.md:
+  category: testing
+  severity: info
+  tags: [playwright]
+  notes: 'Enhancement notes for Playwright usage and stability improvements.'
+
+docs/troubleshooting-guide.md:
+  category: docs
+  severity: info
+  tags: [troubleshooting]
+  notes: 'Common problems and fixes for devs.'
+
+# Scripts (already covered in initial mapping but we ensure broader coverage)
+scripts/run-playwright-with-secret.ps1:
+  category: testing-scripts
+  severity: important
+  tags: [playwright, scripts, secrets]
+  key_rules:
+    - use_ephemeral_test_secret
+  enforcement_suggestions:
+    - use_github_actions_secrets:
+        {
+          type: ci_job,
+          desc: 'Use GH Actions secrets to inject ephemeral test secrets for e2e runs',
+        }
+  notes: 'Runner used in CI to run resend-verification spec; must not log secrets.'
+
+scripts/test-seed-user.ps1:
+  category: testing-scripts
+  severity: info
+  tags: [test, seeding]
+  notes: 'Seeds test users via /__test endpoints; used in local dev and CI for stable test data.'
+
+# Duplicates & redundancy notes (manual cleanup suggestions)
+_cleanup_suggestions:
+  - duplicate_playwright_docs:
+      {
+        files: ['docs/playwright-test-execution.md', 'docs/playwright-enhancements.md'],
+        action: 'merge and canonicalize into docs/playwright/',
+      }
+  - duplicate_adr_overlap:
+      {
+        files:
+          [
+            'docs/adr/0001-monorepo-structure.md',
+            'docs/Architecture/architectural-decision-records.md',
+          ],
+        action: 'ensure single source ADR index and remove duplicate summaries',
+      }
+  - .env_api_key:
+      {
+        files: ['.env'],
+        action: 'remove sensitive API keys from repo; move to GH Secrets and add .env.example',
+      }
