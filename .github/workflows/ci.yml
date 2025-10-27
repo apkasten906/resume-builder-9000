@@ -5,7 +5,7 @@ on:
     branches: [dev, main, milestone/**, feat/**]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: [dev, main]
+    branches: [dev, main, milestone/**, feat/**]
   workflow_dispatch:
 
 concurrency:
@@ -89,19 +89,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - name: Run gitleaks scan
-        # Use the community action to run gitleaks; run in warn-only mode initially
-        uses: zricethezav/gitleaks-action@v2
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
         with:
-          args: "--redact --report-path=gitleaks-report.json"
+          fetch-depth: 0
+
+      - name: Install gitleaks
+        run: |
+          GL_VER=8.24.3
+          curl -sSL -o /tmp/gitleaks.tar.gz "https://github.com/zricethezav/gitleaks/releases/download/v${GL_VER}/gitleaks_${GL_VER}_linux_x64.tar.gz"
+          mkdir -p /tmp/gitleaks && tar -xzf /tmp/gitleaks.tar.gz -C /tmp/gitleaks
+
+      - name: Run gitleaks (warn-only)
+        id: gitleaks
+        run: |
+          /tmp/gitleaks/gitleaks detect --redact --report-path=gitleaks-report.json --report-format=sarif --config-path=.gitleaks.toml || echo "gitleaks exited with $? (warn-only)"
+
       - name: Upload gitleaks report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
           path: gitleaks-report.json
-      - name: Continue on findings (warn)
-        if: always()
-        run: |
-          echo "Gitleaks scan complete. Review the uploaded artifact 'gitleaks-report' for details."
