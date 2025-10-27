@@ -12,11 +12,35 @@ id = "generic-high-entropy"
 description = "Generic high entropy strings (default)"
 regex = '''[A-Za-z0-9_\-]{20,}'''
 entropy = 4.5
-exclude = ['^docs/', '^.github/', '^apps/web/test-results/', '^.tmp/', '^playwright-report/', '(^|/)(package-lock.json)$']
+# Exclude common build/test artifacts and log files to reduce noise. Keep rules for real source files.
+exclude = [
+	'^docs/',
+	'^.github/',
+	'^apps/web/test-results/',
+	'^.tmp/',
+	'^playwright-report/',
+	'(^|/)(package-lock.json)$',
+	'^apps/web/\.next/',
+	'^.github/browserlogs/',
+	'^logs/',
+	'^packages/.*/logs/',
+	'^packages/.*/\.next/',
+	'^playwright-report/',
+	'^node_modules/'
+]
 
 [[rules]]
 id = "resend-api-key"
 description = "Resend API key pattern (re_ prefix)"
 regex = '''re_[A-Za-z0-9_-]{16,}'''
 entropy = 3.5
-exclude = ['^docs/', '^.github/']
+# Keep this rule active for source files, but ignore built bundles and docs/browserlogs.
+exclude = [
+	'^docs/',
+	'^.github/',
+	'^apps/web/\.next/',
+	'^.github/browserlogs/',
+	'^playwright-report/',
+	'^logs/',
+	'^packages/.*/logs/'
+]
