@@ -53,6 +53,34 @@ If a secret was accidentally committed
 2. Rotate the secret (treat as compromised) — create a new API key/token and revoke the old one.
 3. If the secret was pushed to a public mirror, consider using a secrets scanning & history rewrite process and follow your org's incident response.
 
+## Quick action checklist for an accidental secret (example: Resend API key)
+
+- Rotate the compromised key immediately in the provider dashboard (Resend).
+- Remove the secret from the repository tip and ignore it going forward (example steps below).
+
+Example commands (run locally, coordinate with your team before rewriting history):
+
+```powershell
+# 1) Remove the file from HEAD but keep it locally
+git rm --cached packages/api/.env.local
+Add-Content -Path .gitignore -Value "packages/api/.env.local"
+git add .gitignore
+git commit -m "chore(secrets): remove local env containing Resend key and ignore it"
+git push origin HEAD
+```
+
+If you need to remove the secret from the repository history (optional, disruptive):
+
+```powershell
+# Use git-filter-repo (recommended) or BFG to purge the file from history
+# Example outline (run from a separate clone):
+# git clone --mirror https://github.com/<org>/<repo>.git repo-mirror.git
+# cd repo-mirror.git
+# git filter-repo --invert-paths --paths packages/api/.env.local
+# git push --force
+```
+
+
 Why this matters
 
 - Committed secrets can be discovered, reused, or abused. Rotation and centralized secret storage reduce blast radius and make auditing possible.
