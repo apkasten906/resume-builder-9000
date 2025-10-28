@@ -9,40 +9,43 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Path to the API package resume.db file
-const dbPath = path.join(__dirname, '..', 'packages', 'api', 'resume.db');
+// Path to the API package resume.db file. Prefer DB_PATH from environment when provided.
+const defaultDbPath = path.join(__dirname, '..', 'packages', 'api', 'data', 'resume.db');
+const dbPath =
+  process.env.DB_PATH && process.env.DB_PATH.length > 0 ? process.env.DB_PATH : defaultDbPath;
 
 console.log(`Seeding users into database at ${dbPath}`);
 
-// Check if database file exists
-if (!fs.existsSync(dbPath)) {
-  console.error(`Database file not found at ${dbPath}`);
-  process.exit(1);
+// Ensure parent directory exists so better-sqlite3 can open/create the file
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  console.log(`Database directory ${dbDir} does not exist - creating...`);
+  fs.mkdirSync(dbDir, { recursive: true });
 }
 
-// Connect to the database
+// Connect to the database (will create file if it doesn't exist)
 const db = new Database(dbPath);
 
 // First check the schema of the users table
-let userColumns;
-try {
-  userColumns = db.prepare('PRAGMA table_info(users)').all();
-  console.log('Existing table structure:');
-  console.log(userColumns.map(col => col.name).join(', '));
-} catch (err) {
-  console.error('Error checking table schema:', err.message);
-
-  // Create users table if it doesn't exist
+let userColumns = db.prepare('PRAGMA table_info(users)').all();
+if (!userColumns || userColumns.length === 0) {
+  console.log('No users table found - creating users table...');
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
+      name TEXT,
+      email_confirmed INTEGER NOT NULL DEFAULT 0,
+      email_confirmed_at TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
   userColumns = db.prepare('PRAGMA table_info(users)').all();
   console.log('Created users table with columns:');
+  console.log(userColumns.map(col => col.name).join(', '));
+} else {
+  console.log('Existing table structure:');
   console.log(userColumns.map(col => col.name).join(', '));
 }
 

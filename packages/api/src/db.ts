@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 
 import { logger } from './utils/logger.js';
 import { StoredResume, DatabaseRow } from './types/database.js';
@@ -33,6 +34,18 @@ export function connectDatabase(): SQLiteDatabase {
 
   // Get DB path from environment or use default
   const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
+  // Ensure parent directory exists before opening the database file
+  const dbDir = path.dirname(dbPath);
+  try {
+    if (!fs.existsSync(dbDir)) {
+      logger.info(`Database directory ${dbDir} does not exist - creating...`);
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+  } catch (err) {
+    logger.error('Failed to create database directory', { err });
+    throw err;
+  }
+
   logger.info(`Opening new database connection to ${dbPath}`);
   db = new Database(dbPath, {
     fileMustExist: false,

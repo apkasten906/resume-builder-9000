@@ -1,27 +1,147 @@
-# Ignore node_modules
-node_modules
+# Git and version control
+.git
+.gitignore
+.gitattributes
+.gitmodules
 
-# Ignore logs
-logs
-
-# Ignore test files
-tests
-
-# Ignore Docker-related files
-!Dockerfile
-!docker-compose.yml
-
-# Ignore other unnecessary files
+# Documentation and markdown files
 *.md
-*.lock
-*.log
+README*
+CHANGELOG*
+LICENSE*
+docs/
+.github/
+
+# Development and test files
+**/*.test.js
+**/*.test.ts
+**/*.spec.js
+**/*.spec.ts
+**/tests/
+**/test/
+**/__tests__/
+**/coverage/
+.nyc_output
+jest.config.*
+vitest.config.*
+playwright.config.*
+playwright-report/
+test-results/
+
+# Playwright and E2E testing (specifically excluded)
+**/playwright/
+**/e2e/
+**/*playwright*
+**/*e2e*
+@playwright/
+
+# Build artifacts and caches
+**/dist/
+**/build/
+**/.next/
+**/.cache/
+**/node_modules/
+.npm
+.yarn
+.pnp.*
+.yarn/
+
+# Development tools and configs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment and configuration files
+.env*
+!.env.example
+*.local
+.envrc
+
+# Logs
+**/*.log
+**/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Development scripts
+dev.ps1
+dev.sh
+setup.ps1
+**/scripts/
+
+# CI/CD and deployment configs (keep docker files)
+.github/
+!Dockerfile*
+!docker-compose*.yml
+!docker-compose*.yaml
+
+# Temporary and backup files
+**/tmp/
+**/temp/
+*.tmp
+*.temp
+*.backup
+*.bak
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+.atom/
+*.code-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Package manager lock files (yarn and pnpm - npm lock file is needed for npm ci)
+yarn.lock
+pnpm-lock.yaml
+
+# TypeScript cache
+*.tsbuildinfo
+.tscache/
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# Local database files (for development)
 *.sqlite
+*.sqlite3
 *.db
-*.env
+
+# Monorepo specific excludes
+Copilot-Processing*.md
+commit-message.txt
+cleanup-commit-message.txt
+fix-*.ps1
+backup-*.ps1
+debug-*.js
+migrate.js
+local-schema.sql
+origin-schema.sql
+RESOLUTION-SUMMARY.md
+
+# Development-specific files
+eslint-local-rules.cjs
+eslint-rules/
+clear-ts-cache.*
+
+# Archive files
 *.tar
 *.zip
 *.tgz
-*.bak
-*.tmp
-*.swp
-*.DS_Store

@@ -158,6 +158,20 @@ bash ./scripts/run-playwright-tests.sh --test-file "standalone-login.spec.ts" --
 bash ./scripts/run-playwright-tests.sh --headed
 ```
 
+### Running Playwright from VS Code Test Explorer
+
+If you run Playwright via the VS Code Test Explorer, environment variables injected by the IDE can differ from a CLI run. To make Test Explorer runs reproducible, use the helper script which sets the expected Docker/Test environment and forwards arguments to Playwright:
+
+Windows PowerShell:
+
+```powershell
+./scripts/run-playwright-test-explorer.ps1
+# or pass a specific spec/path:
+./scripts/run-playwright-test-explorer.ps1 -PlaywrightArgs "tests/e2e/login.spec.ts"
+```
+
+This script sets `DOCKER_TESTING=true`, configures `WEB_BASE` and `API_BASE` to the container ports (8080/8081), and enforces headless mode by default. Use it from the workspace root to match CI and Docker-based runs.
+
 ### Combined Testing Script
 
 To run both Vitest and Playwright tests sequentially:
