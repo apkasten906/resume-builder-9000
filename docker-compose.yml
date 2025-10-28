@@ -15,7 +15,7 @@ services:
         - NODE_ENV=production
     container_name: rb9k-api
     ports:
-      - '8081:4000'
+      - "8081:4000"
     environment:
       - NODE_ENV=production
       - PORT=4000
@@ -23,7 +23,7 @@ services:
       # Database configuration
       - DATABASE_URL=/app/data/resume_builder.db
       # JWT configuration (use secrets management in production)
-      - JWT_SECRET=${JWT_SECRET:-changeme-use-strong-secret}
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
       # CORS configuration
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080}
@@ -40,25 +40,25 @@ services:
     healthcheck:
       test:
         [
-          'CMD',
-          'node',
-          '-e',
+          "CMD",
+          "node",
+          "-e",
           "require('http').get('http://localhost:4000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
         ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 60s
     # Security: run as non-root user
-    user: '1001:1001'
+    user: "1001:1001"
     # Resource limits
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 1G
         reservations:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
 
   # ============================================================================
@@ -74,7 +74,7 @@ services:
         - NODE_ENV=production
     container_name: rb9k-web
     ports:
-      - '8080:3000'
+      - "8080:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -84,8 +84,8 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8081}
       - API_URL=${API_URL:-http://api:4000}
       # Authentication configuration
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:8080}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-changeme-use-strong-secret}
+  - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:8080}
+  - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
     depends_on:
       api:
         condition: service_healthy
@@ -95,25 +95,25 @@ services:
     healthcheck:
       test:
         [
-          'CMD',
-          'node',
-          '-e',
+          "CMD",
+          "node",
+          "-e",
           "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
         ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 60s
     # Security: run as non-root user
-    user: '1001:1001'
+    user: "1001:1001"
     # Resource limits
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 1G
         reservations:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
 
 # ============================================================================

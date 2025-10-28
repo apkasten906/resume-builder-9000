@@ -10,8 +10,9 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-// Determine database path from environment or use default
-const dbPath = process.env.DB_PATH || path.join(__dirname, 'resume.db');
+// Determine database path from environment or use a container-friendly default
+// In the container runtime the production compose mounts data at /app/data
+const dbPath = process.env.DB_PATH || '/app/data/resume_builder.db';
 const dataDir = path.dirname(dbPath);
 
 console.log('[init-db] Starting database initialization...');

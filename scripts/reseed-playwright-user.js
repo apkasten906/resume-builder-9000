@@ -7,11 +7,22 @@
 
   try {
     console.log('Deleting existing user (if any)');
-    await fetch(`${base}/__test/delete-user`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-test-secret': secret },
-      body: JSON.stringify({ email }),
-    }).catch(() => {});
+    try {
+      const delRes = await fetch(`${base}/__test/delete-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-test-secret': secret },
+        body: JSON.stringify({ email }),
+      });
+      if (!delRes.ok) {
+        console.warn(
+          'Warning: delete-user returned non-OK status',
+          delRes.status,
+          await delRes.text()
+        );
+      }
+    } catch (err) {
+      console.warn('Warning: error while calling delete-user', err);
+    }
 
     if (isDocker) {
       console.log('Seeding verified user inside Docker via test-support endpoint');

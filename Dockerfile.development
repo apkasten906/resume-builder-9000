@@ -44,11 +44,14 @@ RUN npm run build
 # Set up API development environment
 WORKDIR /app/packages/api
 
-# Expose API port and debugging port
+# Expose API port and optional debug port (9229). Debugging is opt-in via build arg NODE_INSPECT
 EXPOSE 4000 9229
 
-# Enable Node.js debugging
-ENV NODE_OPTIONS="--inspect=0.0.0.0:9229"
+# Enable Node.js debugging only when explicitly requested at build time.
+# To enable the inspector, build with:
+#   docker build --build-arg NODE_INSPECT="--inspect=0.0.0.0:9229" -t rb9k-api-dev -f Dockerfile.development .
+ARG NODE_INSPECT=""
+ENV NODE_OPTIONS=${NODE_INSPECT}
 
 # Create non-root user for development
 RUN addgroup -g 1001 -S nodejs && \
