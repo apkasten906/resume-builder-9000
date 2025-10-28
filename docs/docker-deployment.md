@@ -120,7 +120,7 @@ CORS_ORIGIN=http://localhost:3000
 
 # Web Configuration
 WEB_BASE=http://localhost:3000
-NEXT_PUBLIC_API_BASE=http://localhost:4000
+NEXT_PUBLIC_WEB_BASE=http://localhost:3000
 ```
 
 ### Optional Variables
