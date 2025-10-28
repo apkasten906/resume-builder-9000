@@ -67,8 +67,21 @@ function ensureTestAccess(req: Request, res: Response, next: NextFunction): void
     req.socket?.remoteAddress ||
     '';
   ip = ip.toString();
+  // Consider localhost addresses and Docker gateway addresses when running Playwright
+  // against containers. To avoid being overly permissive, allow Docker gateway addresses
+  // only for a configurable trusted subnet (defaults to 172.20.). This reduces the risk
+  // of accidentally trusting unrelated 172.* IPs.
+  const trustedSubnetPrefix = process.env.TEST_TRUSTED_SUBNET || '172.20.';
   const isLocal =
-    ip === '127.0.0.1' || ip === '::1' || ip.startsWith('::ffff:127.') || ip.startsWith('127.');
+    ip === '127.0.0.1' ||
+    ip === '::1' ||
+    ip.startsWith('::ffff:127.') ||
+    ip.startsWith('127.') ||
+    // If DOCKER_TESTING is enabled, treat Docker bridge gateway IPs from the trusted
+    // subnet as local so test-support endpoints can be called from the host when
+    // containers are used for E2E runs.
+    (process.env.DOCKER_TESTING === 'true' &&
+      (ip.startsWith(`::ffff:${trustedSubnetPrefix}`) || ip.startsWith(trustedSubnetPrefix)));
 
   if (!isLocal || !secret || provided !== secret) {
     // Only log suspicious access attempts in dev/test, not production
@@ -139,6 +152,54 @@ if (isTestEnvironment) {
       // eslint-disable-next-line no-console -- test route error visibility
       console.warn('[test-support] Failed to clear email outbox', err);
       return res.status(500).json({ error: 'Failed to clear email outbox' });
+    }
+  });
+
+  // Test-only endpoint to seed a verified user
+  router.post('/__test/seed-verified-user', async (req, res) => {
+    try {
+      // eslint-disable-next-line no-console -- debug visibility
+      console.info('[test-support] POST /__test/seed-verified-user called');
+
+      const { email, password, name } = req.body || {};
+      if (!email || !password) {
+        return res.status(400).json({ error: 'email and password are required' });
+      }
+
+      const db = connectDatabase();
+      const bcrypt = await import('bcryptjs');
+      const { randomUUID } = await import('crypto');
+
+      // Upsert behaviour: delete any existing test user with the same email, then insert a fresh
+      // verified user record. This guarantees idempotent test state and resets password.
+      try {
+        const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email) as
+          | { id: string }
+          | undefined;
+
+        if (existing) {
+          // Remove existing record completely to avoid accumulating Playwright test users
+          db.prepare('DELETE FROM users WHERE id = ?').run(existing.id);
+        }
+
+        const userId = randomUUID();
+        const passwordHash = await bcrypt.hash(password, 10);
+        const createdAt = new Date().toISOString();
+
+        db.prepare(
+          'INSERT INTO users (id, email, password_hash, name, email_confirmed, email_confirmed_at, created_at) VALUES (?, ?, ?, ?, 1, ?, ?)'
+        ).run(userId, email, passwordHash, name || null, createdAt, createdAt);
+
+        return res.status(201).json({ ok: true, userId, existed: Boolean(existing) });
+      } catch (e) {
+        // eslint-disable-next-line no-console -- test route error visibility
+        console.warn('[test-support] Upsert failed in seed-verified-user', e);
+        return res.status(500).json({ error: 'Failed to seed verified user' });
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console -- test route error visibility
+      console.warn('[test-support] Failed to seed verified user', err);
+      return res.status(500).json({ error: 'Failed to seed verified user' });
     }
   });
 

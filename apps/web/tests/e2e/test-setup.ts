@@ -16,17 +16,34 @@ const COOKIE_NAME = process.env.AUTH_SESSION_COOKIE_NAME || 'session'; // ← ma
 
 async function getBearerToken(): Promise<string> {
   try {
+    // Allow overriding the seeded login credentials via env vars when running tests
+    const seedEmail = process.env.TEST_SEED_EMAIL || 'user@example.com';
+    const seedPassword = process.env.TEST_SEED_PASSWORD || 'ValidPassword1!';
     const r = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'user@example.com', password: 'ValidPassword1!' }),
+      body: JSON.stringify({ email: seedEmail, password: seedPassword }),
     });
-    if (!r.ok) throw new Error(`login failed: ${r.status}`);
-    const data = (await r.json()) as { token?: string };
-    if (!data.token) {
-      throw new Error('Token not available in response (production mode)');
+    // Read the response body once, parse JSON if possible, and log/handle errors.
+    const raw = await r.text();
+    let data: { token?: string } | null = null;
+    try {
+      data = raw ? JSON.parse(raw) : null;
+    } catch {
+      // Not JSON — keep raw for logging
+      data = null;
     }
-    return data.token;
+
+    if (!r.ok) {
+      console.error('PLAYWRIGHT-DEBUG: /auth/login failed', { status: r.status, body: raw });
+      throw new Error(`login failed: ${r.status} ${raw}`);
+    }
+
+    if (!data?.token) {
+      throw new Error('Token not available in response: ' + raw);
+    }
+
+    return data.token as string;
   } catch (err) {
     testLogger.error('API login failed:', err instanceof Error ? err.message : String(err));
     throw err;

@@ -1,0 +1,14 @@
+services:
+  api:
+    environment:
+      - ENABLE_TEST_ROUTES=true
+      - TEST_ROUTE_SECRET=development-test-secret-123
+      - DOCKER_TESTING=true
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+  web:
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8081
+      - API_URL=http://api:4000
+      - API_BASE=http://api:4000

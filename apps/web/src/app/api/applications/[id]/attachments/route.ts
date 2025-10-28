@@ -5,14 +5,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   const body = await req.json();
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE}/applications/${params.id}/attachments`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      credentials: 'include' as RequestCredentials,
-    }
-  );
+  const res = await fetch(`${process.env.API_BASE}/applications/${params.id}/attachments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    credentials: 'include' as RequestCredentials,
+  });
   return NextResponse.json(await res.json(), { status: res.status });
 }

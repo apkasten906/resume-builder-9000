@@ -5,7 +5,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   const body = await req.json();
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/applications/${params.id}/stage`, {
+  const res = await fetch(`${process.env.API_BASE}/applications/${params.id}/stage`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
