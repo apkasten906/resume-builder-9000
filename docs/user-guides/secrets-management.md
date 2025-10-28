@@ -80,7 +80,6 @@ If you need to remove the secret from the repository history (optional, disrupti
 # git push --force
 ```
 
-
 Why this matters
 
 - Committed secrets can be discovered, reused, or abused. Rotation and centralized secret storage reduce blast radius and make auditing possible.
@@ -88,3 +87,13 @@ Why this matters
 References
 
 - See `docs/user-guides/email-setup-resend.md` for how this project expects `RESEND_API_KEY` and `RESEND_FROM_EMAIL` to be provided in development.
+
+## Repo cleanup actions performed (2025-10-28)
+
+This repository recently had a small, targeted cleanup applied to a feature branch addressing commit message formatting and noise reduction.
+
+- A non-conforming commit subject that began with the prefix `gitleaks:` was standardized to `chore(gitleaks):` so it matches the repository's Conventional Commit rules and CI `commitlint` validation.
+- A temporary helper script used during the rewrite (`scripts/rewrite-commit-msg.py`) was removed after use.
+- Local backup refs created by the `git filter-branch` operation were inspected and removed from this clone (refs under `refs/original/`) to avoid confusion. If you need the original refs for forensic reasons, do not remove them in your environment.
+
+If you want to reproduce or inspect the rewrite workflow used, see `scripts/purge-secret-history.ps1` for the recommended (mirror + git-filter-repo) approach and contact the repository admin before performing any destructive pushes.
