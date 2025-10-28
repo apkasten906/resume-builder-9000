@@ -68,3 +68,6 @@ resume.db
 commit-message.txt
 
 repo-mirror.git/
+
+# Local logs folder
+logs/
