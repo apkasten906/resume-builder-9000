@@ -66,3 +66,5 @@ packages/api/logs/combined.log
 resume.db
 *.db-journal
 commit-message.txt
+
+repo-mirror.git/
