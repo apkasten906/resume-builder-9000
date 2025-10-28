@@ -47,13 +47,12 @@ console.log('   Web URL:', webBaseUrl);
 console.log('   API URL:', apiBaseUrl);
 console.log('   Database:', dbPath);
 
-// Check if we're testing against Docker containers
-// Either production containers (8080/8081) or development containers (3000/4000)
+// Check if we're testing against Docker containers.
+// Prefer the explicit `DOCKER_TESTING` flag; fall back to production port checks.
 const isDockerTesting =
-  webBaseUrl.includes(':8080') ||
-  apiBaseUrl.includes(':8081') || // Production containers
   process.env.DOCKER_TESTING === 'true' || // Explicit Docker flag
-  (webBaseUrl.includes(':3000') && apiBaseUrl.includes(':4000') && process.env.CI !== 'true'); // Dev containers (not in CI)
+  webBaseUrl.includes(':8080') ||
+  apiBaseUrl.includes(':8081'); // Production container ports as a fallback
 console.log('   Docker Mode:', isDockerTesting);
 
 // Ensure test route credentials are available to test code

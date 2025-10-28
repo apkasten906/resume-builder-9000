@@ -67,18 +67,21 @@ function ensureTestAccess(req: Request, res: Response, next: NextFunction): void
     req.socket?.remoteAddress ||
     '';
   ip = ip.toString();
-  // Consider localhost addresses and (optionally) Docker gateway addresses when running
-  // Playwright against containers. When running Docker E2E tests the client IP may be
-  // the docker bridge gateway (e.g. 172.20.0.1) represented as '::ffff:172.20.0.1'.
+  // Consider localhost addresses and Docker gateway addresses when running Playwright
+  // against containers. To avoid being overly permissive, allow Docker gateway addresses
+  // only for a configurable trusted subnet (defaults to 172.20.). This reduces the risk
+  // of accidentally trusting unrelated 172.* IPs.
+  const trustedSubnetPrefix = process.env.TEST_TRUSTED_SUBNET || '172.20.';
   const isLocal =
     ip === '127.0.0.1' ||
     ip === '::1' ||
     ip.startsWith('::ffff:127.') ||
     ip.startsWith('127.') ||
-    // If DOCKER_TESTING is enabled, treat Docker bridge gateway IPs as local so test-support
-    // endpoints can be called from the host when containers are used for E2E runs.
+    // If DOCKER_TESTING is enabled, treat Docker bridge gateway IPs from the trusted
+    // subnet as local so test-support endpoints can be called from the host when
+    // containers are used for E2E runs.
     (process.env.DOCKER_TESTING === 'true' &&
-      (ip.startsWith('::ffff:172.') || ip.startsWith('172.')));
+      (ip.startsWith(`::ffff:${trustedSubnetPrefix}`) || ip.startsWith(trustedSubnetPrefix)));
 
   if (!isLocal || !secret || provided !== secret) {
     // Only log suspicious access attempts in dev/test, not production

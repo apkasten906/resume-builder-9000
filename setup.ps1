@@ -87,7 +87,7 @@ const db = new Database(dbPath);
 console.log('Creating users table...');
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -99,7 +99,11 @@ console.log('Creating test user: user@example.com');
 db.exec('DELETE FROM users WHERE email = ''user@example.com''');
 
 const hashedPassword = bcrypt.hashSync('ValidPassword1!', 10);
-db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)').run('user@example.com', hashedPassword);
+const { randomUUID } = require('crypto');
+const testUserId = randomUUID();
+
+// Insert including generated UUID for id column
+db.prepare('INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)').run(testUserId, 'user@example.com', hashedPassword);
 
 const user = db.prepare('SELECT id, email FROM users WHERE email = ?').get('user@example.com');
 console.log('Test user created successfully:', user);

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Database Initialization Script for Docker Container
- * 
+ *
  * This script ensures the database schema is created before the API server starts.
  * It runs migrations and creates required tables if they don't exist.
  */
@@ -35,7 +35,7 @@ console.log('[init-db] Connected to database');
 const schemaSql = `
 -- Core users table for authentication
 CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  id TEXT PRIMARY KEY,
   email TEXT NOT NULL UNIQUE COLLATE NOCASE,
   password_hash TEXT NOT NULL,
   name TEXT,
@@ -116,24 +116,30 @@ try {
   console.log('[init-db] Applying schema...');
   db.exec(schemaSql);
   console.log('[init-db] Schema applied successfully');
-  
+
   // Verify critical tables exist
-  const tables = db.prepare(`
-    SELECT name FROM sqlite_master 
-    WHERE type='table' 
+  const tables = db
+    .prepare(
+      `
+    SELECT name FROM sqlite_master
+    WHERE type='table'
     AND name IN ('users', 'applications', 'resumes', 'schema_migrations')
     ORDER BY name
-  `).all();
-  
+  `
+    )
+    .all();
+
   console.log('[init-db] Verified tables:', tables.map(t => t.name).join(', '));
-  
+
   // Insert migration record
   const migrationId = 'docker-init-schema-v1';
-  db.prepare(`
-    INSERT OR IGNORE INTO schema_migrations (id, applied_at) 
+  db.prepare(
+    `
+    INSERT OR IGNORE INTO schema_migrations (id, applied_at)
     VALUES (?, datetime('now'))
-  `).run(migrationId);
-  
+  `
+  ).run(migrationId);
+
   console.log('[init-db] Database initialization complete ✓');
   db.close();
   process.exit(0);

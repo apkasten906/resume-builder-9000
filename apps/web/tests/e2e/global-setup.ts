@@ -19,10 +19,11 @@ export default async function globalSetup(): Promise<void> {
       ? process.env.DB_PATH
       : defaultDbPath;
 
-  // Check if we're testing against Docker containers
+  // Check if we're testing against Docker containers. Prefer the explicit env flag
+  // `DOCKER_TESTING` rather than inferring from ports (which is fragile).
   const webBaseUrl = process.env.WEB_BASE || 'http://localhost:3000';
   const apiBaseUrl = process.env.API_BASE || 'http://localhost:4000';
-  const isDockerTesting = webBaseUrl.includes(':8080') || apiBaseUrl.includes(':8081');
+  const isDockerTesting = process.env.DOCKER_TESTING === 'true';
 
   console.log('🧪 Global Setup Configuration:');
   console.log('   Web URL:', webBaseUrl);

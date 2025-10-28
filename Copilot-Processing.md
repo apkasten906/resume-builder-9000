@@ -986,8 +986,8 @@ The user was correct - many tests should have been removed during previous merge
 
 ### ✅ MAJOR FIXES COMPLETED:
 
-- **Database Schema Fixed**: ID field now INTEGER PRIMARY KEY AUTOINCREMENT (was TEXT)
-- **Test User Fixed**: Now has proper `id: 1` instead of `id: null`
+- **Database Schema Fixed**: ID field now `TEXT PRIMARY KEY` (UUID) (was INTEGER AUTOINCREMENT)
+- **Test User Fixed**: Now has a UUID `id` (e.g. `00000000-0000-0000-0000-000000000001`) instead of an integer
 - **API Authentication Working**: Direct API test shows `{"ok": true, "token": "..."}`
 
 ### ❌ Core Application Issues Identified:
