@@ -21,111 +21,134 @@ services:
       - HOST=0.0.0.0
       - API_BASE=4000
       - DATABASE_URL=/app/data/resume_builder_dev.db
-      - JWT_SECRET=development-secret-change-in-production
-      - JWT_EXPIRES_IN=24h
-      - CORS_ORIGIN=http://localhost:3000
-      - LOG_LEVEL=debug
-      # Enable test routes for E2E testing
-      - ENABLE_TEST_ROUTES=true
-      - TEST_ROUTE_SECRET=development-test-secret-123
-      # When running Playwright against Docker containers, enable this so the API
-      # treats Docker gateway IPs as local for test-support endpoints.
-      - DOCKER_TESTING=true
-    volumes:
-      # Mount source code for hot reload
-      - ./packages/api/src:/app/packages/api/src:ro
-      - ./packages/core/src:/app/packages/core/src:ro
-      # Persistent dev database
-      - dev_api_data:/app/data
-      # Node modules (for faster rebuilds)
-      - api_node_modules:/app/packages/api/node_modules
-      - core_node_modules:/app/packages/core/node_modules
-    networks:
-      - rb9k-dev-network
-    restart: unless-stopped
-    # Enable debugging
-    command: ["npm", "run", "dev"]
+      # Resume Builder 9000 - Development Docker Compose
+      # For local development with hot reload and debugging
 
-  # ============================================================================
-  # Web Frontend Service (Development)
-  # ============================================================================
-  web-dev:
-    image: rb9k-web-dev:latest
-    build:
-      context: .
-      dockerfile: Dockerfile.development
-      target: web-dev
-    container_name: rb9k-web-dev
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-      - HOST=0.0.0.0
-      - NEXT_TELEMETRY_DISABLED=1
-      - NEXT_PUBLIC_API_URL=http://localhost:4000
-      - API_URL=http://api-dev:4000
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=development-secret-change-in-production
-      # Enable hot reload
-      - WATCHPACK_POLLING=true
-    volumes:
-      # Mount source code for hot reload
-      - ./apps/web/src:/app/apps/web/src:ro
-      - ./apps/web/public:/app/apps/web/public:ro
-      - ./packages/core/src:/app/packages/core/src:ro
-      # Next.js specific config files
-      - ./apps/web/next.config.js:/app/apps/web/next.config.js:ro
-      - ./apps/web/tailwind.config.js:/app/apps/web/tailwind.config.js:ro
-      - ./apps/web/postcss.config.mjs:/app/apps/web/postcss.config.mjs:ro
-      # Node modules (for faster rebuilds)
-      - web_node_modules:/app/apps/web/node_modules
-    depends_on:
-      - api-dev
-    networks:
-      - rb9k-dev-network
-    restart: unless-stopped
-    command: ["npm", "run", "dev"]
+      services:
+        # ============================================================================
+        # API Service (Development)
+        # ============================================================================
+        api-dev:
+          image: rb9k-api-dev:latest
+          build:
+            context: .
+            dockerfile: Dockerfile.development
+            target: api-dev
+          container_name: rb9k-api-dev
+          ports:
+            - "4000:4000"
+            - "9229:9229" # Node.js debugging port
+          environment:
+            - NODE_ENV=development
+            - PORT=4000
+            - HOST=0.0.0.0
+            - API_BASE=4000
+            - DATABASE_URL=/app/data/resume_builder_dev.db
+            - JWT_SECRET=development-secret-change-in-production
+            - JWT_EXPIRES_IN=24h
+            - CORS_ORIGIN=http://localhost:3000
+            - LOG_LEVEL=debug
+            # Enable test routes for E2E testing
+            - ENABLE_TEST_ROUTES=true
+            - TEST_ROUTE_SECRET=development-test-secret-123
+            # When running Playwright against Docker containers, enable this so the API
+            # treats Docker gateway IPs as local for test-support endpoints.
+            - DOCKER_TESTING=true
+          volumes:
+            # Mount source code for hot reload
+            - ./packages/api/src:/app/packages/api/src:ro
+            - ./packages/core/src:/app/packages/core/src:ro
+            # Persistent dev database
+            - dev_api_data:/app/data
+            # Node modules (for faster rebuilds)
+            - api_node_modules:/app/packages/api/node_modules
+            - core_node_modules:/app/packages/core/node_modules
+          networks:
+            - rb9k-dev-network
+          restart: unless-stopped
+          # Enable debugging
+          command: ["npm", "run", "dev"]
 
-  # ============================================================================
-  # Development Tools (Optional)
-  # ============================================================================
-  # Database browser for SQLite (optional)
-  db-browser:
-    image: coleifer/sqlite-web:latest
-    container_name: rb9k-db-browser
-    ports:
-      - "8080:8080"
-    volumes:
-      - dev_api_data:/data:ro
-    environment:
-      - SQLITE_DATABASE=/data/resume_builder_dev.db
-    networks:
-      - rb9k-dev-network
-    profiles:
-      - tools
-    restart: unless-stopped
+        # ============================================================================
+        # Web Frontend Service (Development)
+        # ============================================================================
+        web-dev:
+          image: rb9k-web-dev:latest
+          build:
+            context: .
+            dockerfile: Dockerfile.development
+            target: web-dev
+          container_name: rb9k-web-dev
+          ports:
+            - "3000:3000"
+          environment:
+            - NODE_ENV=development
+            - PORT=3000
+            - HOSTNAME=0.0.0.0
+            - HOST=0.0.0.0
+            - NEXT_TELEMETRY_DISABLED=1
+            - NEXT_PUBLIC_API_URL=http://localhost:4000
+            - API_URL=http://api-dev:4000
+            - NEXTAUTH_URL=http://localhost:3000
+            - NEXTAUTH_SECRET=development-secret-change-in-production
+            # Enable hot reload
+            - WATCHPACK_POLLING=true
+          volumes:
+            # Mount source code for hot reload
+            - ./apps/web/src:/app/apps/web/src:ro
+            - ./apps/web/public:/app/apps/web/public:ro
+            - ./packages/core/src:/app/packages/core/src:ro
+            # Next.js specific config files
+            - ./apps/web/next.config.js:/app/apps/web/next.config.js:ro
+            - ./apps/web/tailwind.config.js:/app/apps/web/tailwind.config.js:ro
+            - ./apps/web/postcss.config.mjs:/app/apps/web/postcss.config.mjs:ro
+            # Node modules (for faster rebuilds)
+            - web_node_modules:/app/apps/web/node_modules
+          depends_on:
+            - api-dev
+          networks:
+            - rb9k-dev-network
+          restart: unless-stopped
+          command: ["npm", "run", "dev"]
 
-# ============================================================================
-# Networks
-# ============================================================================
-networks:
-  rb9k-dev-network:
-    driver: bridge
+        # ============================================================================
+        # Development Tools (Optional)
+        # ============================================================================
+        # Database browser for SQLite (optional)
+        db-browser:
+          image: coleifer/sqlite-web:latest
+          container_name: rb9k-db-browser
+          ports:
+            - "8080:8080"
+          volumes:
+            - dev_api_data:/data:ro
+          environment:
+            - SQLITE_DATABASE=/data/resume_builder_dev.db
+          networks:
+            - rb9k-dev-network
+          profiles:
+            - tools
+          restart: unless-stopped
 
-# ============================================================================
-# Volumes for development
-# ============================================================================
-volumes:
-  # Development database
-  dev_api_data:
-    driver: local
+      # ============================================================================
+      # Networks
+      # ============================================================================
+      networks:
+        rb9k-dev-network:
+          driver: bridge
 
-  # Node modules caches (for faster rebuilds)
-  api_node_modules:
-    driver: local
-  core_node_modules:
-    driver: local
-  web_node_modules:
-    driver: local
+      # ============================================================================
+      # Volumes for development
+      # ============================================================================
+      volumes:
+        # Development database
+        dev_api_data:
+          driver: local
+
+        # Node modules caches (for faster rebuilds)
+        api_node_modules:
+          driver: local
+        core_node_modules:
+          driver: local
+        web_node_modules:
+          driver: local

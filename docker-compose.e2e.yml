@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Playwright runner service (one-shot)
@@ -27,116 +27,56 @@ services:
         condition: service_healthy
       web:
         condition: service_healthy
-    command: ["bash", "-lc", "npm ci --prefer-offline --no-audit && npx playwright install --with-deps && npx playwright test --config=apps/web/tests/e2e/playwright.config.ts --reporter=list"]
+    command:
+      [
+        "bash",
+        "-lc",
+        "npm ci --prefer-offline --no-audit && npx playwright install --with-deps && npx playwright test --config=apps/web/tests/e2e/playwright.config.ts --reporter=list",
+      ]
     networks:
       - rb9k-network
 
 networks:
   rb9k-network:
     external: false
-# Resume Builder 9000 - E2E Docker Compose
-# A temporary compose file used for running E2E tests in CI/local without altering the repo's
-# primary docker-compose.yml (useful if the primary file is under iteration).
+version: "3.8"
 
 services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.production
-      target: api-runtime
-      args:
-        - NODE_ENV=production
-    image: rb9k-api:e2e
-    container_name: rb9k-api-e2e
-    ports:
-      - "8081:4000"
-    environment:
-      - NODE_ENV=production
-      - PORT=4000
-      - API_BASE=4000
-      - ENABLE_TEST_ROUTES=true
-      - TEST_ROUTE_SECRET=${TEST_ROUTE_SECRET:-playwright-e2e-secret-0001}
-      - TEST_TRUSTED_SUBNET=${TEST_TRUSTED_SUBNET:-172.}
-      - DATABASE_URL=/app/data/resume_builder.db
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080}
-      - LOG_LEVEL=${LOG_LEVEL:-info}
+  # Playwright runner service (one-shot)
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.55.0-jammy
+    working_dir: /work
+    user: pwuser
+    tty: true
     volumes:
-      - api_data:/app/data
-      - upload_data:/app/uploads
-    networks:
-      - rb9k-network
-    restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://localhost:4000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile.production
-      target: web-runtime
-      args:
-        - NODE_ENV=production
-    image: rb9k-web:e2e
-    container_name: rb9k-web-e2e
-    ports:
-      - "8080:3000"
+      - ./:/work:cached
+      - /dev/shm:/dev/shm
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-      - NEXT_TELEMETRY_DISABLED=1
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8081}
-      - API_URL=${API_URL:-http://api:4000}
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:8080}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      # Use internal hostnames so the runner talks to containers via the compose network
+      - DOCKER_TESTING=true
+      - WEB_BASE=http://web:3000
+      - API_BASE=http://api:4000
+      - PLAYWRIGHT_HEADLESS=true
+      - PLAYWRIGHT_TEST=true
+      - ENABLE_TEST_ROUTES=true
+      # TEST_ROUTE_SECRET must be provided by the caller (do NOT commit real secrets)
+      - TEST_ROUTE_SECRET=${TEST_ROUTE_SECRET}
+      # Optional: trusted subnet for test-support access (matches docker-compose network subnet)
+      - TEST_TRUSTED_SUBNET=${TEST_TRUSTED_SUBNET:-172.20.}
     depends_on:
       api:
         condition: service_healthy
+      web:
+        condition: service_healthy
+    command:
+      [
+        "bash",
+        "-lc",
+        "npm ci --prefer-offline --no-audit && npx playwright install --with-deps && npx playwright test --config=apps/web/tests/e2e/playwright.config.ts --reporter=list",
+      ]
     networks:
       - rb9k-network
-    restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
-volumes:
-  api_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/api
-  upload_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/uploads
 
 networks:
   rb9k-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+    external: false

@@ -1,0 +1,96 @@
+services:
+  api:
+    image: rb9k-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: api-runtime
+    container_name: rb9k-api
+    ports:
+      - "8081:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - API_BASE=4000
+      - DATABASE_URL=/app/data/resume.db
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - api_data:/app/data
+      - upload_data:/app/uploads
+    networks:
+      - rb9k-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:4000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  web:
+    image: rb9k-web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: web-runtime
+    container_name: rb9k-web
+    ports:
+      - "8080:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8081}
+      - API_URL=${API_URL:-http://api:4000}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:8080}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - rb9k-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  rb9k-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  api_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/api
+
+  upload_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/uploads

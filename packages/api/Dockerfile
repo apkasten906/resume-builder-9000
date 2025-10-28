@@ -10,6 +10,18 @@ COPY packages/api/package.json ./packages/api/
 # Copy the core package source files
 COPY packages/core ./packages/core
 # Build the core package
+# Multi-stage build for RB9K API service
+
+# Stage 1: Build the core package
+FROM node:22-alpine AS core-builder
+WORKDIR /app
+# Copy the monorepo structure (package.json files) for proper npm workspaces
+COPY package.json ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/api/package.json ./packages/api/
+# Copy the core package source files
+COPY packages/core ./packages/core
+# Build the core package
 WORKDIR /app/packages/core
 RUN npm install && npm run build
 

@@ -309,7 +309,13 @@ npm run lint         # Check code quality
 # Clear caches
 npm run clear-cache  # Clear TypeScript cache
 rm -rf .next         # Clear Next.js cache
-rm -rf node_modules && npm install  # Fresh dependencies
+
+# Fresh dependencies
+# POSIX / Bash:
+rm -rf node_modules && npm install
+
+# Windows PowerShell (use semicolon to separate commands and Remove-Item to delete):
+Remove-Item -Recurse -Force node_modules; npm install
 ```
 
 ### Common Solutions

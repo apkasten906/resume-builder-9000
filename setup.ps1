@@ -1,6 +1,10 @@
 # Resume Builder 9000 Setup Script
+# Resume Builder 9000 Setup Script
 param(
-  [switch]$Help
+  [switch]$Help,
+  # When set, install Playwright browsers and run the E2E suite at the end of setup.
+  # By default E2E is skipped so CI/dev can run setup faster. Use -RunE2E to enable.
+  [switch]$RunE2E
 )
 
 if ($Help) {
@@ -33,11 +37,11 @@ if (-not (Test-Path ".env")) {
     Copy-Item -Path ".env.example" -Destination ".env" -Force
   }
   else {
-    Write-Host "No .env or .env.example found — please create an .env file manually." -ForegroundColor Yellow
+    Write-Host "No .env or .env.example found - please create an .env file manually." -ForegroundColor Yellow
   }
 }
 else {
-  Write-Host ".env already exists — leaving it unchanged."
+  Write-Host ".env already exists - leaving it unchanged."
 }
 
 # Install dependencies in root and important workspaces
@@ -55,7 +59,7 @@ try {
       Pop-Location
     }
     else {
-      Write-Host "Directory $dir not found — skipping npm install for it." -ForegroundColor Yellow
+      Write-Host "Directory $dir not found - skipping npm install for it." -ForegroundColor Yellow
     }
   }
 }
@@ -69,70 +73,50 @@ catch {
 Write-Host "Building packages..."
 npm run build --workspaces
 
-# Initialize database with test user for integration tests
-Write-Host "Setting up database with test user..."
+# Initialize database with centralized initializer and seed test user
+Write-Host "Setting up database with centralized initializer (init-db.cjs) and seeder..."
 try {
-  $dbSetupScript = @"
-const Database = require('better-sqlite3');
-const bcrypt = require('bcryptjs');
-const path = require('path');
+  # Ensure DB_PATH is set (fall back to repo default if not provided)
+  if (-not $env:DB_PATH -or $env:DB_PATH -eq '') {
+    $repoRoot = (Get-Location).Path
+    $defaultDbPath = Join-Path $repoRoot 'packages\api\data\resume.db'
+    $env:DB_PATH = $defaultDbPath
+    Write-Host "DB_PATH not set; defaulting to $env:DB_PATH"
+  }
+  else {
+    Write-Host "Using DB_PATH: $env:DB_PATH"
+  }
 
-// Path to the API package resume.db file
-const dbPath = path.join(__dirname, 'packages', 'api', 'resume.db');
+  # Run the centralized DB initializer (idempotent)
+  Write-Host "Running packages/api/init-db.cjs to apply schema..."
+  node .\packages\api\init-db.cjs
 
-console.log('Initializing database for integration tests...');
-const db = new Database(dbPath);
+  # Seed the deterministic test user using the existing seeder script
+  Write-Host "Seeding test user via scripts/seed-users.js..."
+  node .\scripts\seed-users.js
 
-// Create users table with proper schema
-console.log('Creating users table...');
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
-// Clear existing test users and create fresh test user
-console.log('Creating test user: user@example.com');
-db.exec('DELETE FROM users WHERE email = ''user@example.com''');
-
-const hashedPassword = bcrypt.hashSync('ValidPassword1!', 10);
-const { randomUUID } = require('crypto');
-const testUserId = randomUUID();
-
-// Insert including generated UUID for id column
-db.prepare('INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)').run(testUserId, 'user@example.com', hashedPassword);
-
-const user = db.prepare('SELECT id, email FROM users WHERE email = ?').get('user@example.com');
-console.log('Test user created successfully:', user);
-
-db.close();
-console.log('Database setup complete!');
-"@
-
-  $dbSetupScript | Out-File -FilePath "temp-db-setup.js" -Encoding utf8
-  node temp-db-setup.js
-  Remove-Item "temp-db-setup.js"
-
-  Write-Host "✅ Database initialized with test user (user@example.com / ValidPassword1!)" -ForegroundColor Green
+  Write-Host "[OK] Database initialized with test user (user@example.com / ValidPassword1!)" -ForegroundColor Green
 }
 catch {
-  Write-Host "⚠️  Database setup failed: $($_.Exception.Message)" -ForegroundColor Yellow
-  Write-Host "Continuing setup - you may need to run scripts/seed-users.js manually"
+  Write-Host "[WARN] Database setup failed: $($_.Exception.Message)" -ForegroundColor Yellow
+  Write-Host "Continuing setup - you may need to run packages/api/init-db.cjs and scripts/seed-users.js manually"
 }
 
 # Run unit/integration tests
 Write-Host "Running tests..."
 npm run test --workspaces
 
-# Install Playwright browsers (for E2E tests)
-Write-Host "Installing Playwright browsers..."
-npx playwright install
+# Optionally install Playwright browsers and run E2E tests
+if ($RunE2E) {
+  Write-Host "Installing Playwright browsers..."
+  npx playwright install
 
-# Run Playwright E2E tests with dot reporter for autonomous exit
-Write-Host "Running Playwright E2E tests (dot reporter)..."
-npx playwright test apps/web/tests/e2e --reporter=dot
+  # Run Playwright E2E tests with dot reporter for autonomous exit
+  Write-Host "Running Playwright E2E tests (dot reporter)..."
+  npx playwright test apps/web/tests/e2e --reporter=dot
+}
+else {
+  Write-Host "Skipping Playwright install/tests. To run E2E, re-run setup.ps1 with the -RunE2E switch."
+}
 
 Write-Host "Setup complete! You can now run task 'Run Dev Script (direct)' to start the development environment."
