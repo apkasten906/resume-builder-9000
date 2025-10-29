@@ -25,7 +25,11 @@ import authRoutes from './routes/auth.js';
 const app = express();
 const defaultPort = 4000;
 const apiBase = process.env.API_BASE;
-let port = Number(process.env.PORT || process.env.API_PORT);
+// Prefer API_PORT explicitly; do not use the generic PORT env var here because
+// the dev orchestration sets PORT for the web frontend and that caused the API
+// to accidentally bind to the web port. Use API_PORT first, then fall back to
+// parsing API_BASE or the default below.
+let port = Number(process.env.API_PORT);
 
 if (!port || Number.isNaN(port)) {
   if (apiBase) {
@@ -39,6 +43,8 @@ if (!port || Number.isNaN(port)) {
     port = defaultPort;
   }
 }
+
+logger.info(`API server starting on API_BASE=${apiBase}, API_PORT=${process.env.API_PORT}`);
 
 // Middleware
 app.use(httpLogger); // HTTP request logging
@@ -124,7 +130,7 @@ async function mountOptionalRoutesAndStart() {
 
     // Start server
     app.listen(port, () => {
-      logger.info(`API server running on http://localhost:${port}`);
+      logger.info(`API server running on apiBase=${apiBase} (port ${port})`);
     });
   } catch (err) {
     logger.error('Failed to connect to database:', { error: err });

@@ -35,9 +35,10 @@ const dbPath =
 
 process.env.DB_PATH = dbPath;
 
-// Configure URLs based on environment (Docker vs development)
-const playwrightWebPort = process.env.PLAYWRIGHT_WEB_PORT || '3000';
-const playwrightApiPort = process.env.PLAYWRIGHT_API_PORT || '4000';
+// Configure URLs based on environment (Docker vs development).
+// Prefer a single source of truth: WEB_PORT / API_PORT. Fall back to PLAYWRIGHT_* for legacy support.
+const playwrightWebPort = process.env.WEB_PORT || process.env.PLAYWRIGHT_WEB_PORT || '3000';
+const playwrightApiPort = process.env.API_PORT || process.env.PLAYWRIGHT_API_PORT || '4000';
 
 const webBaseUrl = process.env.WEB_BASE || `http://localhost:${playwrightWebPort}`;
 const apiBaseUrl = process.env.API_BASE || `http://localhost:${playwrightApiPort}`;

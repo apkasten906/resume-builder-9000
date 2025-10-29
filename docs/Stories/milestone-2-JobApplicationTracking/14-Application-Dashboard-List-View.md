@@ -133,7 +133,6 @@ CREATE INDEX IF NOT EXISTS idx_applications_updated_at ON applications(updated_a
 - npm install
 
 - Run migrations and seed data
-
   - POSIX / Bash:
 
     ```bash
