@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 import { logger } from './utils/logger.js';
 import { StoredResume, DatabaseRow } from './types/database.js';
@@ -32,8 +33,51 @@ export function connectDatabase(): SQLiteDatabase {
     return db;
   }
 
-  // Get DB path from environment or use default
-  const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
+  // Resolve DB path robustly:
+  // - If DB_PATH is provided and absolute, use it as-is
+  // - If DB_PATH is provided and relative, resolve it relative to the API package
+  //   directory (not process.cwd()) so callers can pass 'data/resume.db' and
+  //   it will resolve to 'packages/api/data/resume.db'.
+  // - If DB_PATH is not provided, default to '<packageRoot>/data/resume.db'.
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const packageRoot = path.resolve(__dirname, '..');
+
+  const rawDbPath =
+    process.env.DB_PATH && process.env.DB_PATH.length > 0 ? process.env.DB_PATH : undefined;
+
+  // Decide final DB path. Preserve special SQLite URIs such as ':memory:' or
+  // 'file:...' exactly as provided by tests or callers. If a relative path is
+  // provided, resolve it relative to the api package root so callers can pass
+  // 'data/resume.db'. If none provided, default to packages/api/data/resume.db.
+  let dbPath: string;
+  if (rawDbPath) {
+    if (rawDbPath === ':memory:' || rawDbPath.startsWith('file:')) {
+      dbPath = rawDbPath; // in-memory or file URI -- do not resolve
+    } else if (path.isAbsolute(rawDbPath)) {
+      // Absolute paths are used as-is (covers Windows C:\ and POSIX /absolute)
+      dbPath = rawDbPath;
+    } else {
+      // For relative paths (e.g. 'packages/api/data/resume.db' or
+      // 'data/resume.db') normalize the value so that a leading slash is
+      // present, then resolve against the repository root. This avoids
+      // hardcoding any specific package prefix while supporting both
+      // 'packages/...' and '/packages/...' styles in .env values.
+      const repoRoot = path.resolve(packageRoot, '..', '..');
+
+      // Normalize path separators and ensure a single leading '/'
+      const cleaned = rawDbPath.replace(/\\/g, '/');
+      const withLeading = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+
+      // Use './' + withLeading to force resolve() to join repoRoot with the
+      // repo-relative path (rather than treating withLeading as absolute).
+      dbPath = path.resolve(repoRoot, `.${withLeading}`);
+    }
+  } else {
+    dbPath = path.join(packageRoot, 'data', 'resume.db');
+  }
+
+  logger.info(`Resolved DB path: ${dbPath}`);
   // Ensure parent directory exists before opening the database file
   const dbDir = path.dirname(dbPath);
   try {
