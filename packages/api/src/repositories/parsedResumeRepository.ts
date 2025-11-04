@@ -35,12 +35,16 @@ const DEFAULT_PERSONAL_INFO: ParsedPersonalInfo = {
 // Prefer structuredClone when available (Node 17+ / modern runtimes). Fallback to
 // JSON-based deep clone which preserves basic JSON-safe data.
 function clone<T>(value: T): T {
-  // Use globalThis to safely access structuredClone in environments where it's available.
-  const sc = (globalThis as any).structuredClone;
+  // Prefer a type-safe check for structuredClone on globalThis when available.
+  const sc = 'structuredClone' in globalThis
+    ? (globalThis as unknown as { structuredClone: (v: unknown) => unknown }).structuredClone
+    : undefined;
+
   if (typeof sc === 'function') {
     return sc(value) as T;
   }
-  // Fallback for older Node versions / runtimes
+
+  // Fallback for older Node versions / runtimes (JSON-safe deep clone)
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
@@ -83,25 +87,31 @@ function mapRow(row: ParsedResumeRow): ParsedResumeRecord {
   };
 }
 
-function buildQueryParams(uploadId: string | null): {
-  comparison: string;
-  args: readonly unknown[];
-} {
+// Build a simple param descriptor for uploadId. Avoid returning raw SQL fragments
+// that get injected into queries; instead choose the correct prepared statement
+// branch at the callsite so the query stays parameterized.
+function buildQueryParams(uploadId: string | null): { isNull: boolean; args: readonly unknown[] } {
   if (uploadId === null) {
-    return { comparison: 'upload_id IS NULL', args: [] };
+    return { isNull: true, args: [] };
   }
-  return { comparison: 'upload_id = ?', args: [uploadId] };
+  return { isNull: false, args: [uploadId] };
 }
 
-export function getParsedResumeByUser(
-  userId: string,
-  uploadId: string | null
-): ParsedResumeRecord | undefined {
+export function getParsedResumeByUser(userId: string, uploadId: string | null): ParsedResumeRecord | undefined {
   const db = connectDatabase();
-  const { comparison, args } = buildQueryParams(uploadId);
-  const row = db
-    .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND ${comparison} LIMIT 1`)
-    .get(userId, ...args) as ParsedResumeRow | undefined;
+  const { isNull, args } = buildQueryParams(uploadId);
+
+  let row: ParsedResumeRow | undefined;
+  if (isNull) {
+    row = db
+      .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id IS NULL LIMIT 1`)
+      .get(userId) as ParsedResumeRow | undefined;
+  } else {
+    row = db
+      .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id = ? LIMIT 1`)
+      .get(userId, ...args) as ParsedResumeRow | undefined;
+  }
+
   if (!row) {
     return undefined;
   }
@@ -115,10 +125,17 @@ export function upsertParsedResume(
 ): ParsedResumeRecord {
   const db = connectDatabase();
   const now = new Date().toISOString();
-  const { comparison, args } = buildQueryParams(uploadId);
-  const existing = db
-    .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND ${comparison} LIMIT 1`)
-    .get(userId, ...args) as ParsedResumeRow | undefined;
+  const { isNull, args } = buildQueryParams(uploadId);
+  let existing: ParsedResumeRow | undefined;
+  if (isNull) {
+    existing = db
+      .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id IS NULL LIMIT 1`)
+      .get(userId) as ParsedResumeRow | undefined;
+  } else {
+    existing = db
+      .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id = ? LIMIT 1`)
+      .get(userId, ...args) as ParsedResumeRow | undefined;
+  }
 
   const personalInfo = payload.personalInfo ?? DEFAULT_PERSONAL_INFO;
   const experience = payload.experience ? clone(payload.experience) : clone(EMPTY_EXPERIENCE);

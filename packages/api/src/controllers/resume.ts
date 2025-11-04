@@ -176,7 +176,7 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
           return {
             institution: parsed.institution || e,
             degree: parsed.degree || '',
-            graduationDate: parsed.graduationDate || parsed.graduationDate || '',
+            graduationDate: parsed.graduationDate || '',
             fieldOfStudy: parsed.fieldOfStudy || '',
             notes: '',
           };

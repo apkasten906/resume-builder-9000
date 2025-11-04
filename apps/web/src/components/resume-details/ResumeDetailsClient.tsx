@@ -58,14 +58,14 @@ function mapExperienceToState(
 ): ParsedResumeExperience[] {
   return experience.map((entry, idx) => ({
     ...entry,
-    id: (entry as any).id ?? genLocalId('exp', idx),
+    id: entry.id ?? genLocalId('exp', idx),
   }));
 }
 
 function mapEducationToState(education: readonly ParsedResumeEducation[]): ParsedResumeEducation[] {
   return education.map((entry, idx) => ({
     ...entry,
-    id: (entry as any).id ?? genLocalId('edu', idx),
+    id: entry.id ?? genLocalId('edu', idx),
   }));
 }
 
