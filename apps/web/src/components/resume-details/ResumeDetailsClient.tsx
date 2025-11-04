@@ -50,7 +50,17 @@ function serializeMultiline(values: readonly string[]): string {
 }
 
 function genLocalId(prefix: string, index: number): string {
-  return `${prefix}-${index}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  // Use crypto.randomUUID() when available (more collision-resistant). Fallback to
+  // a timestamp+random string for older browsers.
+  const webCrypto =
+    typeof crypto !== 'undefined'
+      ? (crypto as unknown as { randomUUID?: () => string })
+      : undefined;
+
+  const uuid = webCrypto && typeof webCrypto.randomUUID === 'function'
+    ? webCrypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  return `${prefix}-${index}-${uuid}`;
 }
 
 function mapExperienceToState(
