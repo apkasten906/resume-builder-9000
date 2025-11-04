@@ -29,6 +29,7 @@
     "mammoth": "^1.4.2",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
+  "cookie-parser": "^1.4.6",
     "pdf-parse": "^1.1.1",
     "resend": "^6.2.0",
     "sqlite3": "^5.1.6",
