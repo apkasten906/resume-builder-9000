@@ -75,7 +75,10 @@ function mapRow(row: ParsedResumeRow): ParsedResumeRecord {
   };
 }
 
-function buildQueryParams(uploadId: string | null): { comparison: string; args: readonly unknown[] } {
+function buildQueryParams(uploadId: string | null): {
+  comparison: string;
+  args: readonly unknown[];
+} {
   if (uploadId === null) {
     return { comparison: 'upload_id IS NULL', args: [] };
   }
@@ -89,9 +92,7 @@ export function getParsedResumeByUser(
   const db = connectDatabase();
   const { comparison, args } = buildQueryParams(uploadId);
   const row = db
-    .prepare(
-      `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND ${comparison} LIMIT 1`
-    )
+    .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND ${comparison} LIMIT 1`)
     .get(userId, ...args) as ParsedResumeRow | undefined;
   if (!row) {
     return undefined;
@@ -115,7 +116,9 @@ export function upsertParsedResume(
   const experience = payload.experience ? clone(payload.experience) : clone(EMPTY_EXPERIENCE);
   const skills = payload.skills ? clone(payload.skills) : clone(EMPTY_STRINGS);
   const education = payload.education ? clone(payload.education) : clone(EMPTY_EDUCATION);
-  const certifications = payload.certifications ? clone(payload.certifications) : clone(EMPTY_STRINGS);
+  const certifications = payload.certifications
+    ? clone(payload.certifications)
+    : clone(EMPTY_STRINGS);
   const awards = payload.awards ? clone(payload.awards) : clone(EMPTY_STRINGS);
   const hobbies = payload.hobbies ? clone(payload.hobbies) : clone(EMPTY_STRINGS);
 

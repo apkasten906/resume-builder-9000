@@ -1,7 +1,10 @@
 import type { Request, Response } from 'express';
 import { logger } from '../utils/logger.js';
 import { getResumeFromDb } from '../db.js';
-import { upsertParsedResume, getParsedResumeByUser } from '../repositories/parsedResumeRepository.js';
+import {
+  upsertParsedResume,
+  getParsedResumeByUser,
+} from '../repositories/parsedResumeRepository.js';
 import type { ParsedResumeUpsertInput } from '../types/parsedResume.js';
 import { ParsedResumeUpsertSchema, ParsedPersonalInfoSchema } from '../types/parsedResume.js';
 import type { AuthenticatedUser } from '../services/authService.js';
@@ -14,7 +17,9 @@ const UpdatePayloadSchema = ParsedResumeUpsertSchema.extend({
   personalInfo: ParsedPersonalInfoSchema.optional(),
 }).strict();
 
-function buildDefaultsFromResume(resume: ReturnType<typeof getResumeFromDb>): ParsedResumeUpsertInput {
+function buildDefaultsFromResume(
+  resume: ReturnType<typeof getResumeFromDb>
+): ParsedResumeUpsertInput {
   if (!resume) {
     return {};
   }
@@ -28,8 +33,11 @@ function buildDefaultsFromResume(resume: ReturnType<typeof getResumeFromDb>): Pa
       emails: personalInfoDefaults.email ? [personalInfoDefaults.email] : [],
       phones: personalInfoDefaults.phone ? [personalInfoDefaults.phone] : [],
       addresses: personalInfoDefaults.location ? [personalInfoDefaults.location] : [],
-      websites: [personalInfoDefaults.linkedIn, personalInfoDefaults.website, personalInfoDefaults.github]
-        .filter((value): value is string => !!value),
+      websites: [
+        personalInfoDefaults.linkedIn,
+        personalInfoDefaults.website,
+        personalInfoDefaults.github,
+      ].filter((value): value is string => !!value),
     },
     experience: resume.resumeData.experience.map((experience, index) => ({
       id: `${resume.id}-exp-${index}`,
@@ -54,10 +62,7 @@ function buildDefaultsFromResume(resume: ReturnType<typeof getResumeFromDb>): Pa
   };
 }
 
-export async function getResumeParsedFields(
-  req: Request,
-  res: Response
-): Promise<void> {
+export async function getResumeParsedFields(req: Request, res: Response): Promise<void> {
   const authedRequest = req as AuthenticatedRequest;
   const uploadId = req.params.id;
   if (!uploadId) {
@@ -84,10 +89,7 @@ export async function getResumeParsedFields(
   res.json(created);
 }
 
-export async function updateResumeParsedFields(
-  req: Request,
-  res: Response
-): Promise<void> {
+export async function updateResumeParsedFields(req: Request, res: Response): Promise<void> {
   const authedRequest = req as AuthenticatedRequest;
   const uploadId = req.params.id;
   if (!uploadId) {

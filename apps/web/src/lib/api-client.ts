@@ -1,7 +1,4 @@
-import type {
-  ParsedResumeUpdateRequest,
-  ResumeDetailsApiResponse,
-} from '@/types/resume-details';
+import type { ParsedResumeUpdateRequest, ResumeDetailsApiResponse } from '@/types/resume-details';
 
 /**
  * Type-Safe API Service Generator

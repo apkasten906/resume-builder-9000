@@ -126,24 +126,19 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
     try {
       text = await parseFileText(file);
     } catch (parseErr) {
-      // Log the parsing error but continue — some PDFs fail to parse cleanly in tests
-      // and we prefer to persist a best-effort record so the UI and E2E can proceed.
       logger.error('Error extracting file text', { error: parseErr, fileName: file.originalname });
-
-      // Fallback minimal content so downstream parsing still works
       text = `Summary: Uploaded file ${file.originalname}\nExperience: No experience found.\nSkills: None`;
     }
 
-    // Improved parsing for E2E test reliability:
-    // Extract summary, experience, and skills from the text using explicit line matching
+    // Parse lines for summary, experience, skills, education
     let summary = '';
     let experience: string[] = [];
     let skills: string[] = [];
+    let education: string[] = [];
     const lines = text.split(/\r?\n/).map((l: string) => l.trim());
-
     for (const line of lines) {
       if (line.toLowerCase().startsWith('summary:')) {
-        summary = line.trim(); // Keep the full line for test match
+        summary = line.trim();
       } else if (line.toLowerCase().startsWith('experience:')) {
         experience.push(line.replace(/^experience:/i, '').trim());
       } else if (line.toLowerCase().startsWith('skills:')) {
@@ -151,6 +146,9 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
           .replace(/^skills:/i, '')
           .split(',')
           .map((s: string) => s.trim());
+      } else if (line.toLowerCase().startsWith('education:')) {
+        const raw = line.replace(/^education:/i, '').trim();
+        if (raw) education.push(raw);
       }
     }
     if (!summary) summary = 'Summary: No summary found.';
@@ -160,21 +158,38 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
     // Persist parsed resume to DB
     try {
       const createdAt = new Date().toISOString();
-      // Build minimal typed shapes expected by StoredResume/ResumeData
       const resumeDataTyped = {
-        personalInfo: {
-          fullName: '',
-          email: '',
-        },
+        personalInfo: { fullName: '', email: '' },
         summary,
         experience: experience.map(exp => ({
           title: exp || 'Experience',
           company: '',
           startDate: '',
+          endDate: '',
           current: false,
           responsibilities: [],
         })),
-        education: [],
+        education: education.map(edu => {
+          let institution = edu;
+          let degree = '';
+          let graduationDate = '';
+          const dashParts = edu.split(/\s[-–—]\s/);
+          if (dashParts.length >= 2) {
+            institution = dashParts[0].trim();
+            degree = dashParts.slice(1).join(' - ').trim();
+          } else if (edu.includes(',')) {
+            const parts = edu.split(',').map(p => p.trim());
+            institution = parts[0] || institution;
+            degree = parts.slice(1).join(', ') || '';
+          }
+          return {
+            institution,
+            degree,
+            graduationDate,
+            fieldOfStudy: '',
+            notes: '',
+          };
+        }),
         skills: skills.map(s => ({ name: s })),
         certifications: [],
         projects: [],
@@ -194,36 +209,43 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
 
       const authenticatedUser = await authService.getUserFromRequest(req);
       if (authenticatedUser) {
-        const experienceEntries: ParsedExperience[] = resumeDataTyped.experience.map((exp, index) => ({
-          id: `${storedId}-exp-${index}`,
-          title: exp.title,
-          company: exp.company,
-          startDate: exp.startDate,
-          endDate: exp.endDate,
-          description: exp.responsibilities.join('\n'),
+        const experienceEntries: ParsedExperience[] = resumeDataTyped.experience.map(
+          (exp, index) => ({
+            id: `${storedId}-exp-${index}`,
+            title: exp.title,
+            company: exp.company,
+            startDate: exp.startDate,
+            endDate: exp.endDate,
+            description: exp.responsibilities.join('\n'),
+          })
+        );
+
+        // map education to parsed education shape
+        const educationEntries = resumeDataTyped.education.map((edu: any, idx: number) => ({
+          id: `${storedId}-edu-${idx}`,
+          institution: edu.institution || '',
+          degree: edu.degree || '',
+          graduationDate: edu.graduationDate || '',
+          fieldOfStudy: edu.fieldOfStudy || '',
+          notes: edu.notes || '',
         }));
 
         upsertParsedResume(authenticatedUser.id, storedId, {
           parsedSummary: summary,
-          personalInfo: {
-            name: '',
-            emails: [],
-            phones: [],
-            addresses: [],
-            websites: [],
-          },
+          personalInfo: { name: '', emails: [], phones: [], addresses: [], websites: [] },
           experience: experienceEntries,
           skills,
-          education: [],
+          education: educationEntries,
           certifications: [],
           awards: [],
           hobbies: [],
         });
       } else {
-        logger.warn('Resume parsed without authenticated user context; skipping parsed field storage');
+        logger.warn(
+          'Resume parsed without authenticated user context; skipping parsed field storage'
+        );
       }
 
-      // Return parsed data with id and createdAt so the client can refresh Recent Uploads
       res.status(201).json({ id: storedId, summary, experience, skills, createdAt });
       return;
     } catch (dbErr) {
@@ -231,7 +253,6 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
       res.status(500).json({ error: 'Failed to save resume' });
       return;
     }
-    return;
   } catch (error) {
     logger.error('Error processing resume upload', { error });
     res.status(500).json({ error: 'Failed to process resume' });
