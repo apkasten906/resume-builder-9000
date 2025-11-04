@@ -3,6 +3,7 @@
 // The UI will show a user-friendly error: "File is too large. Maximum allowed size is 5MB."
 // Removed unused imports
 import { test, expect } from './test-setup';
+import type { UploadItem } from '../helpers/types';
 
 // Use WEB_BASE from environment or default to localhost
 const webUrl = process.env.WEB_BASE || 'http://localhost:3000';
@@ -167,11 +168,6 @@ test.describe('Resume Upload Flow', () => {
     const uploadsJson = await uploadsResponse.json();
     expect(Array.isArray(uploadsJson.items)).toBeTruthy();
     // Find the upload with filename matching the uploaded file
-    interface UploadItem {
-      id: string;
-      fileName: string;
-      lastUpdated: string;
-    }
     const found = uploadsJson.items.find((it: UploadItem) =>
       (it.fileName || '').includes('sample_resume')
     );

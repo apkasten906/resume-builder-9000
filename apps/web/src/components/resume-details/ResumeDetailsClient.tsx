@@ -49,14 +49,24 @@ function serializeMultiline(values: readonly string[]): string {
   return values.join('\n');
 }
 
+function genLocalId(prefix: string, index: number): string {
+  return `${prefix}-${index}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 function mapExperienceToState(
   experience: readonly ParsedResumeExperience[]
 ): ParsedResumeExperience[] {
-  return experience.map(entry => ({ ...entry }));
+  return experience.map((entry, idx) => ({
+    ...entry,
+    id: (entry as any).id ?? genLocalId('exp', idx),
+  }));
 }
 
 function mapEducationToState(education: readonly ParsedResumeEducation[]): ParsedResumeEducation[] {
-  return education.map(entry => ({ ...entry }));
+  return education.map((entry, idx) => ({
+    ...entry,
+    id: (entry as any).id ?? genLocalId('edu', idx),
+  }));
 }
 
 export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): React.ReactElement {

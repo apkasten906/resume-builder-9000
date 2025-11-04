@@ -78,7 +78,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 
 // Path to the API package resume.db file
-const dbPath = path.join(__dirname, 'packages', 'api', 'resume.db');
+const dbPath = path.join(__dirname, 'packages', 'api', 'data', 'resume.db');
 
 console.log('Initializing database for integration tests...');
 const db = new Database(dbPath);

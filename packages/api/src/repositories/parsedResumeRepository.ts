@@ -32,7 +32,15 @@ const DEFAULT_PERSONAL_INFO: ParsedPersonalInfo = {
   websites: [],
 };
 
+// Prefer structuredClone when available (Node 17+ / modern runtimes). Fallback to
+// JSON-based deep clone which preserves basic JSON-safe data.
 function clone<T>(value: T): T {
+  // Use globalThis to safely access structuredClone in environments where it's available.
+  const sc = (globalThis as any).structuredClone;
+  if (typeof sc === 'function') {
+    return sc(value) as T;
+  }
+  // Fallback for older Node versions / runtimes
   return JSON.parse(JSON.stringify(value)) as T;
 }
 

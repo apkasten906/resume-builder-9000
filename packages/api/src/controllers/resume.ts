@@ -6,6 +6,8 @@ import { logger } from '../utils/logger.js';
 import { validateFile } from '../utils/fileValidation.js';
 import { parseFileText } from '../services/fileParser.js';
 import { getResumeById } from '../services/resumeService.js';
+import type { Education } from '@rb9k/core';
+import { parseEducationString } from '../utils/educationParser.js';
 import { handleJsonResume } from './testResume.js';
 import { isTestEnvironment } from '../utils/testUtils.js';
 import { authService } from '../services/authService.js';
@@ -169,24 +171,13 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
           current: false,
           responsibilities: [],
         })),
-        education: education.map(edu => {
-          let institution = edu;
-          let degree = '';
-          let graduationDate = '';
-          const dashParts = edu.split(/\s[-–—]\s/);
-          if (dashParts.length >= 2) {
-            institution = dashParts[0].trim();
-            degree = dashParts.slice(1).join(' - ').trim();
-          } else if (edu.includes(',')) {
-            const parts = edu.split(',').map(p => p.trim());
-            institution = parts[0] || institution;
-            degree = parts.slice(1).join(', ') || '';
-          }
+        education: education.map(e => {
+          const parsed = parseEducationString(e || '');
           return {
-            institution,
-            degree,
-            graduationDate,
-            fieldOfStudy: '',
+            institution: parsed.institution || e,
+            degree: parsed.degree || '',
+            graduationDate: parsed.graduationDate || parsed.graduationDate || '',
+            fieldOfStudy: parsed.fieldOfStudy || '',
             notes: '',
           };
         }),
@@ -221,14 +212,16 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
         );
 
         // map education to parsed education shape
-        const educationEntries = resumeDataTyped.education.map((edu: any, idx: number) => ({
-          id: `${storedId}-edu-${idx}`,
-          institution: edu.institution || '',
-          degree: edu.degree || '',
-          graduationDate: edu.graduationDate || '',
-          fieldOfStudy: edu.fieldOfStudy || '',
-          notes: edu.notes || '',
-        }));
+        const educationEntries = resumeDataTyped.education.map(
+          (edu: Partial<Education> & { notes?: string }, idx: number) => ({
+            id: `${storedId}-edu-${idx}`,
+            institution: edu.institution || '',
+            degree: edu.degree || '',
+            graduationDate: edu.graduationDate || '',
+            fieldOfStudy: edu.fieldOfStudy || '',
+            notes: edu.notes ?? '',
+          })
+        );
 
         upsertParsedResume(authenticatedUser.id, storedId, {
           parsedSummary: summary,

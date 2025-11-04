@@ -13,14 +13,14 @@ services:
       target: api-dev
     container_name: rb9k-api-dev
     ports:
-      - "4000:4000"
-      - "9229:9229" # Node.js debugging port
+      - '4000:4000'
+      - '9229:9229' # Node.js debugging port
     environment:
       - NODE_ENV=development
       - PORT=4000
       - HOST=0.0.0.0
       - API_BASE=4000
-      - DATABASE_URL=/app/data/resume_builder_dev.db
+      - DATABASE_URL=/app/data/resume_dev.db
       - JWT_SECRET=development-secret-change-in-production
       - JWT_EXPIRES_IN=24h
       - CORS_ORIGIN=http://localhost:3000
@@ -44,7 +44,7 @@ services:
       - rb9k-dev-network
     restart: unless-stopped
     # Enable debugging
-    command: ["npm", "run", "dev"]
+    command: ['npm', 'run', 'dev']
 
   # ============================================================================
   # Web Frontend Service (Development)
@@ -57,7 +57,7 @@ services:
       target: web-dev
     container_name: rb9k-web-dev
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=development
       - PORT=3000
@@ -86,7 +86,7 @@ services:
     networks:
       - rb9k-dev-network
     restart: unless-stopped
-    command: ["npm", "run", "dev"]
+    command: ['npm', 'run', 'dev']
 
   # ============================================================================
   # Development Tools (Optional)
@@ -96,11 +96,11 @@ services:
     image: coleifer/sqlite-web:latest
     container_name: rb9k-db-browser
     ports:
-      - "8080:8080"
+      - '8080:8080'
     volumes:
       - dev_api_data:/data:ro
     environment:
-      - SQLITE_DATABASE=/data/resume_builder_dev.db
+      - SQLITE_DATABASE=/data/resume_dev.db
     networks:
       - rb9k-dev-network
     profiles:
