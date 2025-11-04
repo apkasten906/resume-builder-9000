@@ -1,60 +1,78 @@
 {
-  "vitest.enable": true,
-  "vitest.commandLine": "npm test",
-  "vitest.include": [
-    "packages/*/tests/**/*.{test,spec}.{js,ts,jsx,tsx}",
-    "apps/*/tests/**/*.{test,spec}.{js,ts,jsx,tsx}"
-  ],
-  "vitest.showFailMessages": true,
-  "vitest.nodeEnv": {
-    "CI": "true"
-  },
-  "playwright.reuseBrowser": false,
-  "playwright.showTrace": false,
-  "playwright.configFile": "apps/web/tests/e2e/playwright.config.ts",
-  "playwright.env": {},
-  "testing.automaticallyOpenPeekView": "never",
-  "testExplorer.addToEditorContextMenu": true,
-  "javascript.suggest.completeFunctionCalls": true,
-  "typescript.suggest.completeFunctionCalls": true,
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "always"
-  },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "eslint.validate": ["javascript", "typescript", "javascriptreact", "typescriptreact"],
-  "eslint.run": "onSave",
-  "eslint.alwaysShowStatus": true,
-  "eslint.format.enable": true,
-  "eslint.lintTask.enable": true,
-  "eslint.codeAction.showDocumentation": {
-    "enable": true
-  },
-  "files.insertFinalNewline": true,
-  "files.trimTrailingWhitespace": true,
-  "[markdown]": {
-    "files.trimTrailingWhitespace": false,
-    "editor.formatOnSave": true
-  },
-  "editor.rulers": [100],
-  "files.associations": {
-    "*.chatmode.md": "markdown",
-    "*.instructions.md": "markdown",
-    "*.prompt.md": "markdown"
-  },
-  "[sql]": {
-    "editor.defaultFormatter": "dbcode.dbcode"
-  },
-  "[powershell]": {
-    "editor.defaultFormatter": "ms-vscode.powershell"
-  }
+    "vitest.enable": true,
+    "vitest.commandLine": "npm test",
+    "vitest.include": [
+        "packages/*/tests/**/*.{test,spec}.{js,ts,jsx,tsx}",
+        "apps/*/tests/**/*.{test,spec}.{js,ts,jsx,tsx}"
+    ],
+    "vitest.showFailMessages": true,
+    "vitest.nodeEnv": {
+        "CI": "true"
+    },
+    "playwright.reuseBrowser": false,
+    "playwright.showTrace": false,
+    "playwright.configFile": "apps/web/tests/e2e/playwright.config.ts",
+    "playwright.env": {},
+    "testing.automaticallyOpenPeekView": "never",
+    "testExplorer.addToEditorContextMenu": true,
+    "javascript.suggest.completeFunctionCalls": true,
+    "typescript.suggest.completeFunctionCalls": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "always"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "eslint.validate": [
+        "javascript",
+        "typescript",
+        "javascriptreact",
+        "typescriptreact"
+    ],
+    "eslint.run": "onSave",
+    "eslint.alwaysShowStatus": true,
+    "eslint.format.enable": true,
+    "eslint.lintTask.enable": true,
+    "eslint.codeAction.showDocumentation": {
+        "enable": true
+    },
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "[markdown]": {
+        "files.trimTrailingWhitespace": false,
+        "editor.formatOnSave": true
+    },
+    "editor.rulers": [
+        100
+    ],
+    "files.associations": {
+        "*.chatmode.md": "markdown",
+        "*.instructions.md": "markdown",
+        "*.prompt.md": "markdown"
+    },
+    "[sql]": {
+        "editor.defaultFormatter": "dbcode.dbcode"
+    },
+    "[powershell]": {
+        "editor.defaultFormatter": "ms-vscode.powershell"
+    },
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/powershell/": true
+    }
 }

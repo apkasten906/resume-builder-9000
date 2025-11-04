@@ -1,4 +1,4 @@
-# Resume Builder 9000 - Development Guidelines
+﻿# Resume Builder 9000 - Development Guidelines
 
 This project is a resume orchestration engine that creates tailored, ATS-friendly resumes.
 

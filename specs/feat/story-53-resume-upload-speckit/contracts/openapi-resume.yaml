@@ -1,0 +1,86 @@
+openapi: 3.0.3
+info:
+  title: Resume Upload & Parse API
+  version: 0.1.0
+  description: API contract for resume upload, parse preview, and save flow (MVP text-layer PDFs only)
+paths:
+  /api/resume/parse:
+    post:
+      summary: Upload a resume (PDF) and return parsed regions (transient)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: List of parsed regions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resumeId:
+                    type: string
+                    nullable: true
+                  regions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParsedRegion'
+        '400':
+          description: Invalid file or parse error
+
+  /api/resume/save:
+    post:
+      summary: Save reviewed parsed regions into the user's profile draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resumeId:
+                  type: string
+                  nullable: true
+                consent:
+                  type: boolean
+                regions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ParsedRegion'
+      responses:
+        '200':
+          description: Save successful
+        '400':
+          description: Validation error (missing consent or invalid regions)
+
+components:
+  schemas:
+    ParsedRegion:
+      type: object
+      properties:
+        id:
+          type: string
+        page:
+          type: integer
+        bbox:
+          type: object
+          properties:
+            x: { type: number }
+            y: { type: number }
+            width: { type: number }
+            height: { type: number }
+        text:
+          type: string
+        category:
+          type: string
+          enum: [contact, experience, education, skill, other]
+        confidence:
+          type: number
+          format: float
