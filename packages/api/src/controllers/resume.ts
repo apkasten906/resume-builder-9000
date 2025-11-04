@@ -8,6 +8,16 @@ import { parseFileText } from '../services/fileParser.js';
 import { getResumeById } from '../services/resumeService.js';
 import { handleJsonResume } from './testResume.js';
 import { isTestEnvironment } from '../utils/testUtils.js';
+import { authService } from '../services/authService.js';
+import { upsertParsedResume } from '../repositories/parsedResumeRepository.js';
+import type { ParsedExperience } from '../types/parsedResume.js';
+import { requireAuth } from '../middleware/requireAuth.js';
+import {
+  getResumeParsedFields,
+  updateResumeParsedFields,
+  getResumeParsedFieldsHistory,
+  restoreResumeParsedFields,
+} from './resumeParsedFields.js';
 
 // Express router for resume endpoints
 const resumeRoutes = Router();
@@ -187,6 +197,37 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
         createdAt,
       });
 
+      const authenticatedUser = await authService.getUserFromRequest(req);
+      if (authenticatedUser) {
+        const experienceEntries: ParsedExperience[] = resumeDataTyped.experience.map((exp, index) => ({
+          id: `${storedId}-exp-${index}`,
+          title: exp.title,
+          company: exp.company,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          description: exp.responsibilities.join('\n'),
+        }));
+
+        upsertParsedResume(authenticatedUser.id, storedId, {
+          parsedSummary: summary,
+          personalInfo: {
+            name: '',
+            emails: [],
+            phones: [],
+            addresses: [],
+            websites: [],
+          },
+          experience: experienceEntries,
+          skills,
+          education: [],
+          certifications: [],
+          awards: [],
+          hobbies: [],
+        });
+      } else {
+        logger.warn('Resume parsed without authenticated user context; skipping parsed field storage');
+      }
+
       // Return parsed data with id and createdAt so the client can refresh Recent Uploads
       res.status(201).json({ id: storedId, summary, experience, skills, createdAt });
       return;
@@ -251,6 +292,191 @@ resumeRoutes.post('/', parseResumeHandler, postResumeHandler);
 resumeRoutes.get('/:id', async (req: Request, res: Response) => {
   await getResumeById(req, res);
 });
+
+/**
+ * @swagger
+ * /api/resumes/{id}/parsed-fields:
+ *   get:
+ *     summary: Get parsed resume fields for an upload
+ *     description: Retrieve parsed resume fields for the authenticated user. Defaults are created when no parsed record exists.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Resume upload identifier
+ *     responses:
+ *       200:
+ *         description: Parsed resume fields for the requested upload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 parsedFields:
+ *                   $ref: '#/components/schemas/ParsedResumeFields'
+ *                 history:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ParsedResumeHistoryEntry'
+ *       400:
+ *         description: Missing upload identifier
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Parsed resume not found
+ */
+resumeRoutes.get('/:id/parsed-fields', requireAuth, async (req: Request, res: Response) => {
+  await getResumeParsedFields(req, res);
+});
+
+/**
+ * @swagger
+ * /api/resumes/{id}/parsed-fields:
+ *   put:
+ *     summary: Update parsed resume fields for an upload
+ *     description: Persist parsed resume updates for the authenticated user.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Resume upload identifier
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ParsedResumeUpdate'
+ *     responses:
+ *       200:
+ *         description: Parsed resume fields saved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 parsedFields:
+ *                   $ref: '#/components/schemas/ParsedResumeFields'
+ *                 history:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ParsedResumeHistoryEntry'
+ *       400:
+ *         description: Invalid payload
+ *       401:
+ *         description: Unauthorized
+ */
+resumeRoutes.put('/:id/parsed-fields', requireAuth, async (req: Request, res: Response) => {
+  await updateResumeParsedFields(req, res);
+});
+
+/**
+ * @swagger
+ * /api/resumes/{id}/parsed-fields/history:
+ *   get:
+ *     summary: Retrieve change history for parsed resume fields
+ *     description: Returns a chronological log of previous parsed resume snapshots for the authenticated user.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Resume upload identifier
+ *     responses:
+ *       200:
+ *         description: Collection of historical snapshots
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 history:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       parsedResumeId:
+ *                         type: string
+ *                       userId:
+ *                         type: string
+ *                       uploadId:
+ *                         type: string
+ *                         nullable: true
+ *                       snapshot:
+ *                         $ref: '#/components/schemas/ParsedResumeFields'
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       400:
+ *         description: Missing upload identifier
+ *       401:
+ *         description: Unauthorized
+ */
+resumeRoutes.get('/:id/parsed-fields/history', requireAuth, async (req: Request, res: Response) => {
+  await getResumeParsedFieldsHistory(req, res);
+});
+
+/**
+ * @swagger
+ * /api/resumes/{id}/parsed-fields/history/{historyId}/restore:
+ *   post:
+ *     summary: Restore parsed resume fields from a history snapshot
+ *     description: Reverts parsed resume fields to the values stored in a selected historical snapshot.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Resume upload identifier
+ *       - in: path
+ *         name: historyId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: History snapshot identifier
+ *     responses:
+ *       200:
+ *         description: Parsed resume restored successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 parsedFields:
+ *                   $ref: '#/components/schemas/ParsedResumeFields'
+ *                 history:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ParsedResumeHistoryEntry'
+ *       400:
+ *         description: Missing identifiers
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: History entry not found
+ */
+resumeRoutes.post(
+  '/:id/parsed-fields/history/:historyId/restore',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    await restoreResumeParsedFields(req, res);
+  }
+);
 
 /**
  * @swagger

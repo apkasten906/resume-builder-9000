@@ -92,7 +92,7 @@ function RecentUploadsClient(): React.ReactElement {
                     <td role="cell" className="py-2">
                       <a
                         data-testid={`resume-link-${u.id}`}
-                        href={`/resume-upload?id=${u.id}`}
+                        href={`/resume-details?id=${u.id}`}
                         className="block max-w-full hover:underline"
                         title={u.fileName}
                       >

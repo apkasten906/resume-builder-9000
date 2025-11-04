@@ -19,7 +19,6 @@ export function mockSignedIn(
 // apps/web/tests/vitest.setup.ts
 import { beforeEach, afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom';
-import 'whatwg-fetch';
 
 // Default network stubs for web unit tests.
 // By default we assume "signed-out". Individual tests can override using

@@ -1,7 +1,13 @@
-import { describe, test, expect, vi, beforeAll } from 'vitest';
+import { describe, test, expect, vi, beforeAll, beforeEach } from 'vitest';
 import supertest from 'supertest';
 import { default as app } from '../src/index.js';
 import { disableTestLogging, enableTestLogging } from './utils/test-logger.js';
+import { authService } from '../src/services/authService.js';
+import {
+  getParsedResumeByUser,
+  getParsedResumeHistoryByUser,
+  restoreParsedResumeFromHistory,
+} from '../src/repositories/parsedResumeRepository.js';
 
 // Disable verbose logging for all tests by default
 beforeAll(() => {
@@ -25,6 +31,44 @@ vi.mock('../src/db', () => ({
   }),
   insertResume: vi.fn(resumeData => 'test-resume-id'),
 }));
+
+vi.mock('../src/repositories/parsedResumeRepository', () => ({
+  upsertParsedResume: vi.fn((userId, uploadId, payload) => ({
+    id: 'parsed-id',
+    userId,
+    uploadId,
+    parsedSummary: payload.parsedSummary,
+    personalInfo: payload.personalInfo ?? {
+      name: undefined,
+      emails: [],
+      phones: [],
+      addresses: [],
+      websites: [],
+    },
+    experience: payload.experience ?? [],
+    skills: payload.skills ?? [],
+    education: payload.education ?? [],
+    certifications: payload.certifications ?? [],
+    awards: payload.awards ?? [],
+    hobbies: payload.hobbies ?? [],
+    createdAt: '2025-10-23T00:00:00.000Z',
+    updatedAt: '2025-10-23T00:00:00.000Z',
+  })),
+  getParsedResumeByUser: vi.fn(),
+  getParsedResumeHistoryByUser: vi.fn(() => []),
+  restoreParsedResumeFromHistory: vi.fn(() => undefined),
+}));
+
+vi.mock('../src/services/authService', () => ({
+  authService: {
+    getUserFromRequest: vi.fn(),
+  },
+}));
+
+const mockedAuthService = vi.mocked(authService);
+const mockedGetParsedResumeByUser = vi.mocked(getParsedResumeByUser);
+const mockedGetParsedResumeHistoryByUser = vi.mocked(getParsedResumeHistoryByUser);
+const mockedRestoreParsedResumeFromHistory = vi.mocked(restoreParsedResumeFromHistory);
 
 // Mock the resume generator service
 vi.mock('../src/services/resume-generator', () => ({
@@ -50,6 +94,13 @@ vi.mock('../src/utils/logger', () => ({
 }));
 
 describe('API Routes', () => {
+  beforeEach(() => {
+    mockedAuthService.getUserFromRequest.mockReset();
+    mockedGetParsedResumeByUser.mockReset();
+    mockedGetParsedResumeHistoryByUser.mockReset();
+    mockedRestoreParsedResumeFromHistory.mockReset();
+  });
+
   // Test health check endpoint
   test('GET /api/health should return status 200', async () => {
     const response = await supertest(app).get('/api/health');
@@ -118,5 +169,198 @@ describe('API Routes', () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('id', 'test-resume-id');
+  });
+
+  test('GET /api/resumes/:id/parsed-fields requires authentication', async () => {
+    mockedAuthService.getUserFromRequest.mockResolvedValueOnce(null);
+
+    const response = await supertest(app).get('/api/resumes/test-resume-id/parsed-fields');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty('error', 'Unauthorized');
+  });
+
+  test('GET /api/resumes/:id/parsed-fields returns parsed data when authenticated', async () => {
+    mockedAuthService.getUserFromRequest.mockResolvedValueOnce({
+      id: 'user-1',
+      email: 'user@example.com',
+      name: 'User',
+    });
+
+    const parsedRecord = {
+      id: 'parsed-id',
+      userId: 'user-1',
+      uploadId: 'test-resume-id',
+      parsedSummary: 'Summary',
+      personalInfo: {
+        name: 'User',
+        emails: ['user@example.com'],
+        phones: [],
+        addresses: [],
+        websites: [],
+      },
+      experience: [],
+      skills: [],
+      education: [],
+      certifications: [],
+      awards: [],
+      hobbies: [],
+      createdAt: '2025-10-23T00:00:00.000Z',
+      updatedAt: '2025-10-23T00:00:00.000Z',
+    };
+
+    mockedGetParsedResumeByUser.mockReturnValueOnce(parsedRecord);
+    mockedGetParsedResumeHistoryByUser.mockReturnValueOnce([
+      {
+        id: 'history-1',
+        parsedResumeId: parsedRecord.id,
+        userId: parsedRecord.userId,
+        uploadId: parsedRecord.uploadId,
+        snapshot: parsedRecord,
+        createdAt: '2025-10-23T00:00:00.000Z',
+      },
+    ]);
+
+    const response = await supertest(app).get('/api/resumes/test-resume-id/parsed-fields');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('parsedFields');
+    expect(response.body.parsedFields).toHaveProperty('parsedSummary', 'Summary');
+    expect(response.body.history).toHaveLength(1);
+  });
+
+  test('GET /api/resumes/:id/parsed-fields/history requires authentication', async () => {
+    mockedAuthService.getUserFromRequest.mockResolvedValueOnce(null);
+
+    const response = await supertest(app).get('/api/resumes/test-resume-id/parsed-fields/history');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty('error', 'Unauthorized');
+  });
+
+  test('GET /api/resumes/:id/parsed-fields/history returns change history when authenticated', async () => {
+    mockedAuthService.getUserFromRequest.mockResolvedValueOnce({
+      id: 'user-1',
+      email: 'user@example.com',
+      name: 'User',
+    });
+
+    const snapshot = {
+      id: 'parsed-id',
+      userId: 'user-1',
+      uploadId: 'test-resume-id',
+      parsedSummary: 'Earlier summary',
+      personalInfo: {
+        name: 'User',
+        emails: ['user@example.com'],
+        phones: [],
+        addresses: [],
+        websites: [],
+      },
+      experience: [],
+      skills: [],
+      education: [],
+      certifications: [],
+      awards: [],
+      hobbies: [],
+      createdAt: '2025-10-22T00:00:00.000Z',
+      updatedAt: '2025-10-22T00:00:00.000Z',
+    };
+
+    mockedGetParsedResumeHistoryByUser.mockReturnValueOnce([
+      {
+        id: 'history-2',
+        parsedResumeId: snapshot.id,
+        userId: snapshot.userId,
+        uploadId: snapshot.uploadId,
+        snapshot,
+        createdAt: '2025-10-23T00:00:00.000Z',
+      },
+    ]);
+
+    const response = await supertest(app).get('/api/resumes/test-resume-id/parsed-fields/history');
+
+    expect(response.status).toBe(200);
+    expect(response.body.history).toHaveLength(1);
+    expect(response.body.history[0]).toHaveProperty('snapshot.parsedSummary', 'Earlier summary');
+  });
+
+  test('POST /api/resumes/:id/parsed-fields/history/:historyId/restore requires authentication', async () => {
+    mockedAuthService.getUserFromRequest.mockResolvedValueOnce(null);
+
+    const response = await supertest(app).post(
+      '/api/resumes/test-resume-id/parsed-fields/history/history-1/restore'
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty('error', 'Unauthorized');
+  });
+
+  test('POST /api/resumes/:id/parsed-fields/history/:historyId/restore returns 404 when entry missing', async () => {
+    mockedAuthService.getUserFromRequest.mockResolvedValueOnce({
+      id: 'user-1',
+      email: 'user@example.com',
+      name: 'User',
+    });
+
+    mockedRestoreParsedResumeFromHistory.mockReturnValueOnce(undefined);
+
+    const response = await supertest(app)
+      .post('/api/resumes/test-resume-id/parsed-fields/history/history-1/restore')
+      .set('Authorization', 'Bearer token');
+
+    expect(mockedRestoreParsedResumeFromHistory).toHaveBeenCalledWith('user-1', 'test-resume-id', 'history-1');
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty('error', 'History entry not found');
+  });
+
+  test('POST /api/resumes/:id/parsed-fields/history/:historyId/restore restores data when authenticated', async () => {
+    mockedAuthService.getUserFromRequest.mockResolvedValueOnce({
+      id: 'user-1',
+      email: 'user@example.com',
+      name: 'User',
+    });
+
+    const restoredRecord = {
+      id: 'parsed-id',
+      userId: 'user-1',
+      uploadId: 'test-resume-id',
+      parsedSummary: 'Restored summary',
+      personalInfo: {
+        name: 'User',
+        emails: ['user@example.com'],
+        phones: [],
+        addresses: [],
+        websites: [],
+      },
+      experience: [],
+      skills: ['TypeScript'],
+      education: [],
+      certifications: [],
+      awards: [],
+      hobbies: [],
+      createdAt: '2025-10-23T00:00:00.000Z',
+      updatedAt: '2025-10-24T00:00:00.000Z',
+    };
+
+    mockedRestoreParsedResumeFromHistory.mockReturnValueOnce(restoredRecord);
+    mockedGetParsedResumeHistoryByUser.mockReturnValueOnce([
+      {
+        id: 'history-2',
+        parsedResumeId: 'parsed-id',
+        userId: 'user-1',
+        uploadId: 'test-resume-id',
+        snapshot: restoredRecord,
+        createdAt: '2025-10-24T00:00:00.000Z',
+      },
+    ]);
+
+    const response = await supertest(app)
+      .post('/api/resumes/test-resume-id/parsed-fields/history/history-1/restore')
+      .set('Authorization', 'Bearer token');
+
+    expect(response.status).toBe(200);
+    expect(response.body.parsedFields).toHaveProperty('parsedSummary', 'Restored summary');
+    expect(response.body.history).toHaveLength(1);
   });
 });

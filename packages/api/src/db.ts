@@ -38,6 +38,8 @@ export function connectDatabase(): SQLiteDatabase {
     fileMustExist: false,
   });
 
+  db.pragma('foreign_keys = ON');
+
   // Note: verbose logging removed due to type compatibility issues with newer better-sqlite3 versions
 
   // Create tables if they don't exist
@@ -52,6 +54,75 @@ export function connectDatabase(): SQLiteDatabase {
   `);
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS profile_parsed_fields (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      upload_id TEXT,
+      parsed_summary TEXT,
+      personal_info TEXT,
+      experience TEXT,
+      skills TEXT,
+      education TEXT,
+      certifications TEXT,
+      awards TEXT,
+      hobbies TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (upload_id) REFERENCES resumes(id) ON DELETE SET NULL
+    )
+  `);
+
+  let parsedFieldColumns: Array<{ name: string }> = [];
+  try {
+    const pragmaStatement = db.prepare('PRAGMA table_info(profile_parsed_fields)');
+    if (typeof pragmaStatement.all === 'function') {
+      const columnsResult = pragmaStatement.all() as Array<{ name: string }> | undefined;
+      if (Array.isArray(columnsResult)) {
+        parsedFieldColumns = columnsResult;
+      }
+    }
+  } catch (error) {
+    logger.warn('Unable to inspect profile_parsed_fields columns', { error });
+  }
+
+  const parsedFieldColumnNames = new Set(parsedFieldColumns.map(col => col.name));
+  const ensureParsedColumn = (column: string, definition: string): void => {
+    if (!parsedFieldColumnNames.has(column)) {
+      db.exec(`ALTER TABLE profile_parsed_fields ADD COLUMN ${column} ${definition}`);
+      parsedFieldColumnNames.add(column);
+    }
+  };
+
+  ensureParsedColumn('upload_id', 'TEXT');
+  ensureParsedColumn('parsed_summary', 'TEXT');
+  ensureParsedColumn('personal_info', 'TEXT');
+  ensureParsedColumn('experience', 'TEXT');
+  ensureParsedColumn('skills', 'TEXT');
+  ensureParsedColumn('education', 'TEXT');
+  ensureParsedColumn('certifications', 'TEXT');
+  ensureParsedColumn('awards', 'TEXT');
+  ensureParsedColumn('hobbies', 'TEXT');
+  ensureParsedColumn(
+    'created_at',
+    "TEXT NOT NULL DEFAULT (datetime('now'))"
+  );
+  ensureParsedColumn(
+    'updated_at',
+    "TEXT NOT NULL DEFAULT (datetime('now'))"
+  );
+
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_profile_parsed_fields_user_upload
+    ON profile_parsed_fields(user_id, upload_id)
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_profile_parsed_fields_upload
+    ON profile_parsed_fields(upload_id)
+  `);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
@@ -61,6 +132,30 @@ export function connectDatabase(): SQLiteDatabase {
       email_confirmed_at TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS profile_parsed_fields_history (
+      id TEXT PRIMARY KEY,
+      parsed_resume_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      upload_id TEXT,
+      snapshot TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (parsed_resume_id) REFERENCES profile_parsed_fields(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (upload_id) REFERENCES resumes(id) ON DELETE SET NULL
+    )
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_profile_parsed_history_user_upload
+    ON profile_parsed_fields_history(user_id, upload_id, created_at DESC)
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_profile_parsed_history_resume
+    ON profile_parsed_fields_history(parsed_resume_id)
   `);
 
   db.exec(`

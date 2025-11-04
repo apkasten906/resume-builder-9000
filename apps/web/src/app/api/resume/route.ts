@@ -21,7 +21,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const cookie = req.headers.get('cookie');
     if (cookie) headers['cookie'] = cookie;
     const auth = req.headers.get('authorization');
-    if (auth) headers['authorization'] = auth;
+    if (auth) {
+      headers['authorization'] = auth;
+    } else {
+      const sessionCookie = req.cookies.get('session');
+      if (sessionCookie) {
+        headers['authorization'] = `Bearer ${sessionCookie.value}`;
+      }
+    }
 
     const bodyBuffer = Buffer.from(await req.arrayBuffer());
 
