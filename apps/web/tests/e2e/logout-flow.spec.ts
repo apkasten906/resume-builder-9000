@@ -8,6 +8,8 @@ test('logout clears cookie and stays logged out after reload', async ({ page, co
 
   // Verify we're logged in by checking for authenticated content or navigation
   // Look for either "Welcome back" text or navigate to a protected page
+  // Ensure viewport is large so the AppShell shows the logout button (hidden on small screens)
+  await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto(`${baseUrl}/applications`);
 
   // Wait for the page to load and verify we're authenticated
@@ -19,6 +21,8 @@ test('logout clears cookie and stays logged out after reload', async ({ page, co
     .or(page.locator('[data-testid="logout-button"]'))
     .or(page.getByRole('button', { name: /sign.?out/i }));
 
+  // Click the logout button; if it's not immediately visible, ensure we wait for it
+  await expect(logoutButton).toBeVisible({ timeout: 5000 });
   await logoutButton.click();
   // Wait for the logout network request to complete so Set-Cookie headers are processed
   const logoutResponse = await page.waitForResponse(
@@ -37,10 +41,16 @@ test('logout clears cookie and stays logged out after reload', async ({ page, co
   await page.waitForLoadState('networkidle');
   await expect(page.getByRole('button', { name: /get started/i })).toBeVisible({ timeout: 10000 });
 
-  // Verify session cookie is cleared
-  // Give browser a brief moment to apply cookie changes from the response
-  await page.waitForTimeout(150);
-  const cookies = await context.cookies();
-  const sessionCookie = cookies.find(c => c.name === 'session');
-  expect(sessionCookie).toBeFalsy();
+  // Verify session cookie is cleared by polling to avoid timing races
+  await expect
+    .poll(
+      async () => {
+        const cookies = await context.cookies();
+        return cookies.find(c => c.name === 'session');
+      },
+      {
+        timeout: 2000,
+      }
+    )
+    .toBeFalsy();
 });
