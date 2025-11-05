@@ -38,3 +38,9 @@
 - Add comments or findings inline
 - Link to relevant resources or documentation
 - Items are numbered sequentially for easy reference
+
+## Implementation guidance (short)
+
+- Enforce thin-router / controller / service pattern when implementing API work: routers mount middleware + controllers; controllers validate and call services; services are pure business logic.
+- Use canonical DTOs in `packages/core/src/dtos/` and validate at the controller boundary. Put parser code in `packages/api/src/lib/` or `packages/api/src/services/` and normalize bboxes there.
+- Tests: backend unit/contract tests -> `packages/api/tests/` (Vitest). E2E -> `apps/web/tests/e2e/` (Playwright) and use `WEB_BASE` for base URL.

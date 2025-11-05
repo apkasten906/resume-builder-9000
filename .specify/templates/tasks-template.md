@@ -248,3 +248,10 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+## Implementation specifics (repo conventions)
+
+- Routes: put Express routers under `packages/api/src/routes/` and keep them thin (middleware + mount handlers). Controllers go in `packages/api/src/controllers/` and services in `packages/api/src/services/`.
+- Parser helpers and bbox normalization belong in `packages/api/src/lib/` (e.g., `pdf-parser.ts`, `bbox.ts`).
+- DTOs (Zod or equivalent) live in `packages/core/src/dtos/` and are the contract between services and controllers.
+- Tests: unit & contract (Vitest) in `packages/api/tests/`. E2E (Playwright) in `apps/web/tests/e2e/` and use `WEB_BASE` env var for web base URL.

@@ -138,4 +138,14 @@ Acceptance Scenarios:
 
 - This specification intentionally focuses on user-facing behavior and does not mandate parsing libraries, OCR providers, or storage formats. Implementation details should be chosen to meet success criteria and privacy requirements.
 
+## Implementation guidance (developer notes)
+
+- Keep backend parsing and business logic canonical in `packages/api`. Place parser helpers in `packages/api/src/lib/` and resume-specific services in `packages/api/src/services/` (e.g., `resumeParseService.ts`).
+- Follow the thin-router/controller/service pattern: routers under `packages/api/src/routes/` attach middleware and mount controllers; controllers validate requests and call services; services are pure business logic and IO helpers (no req/res dependency).
+- Use canonical DTOs in `packages/core/src/dtos/` (Zod schemas) for request/response shapes. Controllers must validate input and map to DTOs before calling services.
+- File upload contract: accept `application/pdf` on the `resume` multipart field, validate server-side (MIME + size). Use transient storage (memory/tmp) for parsing; delete after processing. Default size limit: recommend 5MB for MVP; make configurable.
+- Parser behavior: MVP supports text-layer PDFs only (no OCR). Use `pdfjs-dist` primary with a small fallback. Parser must emit normalized `bbox` coordinates (page, x,y,width,height) and a confidence value. Document coordinate system and normalization rules in `packages/api/src/lib/bbox.ts`.
+- Tests: backend unit/contract tests -> `packages/api/tests/` (Vitest). E2E Playwright tests -> `apps/web/tests/e2e/` and use `WEB_BASE` env var for the web base URL. Use `pdf-lib` to create deterministic, small text-layer PDF fixtures in tests where possible.
+- Privacy & security: do NOT persist parsed PII until user confirms Save. Log minimally and avoid storing raw file contents beyond transient parsing. Follow OWASP/security guidance in the repo for headers, secret management, and input validation.
+
 ---
