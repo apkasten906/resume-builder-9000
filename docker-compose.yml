@@ -21,7 +21,7 @@ services:
       - PORT=4000
       - API_BASE=4000
       # Database configuration
-      - DATABASE_URL=/app/data/resume_builder.db
+      - DATABASE_URL=/app/data/resume.db
       # JWT configuration (use secrets management in production)
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}

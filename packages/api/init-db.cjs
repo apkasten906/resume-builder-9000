@@ -12,7 +12,7 @@ const fs = require('fs');
 
 // Determine database path from environment or use a container-friendly default
 // In the container runtime the production compose mounts data at /app/data
-const dbPath = process.env.DB_PATH || '/app/data/resume_builder.db';
+const dbPath = process.env.DB_PATH || '/app/data/resume.db';
 const dataDir = path.dirname(dbPath);
 
 console.log('[init-db] Starting database initialization...');

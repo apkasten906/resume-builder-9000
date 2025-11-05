@@ -1,5 +1,6 @@
 param(
-  [switch]$PersistSecret
+  [switch]$PersistSecret,
+  [switch]$Full
 )
 
 # Generate 32 bytes random secret
@@ -55,10 +56,18 @@ for ($i = 0; $i -lt 90; $i++) {
   }
 }
 
-# Run single Playwright test (will inherit TEST_ROUTE_SECRET from env)
-Write-Host 'Running Playwright test (resend-verification)...'
+# Run Playwright tests (will inherit TEST_ROUTE_SECRET from env)
+Write-Host 'Running Playwright tests...'
 $npx = 'npx'
-$testCmd = "$npx playwright test apps/web/tests/e2e/resend-verification.spec.ts --project=web-e2e --reporter=dot"
+if ($Full) {
+  # Run the full workspace-scoped web-e2e project
+  $testCmd = "$npx playwright test --config=playwright.workspace.config.ts --project=web-e2e --reporter=dot"
+}
+else {
+  # Default: run a single fast test used for smoke verification
+  $testCmd = "$npx playwright test apps/web/tests/e2e/resend-verification.spec.ts --config=playwright.workspace.config.ts --project=web-e2e --reporter=dot"
+}
+Write-Host "Executing: $testCmd"
 Invoke-Expression $testCmd
 $exit = $LASTEXITCODE
 Write-Host "Playwright exit code: $exit"

@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 
+// Disable caching to ensure fresh data on every request
+// Force rebuild timestamp: 2025-10-23
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // API base URL is read inside the handler for testability
 
 type ResumeUploadItem = {
@@ -15,6 +20,7 @@ export async function GET(): Promise<NextResponse> {
     const res = await fetch(`${API_BASE}/api/resumes`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store', // Ensure fresh data on every request
       // Optionally forward cookies/auth headers if needed
     });
     if (!res.ok) {

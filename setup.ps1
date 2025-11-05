@@ -72,13 +72,18 @@ npm run build --workspaces
 # Initialize database with test user for integration tests
 Write-Host "Setting up database with test user..."
 try {
+  # The following JavaScript is intentionally embedded as a here-string and written
+  # to a temporary .js file which is executed with Node. This keeps the complex
+  # DB initialization logic in JavaScript (where better-sqlite3 is available) while
+  # still driving the flow from PowerShell. We write the file and execute it rather
+  # than embedding raw JS code directly in the PowerShell runtime.
   $dbSetupScript = @"
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 
 // Path to the API package resume.db file
-const dbPath = path.join(__dirname, 'packages', 'api', 'resume.db');
+const dbPath = path.join(__dirname, 'packages', 'api', 'data', 'resume.db');
 
 console.log('Initializing database for integration tests...');
 const db = new Database(dbPath);

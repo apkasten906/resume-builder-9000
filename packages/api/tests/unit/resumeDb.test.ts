@@ -29,6 +29,7 @@ function createMockJobDetails(): JobDetails {
 interface MockDatabase {
   prepare: MockInstance;
   exec: MockInstance;
+  pragma: MockInstance;
 }
 
 // Helper function for creating error-throwing function to avoid deep nesting
@@ -136,6 +137,7 @@ vi.mock('better-sqlite3', () => {
         };
       }),
       exec: vi.fn(),
+      pragma: vi.fn(),
     })),
   };
 });
@@ -264,6 +266,7 @@ describe('Resume Database Operations', () => {
           throw new Error('Database error');
         }),
         exec: vi.fn(),
+        pragma: vi.fn(),
       };
 
       // Store original mock
@@ -343,6 +346,7 @@ describe('Resume Database Operations', () => {
       const mockDb: MockDatabase = {
         prepare: mockPrepare,
         exec: vi.fn(),
+        pragma: vi.fn(),
       };
 
       // Store original mock

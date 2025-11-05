@@ -7,7 +7,7 @@
     "apps/*"
   ],
   "scripts": {
-    "setup": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/setup.ps1",
+    "setup": "powershell.exe -ExecutionPolicy Bypass -File ./setup.ps1",
     "seedusers": "node ./scripts/seed-users.js",
     "playwright": "npx playwright",
     "playwright:docker": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/configure-playwright.ps1 -Mode docker",

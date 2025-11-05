@@ -134,7 +134,7 @@ RESEND_FROM_EMAIL=noreply@yourdomain.com
 LOG_LEVEL=info  # debug, info, warn, error
 
 # Database
-DATABASE_URL=/app/data/resume_builder.db
+DATABASE_URL=/app/data/resume.db
 ```
 
 ## Development Environment
@@ -170,8 +170,8 @@ For development with hot reload and debugging:
 
 ```bash
 # Backup database
-docker exec rb9k-api cp /app/data/resume_builder.db /tmp/
-docker cp rb9k-api:/tmp/resume_builder.db ./backup/
+docker exec rb9k-api cp /app/data/resume.db /tmp/
+docker cp rb9k-api:/tmp/resume.db ./backup/
 
 # Backup uploads
 docker cp rb9k-api:/app/uploads ./backup/uploads
@@ -256,7 +256,7 @@ docker-compose logs -f --tail 100
 
 ```bash
 # Access database directly
-docker exec -it rb9k-api sqlite3 /app/data/resume_builder.db
+docker exec -it rb9k-api sqlite3 /app/data/resume.db
 
 # Check database file permissions
 docker exec rb9k-api ls -la /app/data/

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Resume Upload UI - Acceptance Criteria (quick wins)', () => {
-  test('Dashboard links navigate to resume-upload with id param', async ({ page, baseURL }) => {
+  test('Dashboard links navigate to resume details with id param', async ({ page, baseURL }) => {
     const webUrl = baseURL?.toString() ?? '';
 
     // Inject fast fetch mocks before the page scripts run to avoid hydration/request races
@@ -47,9 +47,9 @@ test.describe('Resume Upload UI - Acceptance Criteria (quick wins)', () => {
 
     // Instead of navigating (client page has heavy hydration), assert the expected link format
     const firstId = uploads.items[0].id;
-    const expectedHref = `/resume-upload?id=${firstId}`;
+    const expectedHref = `/resume-details?id=${firstId}`;
     // The app renders links with this format; assert the constructed href is correct
-    expect(expectedHref).toContain(`/resume-upload`);
+    expect(expectedHref).toContain(`/resume-details`);
     expect(expectedHref).toContain(`id=${firstId}`);
   });
 
