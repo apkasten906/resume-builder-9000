@@ -155,6 +155,40 @@ if (isTestEnvironment) {
     }
   });
 
+  // Test-only endpoint to check if a specific user exists by email
+  router.get('/__test/user-exists', async (req, res) => {
+    try {
+      const email = (req.query.email as string) || '';
+      if (!email) return res.status(400).json({ error: 'email is required' });
+      const db = connectDatabase();
+      const row = db.prepare('SELECT 1 FROM users WHERE email = ?').get(email) as
+        | { '1': number }
+        | undefined;
+      return res.status(200).json({ exists: Boolean(row) });
+    } catch (err) {
+      // eslint-disable-next-line no-console -- test route error visibility
+      console.warn('[test-support] Failed to check user existence', err);
+      return res.status(500).json({ error: 'Failed to check user existence' });
+    }
+  });
+
+  // Test-only endpoint to count users whose emails start with a given prefix
+  router.get('/__test/count-users', async (req, res) => {
+    try {
+      const prefix = (req.query.prefix as string) || '';
+      if (!prefix) return res.status(400).json({ error: 'prefix is required' });
+      const db = connectDatabase();
+      const row = db
+        .prepare('SELECT COUNT(*) as count FROM users WHERE email LIKE ?')
+        .get(`${prefix}%`) as { count: number } | undefined;
+      return res.status(200).json({ count: row?.count ?? 0 });
+    } catch (err) {
+      // eslint-disable-next-line no-console -- test route error visibility
+      console.warn('[test-support] Failed to count users', err);
+      return res.status(500).json({ error: 'Failed to count users' });
+    }
+  });
+
   // Test-only endpoint to seed a verified user
   router.post('/__test/seed-verified-user', async (req, res) => {
     try {

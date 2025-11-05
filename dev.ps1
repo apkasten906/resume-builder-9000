@@ -87,11 +87,14 @@ function GetLocalEnvVariable {
 
 # Load a few critical environment variables from .env into the current process so child
 # node/npm processes inherit them. We intentionally only load the minimal set needed
-# for local development (email, auth secrets) instead of importing everything.
+# for local development (email, auth secrets, test-support credentials) instead of importing everything.
 if (-not $env:RESEND_API_KEY) { $env:RESEND_API_KEY = GetLocalEnvVariable -RequiredVar "RESEND_API_KEY" }
 if (-not $env:RESEND_FROM_EMAIL) { $env:RESEND_FROM_EMAIL = GetLocalEnvVariable -RequiredVar "RESEND_FROM_EMAIL" }
 if (-not $env:NEXTAUTH_SECRET) { $env:NEXTAUTH_SECRET = GetLocalEnvVariable -RequiredVar "NEXTAUTH_SECRET" }
 if (-not $env:JWT_SECRET) { $env:JWT_SECRET = GetLocalEnvVariable -RequiredVar "JWT_SECRET" }
+# Load test-support credentials so E2E tests can use test-only endpoints when running against local dev servers
+if (-not $env:ENABLE_TEST_ROUTES) { $env:ENABLE_TEST_ROUTES = GetLocalEnvVariable -RequiredVar "ENABLE_TEST_ROUTES" }
+if (-not $env:TEST_ROUTE_SECRET) { $env:TEST_ROUTE_SECRET = GetLocalEnvVariable -RequiredVar "TEST_ROUTE_SECRET" }
 
 
 # Function to kill all dev server processes

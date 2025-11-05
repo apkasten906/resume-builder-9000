@@ -107,6 +107,9 @@ export default defineConfig({
             ...process.env,
             NODE_ENV: 'development',
             DB_PATH: dbPath,
+            // Explicitly pass test-support credentials so Test Explorer API server has them
+            ENABLE_TEST_ROUTES: process.env.ENABLE_TEST_ROUTES || 'true',
+            TEST_ROUTE_SECRET: process.env.TEST_ROUTE_SECRET || '',
           },
         },
         {

@@ -34,3 +34,11 @@ Older behavior resolved all relative `DB_PATH` values against the API package di
 ## Notes
 
 - The code that implements this behavior is in `packages/api/src/db.ts`. If you need a different resolution policy (for example prefer package-relative paths), update that file and add a small unit test to lock-in the behavior.
+
+### Implementation details & Windows quirks
+
+- The implementation lives in `packages/api/src/db.ts` and intentionally preserves special SQLite values such as `:memory:` and `file:` URIs — they are used verbatim and not resolved against the filesystem.
+- The code will create the parent directory for a resolved file DB path when needed. This prevents runtime errors when `DB_PATH` points to a path inside a directory that does not yet exist (for example `packages/api/data/resume.db`).
+- On Windows there is a subtle `path.isAbsolute()` quirk when paths start with a leading `/` (for example `/packages/api/...`) — the code treats both `packages/...` and `/packages/...` as repo-relative and resolves them against the repository root to keep configuration consistent across OSes.
+
+If you change this behavior, please add a unit test in `packages/api` to assert the resolution rules on Windows and POSIX systems.

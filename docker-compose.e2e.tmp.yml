@@ -24,9 +24,9 @@ services:
         condition: service_healthy
     command:
       [
-        "bash",
-        "-lc",
-        "npm ci --prefer-offline --no-audit && npx playwright install --with-deps && npx playwright test --config=apps/web/tests/e2e/playwright.config.ts --reporter=list",
+        'bash',
+        '-lc',
+        'npm ci --prefer-offline --no-audit && npx playwright install --with-deps && npx playwright test --config=apps/web/tests/e2e/playwright.config.ts --reporter=list',
       ]
     networks:
       - rb9k-network

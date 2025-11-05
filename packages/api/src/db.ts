@@ -54,24 +54,28 @@ export function connectDatabase(): SQLiteDatabase {
   if (rawDbPath) {
     if (rawDbPath === ':memory:' || rawDbPath.startsWith('file:')) {
       dbPath = rawDbPath; // in-memory or file URI -- do not resolve
-    } else if (path.isAbsolute(rawDbPath)) {
-      // Absolute paths are used as-is (covers Windows C:\ and POSIX /absolute)
-      dbPath = rawDbPath;
     } else {
-      // For relative paths (e.g. 'packages/api/data/resume.db' or
-      // 'data/resume.db') normalize the value so that a leading slash is
-      // present, then resolve against the repository root. This avoids
-      // hardcoding any specific package prefix while supporting both
-      // 'packages/...' and '/packages/...' styles in .env values.
-      const repoRoot = path.resolve(packageRoot, '..', '..');
-
-      // Normalize path separators and ensure a single leading '/'
+      // Normalize path separators first
       const cleaned = rawDbPath.replace(/\\/g, '/');
-      const withLeading = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
 
-      // Use './' + withLeading to force resolve() to join repoRoot with the
-      // repo-relative path (rather than treating withLeading as absolute).
-      dbPath = path.resolve(repoRoot, `.${withLeading}`);
+      // Check if this is a repo-relative path (starts with 'packages/', '/packages/', 'apps/', '/apps/', or single segment like 'data/')
+      // These should be resolved relative to repo root, not treated as absolute even if they start with '/'
+      const isRepoRelative =
+        cleaned.startsWith('packages/') ||
+        cleaned.startsWith('/packages/') ||
+        cleaned.startsWith('apps/') ||
+        cleaned.startsWith('/apps/') ||
+        (!cleaned.includes(':') && !path.isAbsolute(cleaned.replace(/^\//, ''))); // Remove leading / before checking if absolute
+
+      if (isRepoRelative) {
+        // For repo-relative paths, resolve against the repository root
+        const repoRoot = path.resolve(packageRoot, '..', '..');
+        const withLeading = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+        dbPath = path.resolve(repoRoot, `.${withLeading}`);
+      } else {
+        // True absolute paths (e.g., C:\..., /absolute/posix/path) are used as-is
+        dbPath = rawDbPath;
+      }
     }
   } else {
     dbPath = path.join(packageRoot, 'data', 'resume.db');
