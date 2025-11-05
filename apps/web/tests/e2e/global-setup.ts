@@ -110,7 +110,7 @@ export default async function globalSetup(): Promise<void> {
       // Verify cleanup completed: poll user counts for common test prefixes
       const prefixes = ['playwright-', 'pw-', 'test-'];
       const maxRetries = 8;
-      const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+      const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
       for (const prefix of prefixes) {
         let ok = false;
         for (let i = 0; i < maxRetries; i++) {
@@ -129,7 +129,7 @@ export default async function globalSetup(): Promise<void> {
                 break;
               }
             }
-          } catch (e) {
+          } catch {
             // ignore and retry
           }
           await sleep(200);

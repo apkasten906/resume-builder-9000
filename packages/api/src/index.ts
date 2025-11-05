@@ -106,14 +106,14 @@ app.use(
 const enableTestRoutes =
   process.env.NODE_ENV === 'test' || process.env.ENABLE_TEST_ROUTES === 'true';
 
-async function mountOptionalRoutesAndStart() {
+async function mountOptionalRoutesAndStart(): Promise<void> {
   if (enableTestRoutes) {
     // dynamic import so the module sees the environment variables loaded above
     // and so logs like NODE_ENV are accurate.
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires -- dynamic import
-      const module = await import('./routes/test-support.js');
-      const testSupportRoutes = module.default;
+      const testModule = await import('./routes/test-support.js');
+      const testSupportRoutes = testModule.default;
       app.use('/', testSupportRoutes);
     } catch (err) {
       // If test routes fail to load, log but continue startup (non-fatal)

@@ -20,7 +20,7 @@ if (process.env.NODE_ENV !== 'production') {
       'NODE_ENV=',
       process.env.NODE_ENV
     );
-  } catch (e) {
+  } catch {
     // ignore
   }
 }
