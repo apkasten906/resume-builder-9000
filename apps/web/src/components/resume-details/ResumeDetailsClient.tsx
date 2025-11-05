@@ -57,9 +57,11 @@ function genLocalId(prefix: string, index: number): string {
       ? (crypto as unknown as { randomUUID?: () => string })
       : undefined;
 
-  const uuid = webCrypto && typeof webCrypto.randomUUID === 'function'
-    ? webCrypto.randomUUID()
-    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  let uuid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  if (webCrypto && typeof webCrypto.randomUUID === 'function') {
+    uuid = webCrypto.randomUUID();
+  }
+
   return `${prefix}-${index}-${uuid}`;
 }
 
