@@ -1,16 +1,14 @@
-import { Request, Response, Router } from 'express';
+import { Request, Response } from 'express';
 import multer from 'multer';
 // Removed unused ResumeData, JobDetails imports
 import { getAllResumesFromDb } from '../db.js';
 import { logger } from '../utils/logger.js';
 import { validateFile } from '../utils/fileValidation.js';
 import { parseFileText } from '../services/fileParser.js';
-import { getResumeById } from '../services/resumeService.js';
+import { parseResumeFile } from '../services/resumeParseService.js';
+import { fetchResumeById } from '../services/resumeService.js';
 import { handleJsonResume } from './testResume.js';
 import { isTestEnvironment } from '../utils/testUtils.js';
-
-// Express router for resume endpoints
-const resumeRoutes = Router();
 
 // Multer setup for file uploads (memory storage, 5MB limit)
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -29,6 +27,9 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
  *             type: object
  *             properties:
  *               file:
+ *                 type: string
+ *                 format: binary
+ *               resume:
  *                 type: string
  *                 format: binary
  *     responses:
@@ -60,7 +61,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
  *       503:
  *         description: Service unavailable
  */
-export const parseResumeHandler = upload.single('file');
+export const parseResumeHandler = upload.single('resume');
 
 export const postResumeHandler = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -142,8 +143,9 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
     return;
   }
 };
-// POST /api/resumes is the canonical endpoint for parsing resumes
-resumeRoutes.post('/', parseResumeHandler, postResumeHandler);
+// NOTE: Router wiring moved to `packages/api/src/routes/resume.ts` to keep
+// route definitions thin and centralized. Export handler middleware above
+// and let the routes module mount them.
 
 /**
  * @swagger
@@ -177,9 +179,20 @@ resumeRoutes.post('/', parseResumeHandler, postResumeHandler);
  *       500:
  *         description: Internal server error
  */
-resumeRoutes.get('/:id', async (req: Request, res: Response) => {
-  await getResumeById(req, res);
-});
+export const getResumeHandler = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const resume = await fetchResumeById(id);
+    if (!resume) {
+      res.status(404).json({ error: 'Resume not found' });
+      return;
+    }
+    res.json(resume);
+  } catch (error) {
+    logger.error('Error in getResumeHandler', { error, resumeId: req.params.id });
+    res.status(500).json({ error: 'Failed to retrieve resume' });
+  }
+};
 
 /**
  * @swagger
@@ -199,7 +212,7 @@ resumeRoutes.get('/:id', async (req: Request, res: Response) => {
  *       500:
  *         description: Internal server error
  */
-resumeRoutes.get('/', async (req, res) => {
+export const listResumesHandler = async (req: Request, res: Response) => {
   try {
     const resumes = getAllResumesFromDb();
     res.json(resumes);
@@ -207,6 +220,42 @@ resumeRoutes.get('/', async (req, res) => {
     logger.error('Error retrieving all resumes', { error });
     res.status(500).json({ error: 'Failed to retrieve resumes' });
   }
-});
+};
 
-export { resumeRoutes };
+/**
+ * Handler that returns raw parsed regions (compatibility for parse.route.ts tests).
+ * Expects multer has already populated `req.file` (upload.single('resume')).
+ */
+export const parseOnlyHandler = async (req: Request, res: Response) => {
+  try {
+    const file = req.file as Express.Multer.File | undefined;
+    if (!file || !file.buffer) {
+      return res.status(400).json({ error: 'no file uploaded' });
+    }
+
+    const regions = await parseResumeFile(file);
+    return res.status(200).json({ resumeId: null, regions });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'parse error';
+    return res.status(500).json({ error: msg });
+  }
+};
+
+/**
+ * Handler to save parsed resume or draft data. Kept minimal for now.
+ */
+export const saveResumeHandler = async (req: Request, res: Response) => {
+  try {
+    const body = req.body ?? {};
+    const consent = Boolean(body.consent);
+    if (!consent) {
+      return res.status(400).json({ error: 'consent required' });
+    }
+
+    // Persisting is out-of-scope for this branch; return a stub OK.
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    logger.error('Error in saveResumeHandler', { error: err });
+    return res.status(500).json({ error: 'Failed to save resume' });
+  }
+};

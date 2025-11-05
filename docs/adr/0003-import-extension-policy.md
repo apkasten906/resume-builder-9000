@@ -66,6 +66,60 @@ This hybrid rule keeps runtime Node ESM resolution correct while letting Next.js
 - Perform the targeted fixups for Node packages and run tests.
 - Document the policy in CONTRIBUTING.md and consider adding an ESLint rule or codemod to enforce correctness per folder.
 
+## Consolidation guidance (project policy)
+
+After recent feature work, we observed duplicate runtime helpers under `apps/api/src/lib` and `packages/api/src/lib`. To avoid drift and confusion in a monorepo, adopt the following best practice:
+
+- Keep the authoritative backend implementation in `packages/api`. This package contains controllers, DB wiring, and tests and is the canonical runtime for backend services.
+- Avoid duplicating business logic or helpers in `apps/api` or `apps/web/src/app/api`. If a helper is needed by multiple runtimes, extract it into `packages/core` or `packages/api/src/lib` and import it from there.
+- During development you may prototype in `apps/api`, but consolidation into `packages/api` is required before landing changes to the main branch.
+
+This guidance reduces deployment ambiguity, centralizes tests, and keeps CI focused on the canonical API package.
+
+## Routes & services pattern (repository governance)
+
+Date: 2025-11-05
+
+Status: Proposed / Recommended
+
+Summary
+
+- Enforce a thin-routes / services pattern for the canonical API (`packages/api`). Routes (Express handlers/controllers) must be thin and only perform HTTP-level concerns: parse request, validate, call a service, and translate results to HTTP responses. All business logic, heavy parsing, and external integrations must live in service modules under `packages/api/src/services` (or a well-scoped lib imported by services).
+
+Why this matters
+
+- Keeps controllers small and focused, simplifying reviews and ensuring consistent error handling and middleware usage.
+- Makes business logic easier to unit-test (services can be tested without HTTP/middleware), improves reusability, and reduces duplication across experimental sandboxes.
+
+Practical guidance
+
+- File layout
+  - `routes/` — Express routers and route wiring only (request -> service call). Keep response shapes minimal and consistent.
+  - `controllers/` (optional) — thin functions for request/response mapping. Controllers must not contain business logic.
+  - `services/` — implement logic, side-effects, and third-party calls. Keep service signatures explicit (inputs/outputs) and prefer pure functions where possible.
+
+- DTOs and validation
+  - Use small DTO validators (Zod schemas) at the route boundary. Convert and pass validated plain objects to services.
+
+- Testing
+  - Unit-test services with mocks for external dependencies (file parsers, DB, network). Keep tests fast.
+  - Route/controller tests should be lightweight and focus on middleware, authentication, and error mapping. Use a small set of contract/integration tests to validate end-to-end behavior.
+
+- Review checklist (PR template suggestion)
+  - Does a new route delegate to a service in `packages/api/src/services`?
+  - Is business logic covered by service-level unit tests?
+  - Are route-level validations concise and implemented via DTOs?
+
+Acceptance criteria
+
+- New or modified API endpoints in `packages/api` follow the thin-routes / services pattern.
+- Services are unit-tested; controllers/route handlers have focused tests for mapping and middleware.
+
+Next steps
+
+- Add a short section to the PR template reminding contributors about the pattern and the checklist above.
+- Optionally add an ESLint custom rule or repo-level CI check that flags large functions in `routes/` files for manual review.
+
 # 0003 — Import extension policy: use extension-less relative imports
 
 Date: 2025-10-30

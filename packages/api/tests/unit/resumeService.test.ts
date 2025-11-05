@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response } from 'express';
-import { getResumeById, saveResume } from '../../src/services/resumeService.js';
+import { fetchResumeById, saveResume } from '../../src/services/resumeService.js';
 import * as db from '../../src/db.js';
 import { ResumeData, JobDetails } from '@rb9k/core';
 
@@ -46,7 +46,7 @@ describe('resumeService', () => {
     vi.restoreAllMocks();
   });
 
-  describe('getResumeById', () => {
+  describe('fetchResumeById', () => {
     it('should return a resume when found', async () => {
       // Arrange
       const mockResume = {
@@ -64,40 +64,34 @@ describe('resumeService', () => {
       vi.mocked(db.getResumeFromDb).mockReturnValue(mockResume);
 
       // Act
-      await getResumeById(mockReq as Request, mockRes as Response);
+      const result = await fetchResumeById('test-id');
 
       // Assert
       expect(db.getResumeFromDb).toHaveBeenCalledWith('test-id');
-      expect(jsonMock).toHaveBeenCalledWith(mockResume);
-      expect(statusMock).not.toHaveBeenCalled();
+      expect(result).toEqual(mockResume);
     });
 
-    it('should return 404 when resume is not found', async () => {
+    it('should return null when resume is not found', async () => {
       // Arrange
       vi.mocked(db.getResumeFromDb).mockReturnValue(null);
 
       // Act
-      await getResumeById(mockReq as Request, mockRes as Response);
+      const result = await fetchResumeById('test-id');
 
       // Assert
       expect(db.getResumeFromDb).toHaveBeenCalledWith('test-id');
-      expect(statusMock).toHaveBeenCalledWith(404);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Resume not found' });
+      expect(result).toBeNull();
     });
 
-    it('should handle errors and return 500', async () => {
+    it('should throw when the DB access fails', async () => {
       // Arrange
       const error = new Error('Test error');
       vi.mocked(db.getResumeFromDb).mockImplementation(() => {
         throw error;
       });
 
-      // Act
-      await getResumeById(mockReq as Request, mockRes as Response);
-
-      // Assert
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({ error: 'Failed to retrieve resume' });
+      // Act & Assert
+      await expect(fetchResumeById('test-id')).rejects.toThrow(error);
     });
   });
 

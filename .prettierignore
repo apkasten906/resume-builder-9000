@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.log
+.vscode/
+.idea/
+.env*
+test-results/
+playwright-report/
+packages/api/logs/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+.cache/

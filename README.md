@@ -188,6 +188,27 @@ For a detailed explanation of our testing strategies, boundaries, and tools, see
 
 Feel free to submit issues and pull requests. We welcome contributions from the community!
 
+## Repository conventions — Canonical API location
+
+- Canonical API package: `packages/api` is the single source of truth for backend logic, routes, database wiring, and tests. Maintain API controllers, services, and heavy business logic in `packages/api`.
+- Do not duplicate API business logic in `apps/api` or `apps/web/src/app/api`. If you need shared helpers, extract them into `packages/core` or `packages/api/src/lib` and import from the canonical package.
+- `apps/api` may be used as a temporary sandbox for feature experiments during development, but long-term code must be consolidated into `packages/api` before merging. This reduces duplication, test drift, and deployment confusion.
+- Routes / services pattern (enforced guidance): keep HTTP route handlers (controllers) thin — they should only:
+  - Parse and validate incoming HTTP requests (authentication, small DTO validation and file checks).
+  - Map request data to service inputs and call a service function.
+  - Handle top-level errors and translate service results into HTTP responses.
+
+  Put all business logic, heavy computation, and third-party integrations in service modules under `packages/api/src/services`. Services should be simple, pure where possible, and easy to unit-test without HTTP plumbing.
+
+  Testing guidance:
+  - Unit-test services directly (mock external deps like file parsers, databases, or network calls).
+  - Keep route/controller tests lightweight and focused on request/response mapping and middleware behavior (authentication, file validation). Use integration or contract tests to exercise end-to-end behavior.
+
+- Do not duplicate API business logic in `apps/api` or `apps/web/src/app/api`. If you need shared helpers, extract them into `packages/core` or `packages/api/src/lib` and import from the canonical package.
+- `apps/api` may be used as a temporary sandbox for feature experiments during development, but long-term code must be consolidated into `packages/api` before merging. This reduces duplication, test drift, and deployment confusion.
+
+If you want me to automatically move consolidated helpers and remove `apps/api` copies, I can do that as a follow-up (I already copied the resume parsing helpers into `packages/api/src/lib` for this feature).
+
 ## Resources
 
 - Check out [awesome-github-copilot](https://github.com/awesome-github-copilot/awesome-github-copilot) for tips and resources on using GitHub Copilot effectively.

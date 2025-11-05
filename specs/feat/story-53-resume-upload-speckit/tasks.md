@@ -15,8 +15,8 @@ Phase 1 — Setup
 
 Phase 2 — Foundational (blocking prerequisites)
 
-- [ ] T007 Implement file validation middleware `apps/api/src/middleware/file-validation.ts` (limit 10MB, MIME application/pdf)
-- [ ] T008 [P] Implement transient DTOs and serializers `packages/core/src/dtos/parsed-region.dto.ts` and `packages/core/src/dtos/resume-upload.dto.ts`
+- [x] T007 Implement file validation middleware `apps/api/src/middleware/file-validation.ts` (limit 10MB, MIME application/pdf)
+- [x] T008 [P] Implement transient DTOs and serializers `packages/core/src/dtos/parsed-region.dto.ts` and `packages/core/src/dtos/resume-upload.dto.ts`
 - [x] T009 [P] Implement server-side parsing integration that calls `apps/api/src/lib/pdf-parser.ts` and returns parsed regions `apps/api/src/routes/resume/parse.route.ts`
 - [ ] T010 Create API contract test `apps/api/test/parse.route.spec.ts` that POSTs example PDF and asserts JSON shape
 
@@ -26,9 +26,15 @@ US1: Upload and quick-parse (Priority: P1)
 
 - [x] T011 [US1] Implement `POST /api/resume/parse` route logic in `apps/api/src/routes/resume/parse.route.ts` to accept multipart/form-data and return parsed regions JSON (apply file validation middleware)
 - [x] T012 [US1] Implement parser worker `apps/api/src/lib/pdf-parser.ts` using `pdfjs-dist` (text-layer extraction). Output shape: [{id,page,bbox,text,category,confidence}]
-- [ ] T013 [US1] [P] Create client upload UI `apps/web/src/components/ResumeUploadInteractive.tsx` to POST file and display parsed JSON (stubbed UI)
-- [ ] T014 [US1] [P] Add a basic integration test `apps/web/test/resume-upload.e2e.ts` (Playwright) to upload a known text-layer PDF and validate the preview receives parsed regions
+- [x] T013 [US1] [P] Create client upload UI `apps/web/src/components/ResumeUploadInteractive.tsx` to POST file and display parsed JSON (stubbed UI)
+- [x] T014 [US1] [P] Add a basic integration test `apps/web/test/resume-upload.e2e.ts` (Playwright) to upload a known text-layer PDF and validate the preview receives parsed regions
 - [x] T015 [US1] Map parsed regions to profile draft DTO and add unit test `packages/core/test/parsed-region-to-profile.spec.ts`
+
+Additional remaining work for US1 (tests & fixtures)
+
+- [x] T012A [US1] Add focused API unit tests with mocking for parser branches (`pdfjs-dist` and `pdf-parse`) under `packages/api/tests/` (keeps API tests fast and isolated; full E2E flows will be covered by Playwright in `apps/web`).
+- [x] T012B [US1] Add normalization tests to verify bbox coordinate mapping for overlay (map PDF page coordinates to CSS overlay coordinates).
+- [ ] T012C [US1] (Optional) Add an unmocked integration smoke test in `apps/api/tests/integration/` that generates a small text-layer PDF (via `pdf-lib`) and validates parser output. This is optional — prefer Playwright E2E for full-stack verification.
 
 US2: Review and correct (Priority: P2)
 

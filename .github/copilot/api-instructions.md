@@ -17,7 +17,7 @@ The `@rb9k/api` package provides the backend API server for Resume Builder 9000,
 
 1. **Endpoint Structure**
    - `/api/ingest/resume` - POST - Upload and parse resume
-   - `/api/ingest/jd` - POST - Submit job description
+   - `/api/ingest/jobdescription` - POST - Submit job description
    - `/api/tailor` - POST - Generate tailored resume
 
 2. **Status Codes**

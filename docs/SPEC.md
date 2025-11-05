@@ -106,7 +106,7 @@ See `packages/core/src/types.ts` for `JobProfile`, `Achievement`, etc.
 ## API (MVP)
 
 - `POST /api/resumes/parse` → parses and persists resume, returns preview JSON `{ summary, experience, skills }`.
-- `POST /api/ingest/jd` → job_id
+- `POST /api/ingest/jobdescription` → job_id
 - `POST /api/tailor` → run + outputs
 
 ## Acceptance Criteria

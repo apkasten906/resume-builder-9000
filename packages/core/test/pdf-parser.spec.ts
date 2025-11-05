@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parsePdfBuffer } from '../../../apps/api/src/lib/pdf-parser.js';
+import { parsePdfBuffer } from '../../../packages/api/src/lib/pdf-parser.js';
 
 describe('pdf-parser (stub)', () => {
   it('returns an array for empty buffer', async () => {

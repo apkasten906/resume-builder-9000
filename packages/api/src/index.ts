@@ -12,7 +12,7 @@ import applicationsRoutes from './routes/applications.js';
 import { parseJobDescription } from './controllers/jobDescription.js';
 import { tailorBullets } from './controllers/tailor.js';
 import { downloadResume } from './controllers/resumeDownload.js';
-import { resumeRoutes, parseResumeHandler, postResumeHandler } from './controllers/resume.js';
+import resumeRoutes from './routes/resume.js';
 import { connectDatabase } from './db.js';
 import { logger, httpLogger, errorLogger } from './utils/logger.js';
 import { openApiSpec } from './utils/openapi.js';
@@ -62,7 +62,6 @@ app.post('/resume/download', downloadResume);
 // Existing routes
 app.get('/', (req, res) => res.redirect('/api/docs'));
 app.use('/api/resumes', resumeRoutes);
-app.post('/api/resumes/parse', parseResumeHandler, postResumeHandler);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
