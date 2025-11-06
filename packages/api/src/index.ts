@@ -135,7 +135,15 @@ async function mountOptionalRoutesAndStart(): Promise<void> {
   }
 }
 
-// Execute mounting and startup
-mountOptionalRoutesAndStart();
+// Execute mounting and startup when running outside of test environment.
+// When running tests we avoid auto-starting the server so importing this
+// module does not create side effects (like opening DB connections).
+if (process.env.NODE_ENV !== 'test') {
+  mountOptionalRoutesAndStart();
+} else {
+  // In test mode we intentionally do not start the server. Tests that
+  // need the full server lifecycle should call mountOptionalRoutesAndStart()
+  // or start the server explicitly. This keeps imports side-effect free.
+}
 
 export default app;
