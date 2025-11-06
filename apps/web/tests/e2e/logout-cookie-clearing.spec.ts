@@ -27,7 +27,8 @@ test.describe('Logout Cookie Clearing', () => {
 
     // 3. Attempt login (may fail in test environment without proper test user)
     await page.getByRole('button', { name: 'Sign In' }).click();
-    await page.waitForTimeout(2000);
+    // Wait for navigation/network idle instead of a fixed timeout to reduce flakiness
+    await page.waitForLoadState('networkidle');
 
     const currentUrl = page.url();
     testLogger.log(`URL after login attempt: ${currentUrl}`);
@@ -60,15 +61,18 @@ test.describe('Logout Cookie Clearing', () => {
 
     // 7. Wait for redirect to root page
     await page.waitForURL(WEB_BASE + '/');
-    await page.waitForTimeout(1000); // Give time for logout process to complete
     testLogger.log('Logout redirect completed');
 
-    // 8. Verify session cookie is cleared
-    const cookiesAfterLogout = await page.context().cookies();
-    const sessionCookieAfter = cookiesAfterLogout.find(
-      cookie => cookie.name === 'session' && cookie.value !== ''
-    );
-    expect(sessionCookieAfter).toBeFalsy();
+    // 8. Verify session cookie is cleared (poll until cookie absent to avoid timing issues)
+    await expect
+      .poll(
+        async () => {
+          const cookies = await page.context().cookies();
+          return cookies.find(cookie => cookie.name === 'session');
+        },
+        { timeout: 2000 }
+      )
+      .toBeFalsy();
     testLogger.log('[TEST] Verified: Session cookie is cleared after logout');
 
     // 9. Verify navigation menu is hidden after logout
@@ -82,7 +86,10 @@ test.describe('Logout Cookie Clearing', () => {
 
     // 11. Refresh the page to ensure session doesn't persist across page loads
     await page.reload();
-    await page.waitForTimeout(1000); // Give time for auth check
+    // Wait for navigation/auth check to settle by polling the navigation element count
+    await expect
+      .poll(async () => await page.locator('aside nav').count(), { timeout: 2000 })
+      .toBe(0);
     testLogger.log('Refreshed page to test session persistence');
 
     // 12. Verify navigation menu is still hidden after page refresh
@@ -123,7 +130,10 @@ test.describe('Logout Cookie Clearing', () => {
 
     // 2. Navigate to root page
     await page.goto(WEB_BASE);
-    await page.waitForTimeout(2000); // Give time for auth check
+    // Poll for navigation to remain hidden since cookie is expired
+    await expect
+      .poll(async () => await page.locator('aside nav').count(), { timeout: 2000 })
+      .toBe(0);
     testLogger.log('Navigated to root page with expired cookie');
 
     // 3. Verify navigation menu is not visible

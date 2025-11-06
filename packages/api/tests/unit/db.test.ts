@@ -25,6 +25,7 @@ vi.mock('better-sqlite3', () => {
         run: vi.fn(),
       }),
       exec: vi.fn(),
+      pragma: vi.fn(),
       close: vi.fn(),
     })),
   };

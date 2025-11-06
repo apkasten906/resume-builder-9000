@@ -34,7 +34,7 @@ Follow accessibility best practices
 ## Setup Instructions
 
 - Run `setup.ps1` to install dependencies and build the project
-- Run Task `Run Dev Script` to start the development environment in it's own terminal window:
+- Run Task `Run Dev Script (direct)` to start the development environment in it's own terminal window:
   - This starts both the API and Web servers with hot reload enabled
   - Set environment variables in `.env` files as needed
   - The dev script uses `concurrently` to run both servers

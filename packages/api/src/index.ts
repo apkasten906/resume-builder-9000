@@ -45,7 +45,14 @@ logger.info(`API server starting on API_BASE=${apiBase}, API_PORT=${process.env.
 
 // Middleware
 app.use(httpLogger); // HTTP request logging
-app.use(cors());
+// Configure CORS using env var so browser fetches with credentials are allowed
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || true, // reflect request origin when not set
+  credentials: true,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Test-Secret'],
+};
+app.use(cors(corsOptions));
 // Parse cookies on incoming requests so req.cookies is available
 app.use(cookieParser());
 // NOTE: We purposely avoid a static import of test-support here because

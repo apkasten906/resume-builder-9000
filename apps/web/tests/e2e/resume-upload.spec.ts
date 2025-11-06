@@ -2,7 +2,8 @@
 // Playwright cannot easily generate or upload a >5MB file in CI environments.
 // The UI will show a user-friendly error: "File is too large. Maximum allowed size is 5MB."
 // Removed unused imports
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test-setup';
+import type { UploadItem } from '../helpers/types';
 
 // Use WEB_BASE from environment or default to localhost
 const webUrl = process.env.WEB_BASE || 'http://localhost:3000';
@@ -15,6 +16,12 @@ test.describe('Resume Upload Flow', () => {
   test('should upload a resume and show parsed data', async ({ page }) => {
     test.setTimeout(30000);
     await page.goto(`${webUrl}/resume-upload`);
+    // Wait for the upload UI to be fully hydrated and visible before interacting.
+    await page.getByRole('heading', { name: /Upload Your Resume/i }).waitFor({
+      state: 'visible',
+      timeout: 15000,
+    });
+    await page.waitForSelector('[data-testid="resume-upload-input"]', { timeout: 15000 });
     // Intercept the fetch and set the header
     await page.route('/api/resumes', async (route, request) => {
       const headers = {
@@ -46,6 +53,11 @@ test.describe('Resume Upload Flow', () => {
 
   test('should show error for unsupported file type', async ({ page }) => {
     await page.goto(`${webUrl}/resume-upload`);
+    await page.getByRole('heading', { name: /Upload Your Resume/i }).waitFor({
+      state: 'visible',
+      timeout: 10000,
+    });
+    await page.waitForSelector('[data-testid="resume-upload-input"]', { timeout: 10000 });
     await page
       .getByTestId('resume-upload-input')
       .setInputFiles('apps/web/tests/assets/invalid_file.exe');
@@ -61,6 +73,11 @@ test.describe('Resume Upload Flow', () => {
 
   test('shows loading state and disables controls during parse', async ({ page }) => {
     await page.goto(`${webUrl}/resume-upload`);
+    await page.getByRole('heading', { name: /Upload Your Resume/i }).waitFor({
+      state: 'visible',
+      timeout: 10000,
+    });
+    await page.waitForSelector('[data-testid="resume-upload-input"]', { timeout: 10000 });
     await page
       .getByTestId('resume-upload-input')
       .setInputFiles('apps/web/tests/assets/sample_resume.pdf');
@@ -73,7 +90,7 @@ test.describe('Resume Upload Flow', () => {
     await expect(parseButton).not.toBeDisabled({ timeout: 10000 });
   });
 
-  test('uploads list shows max 10 items and displays friendly error on API failure', async ({
+  test('uploads list shows ALL items (no limit) and displays friendly error on API failure', async ({
     page,
   }) => {
     await page.goto(`${webUrl}/resume-upload`);
@@ -95,8 +112,9 @@ test.describe('Resume Upload Flow', () => {
     await page.reload();
     // Wait for the first item to render
     await page.waitForSelector('text=resume-0.pdf');
-    const items = await page.locator('ul.list-disc li').count();
-    expect(items).toBe(10);
+    const items = await page.locator('[data-testid="recent-uploads-table"] tbody tr').count();
+    // Should show all 12 items, not limited to 10
+    expect(items).toBe(12);
 
     // Now mock failure and check the user-facing message
     await page.route('**/api/uploads', route =>
@@ -109,6 +127,118 @@ test.describe('Resume Upload Flow', () => {
     await expect(
       page.getByText('Apologies! We are having trouble retrieving your uploaded resumes right now.')
     ).toBeVisible();
+  });
+
+  test('uploaded resume is persisted and parsed fields are stored', async ({ page }) => {
+    test.setTimeout(40000);
+    await page.goto(`${webUrl}/resume-upload`);
+    // Ensure upload UI is ready before interacting to avoid hydration/race issues
+    await page.getByRole('heading', { name: /Upload Your Resume/i }).waitFor({
+      state: 'visible',
+      timeout: 15000,
+    });
+    await page.waitForSelector('[data-testid="resume-upload-input"]', { timeout: 15000 });
+
+    // Intercept POST to /api/resumes to add a dev header and forward to backend
+    await page.route('/api/resumes', async (route, request) => {
+      const headers = {
+        ...request.headers(),
+        'x-dev-e2e-test': 'true',
+      };
+      const response = await page.request.fetch(request.url(), {
+        method: request.method(),
+        headers,
+        data: request.postData(),
+      });
+      route.fulfill({ response });
+    });
+
+    // Upload file and trigger parse
+    await page
+      .getByTestId('resume-upload-input')
+      .setInputFiles('apps/web/tests/assets/sample_resume.pdf');
+    await page.getByTestId('parse-button').click();
+
+    // Wait for parsed summary to appear (allow a bit more time for parsing + persistence)
+    await expect(page.getByTestId('parsed-summary')).toBeVisible({ timeout: 30000 });
+
+    // Now poll the uploads API (via the web server) to find the newly created item
+    const uploadsResponse = await page.request.get('/api/uploads');
+    expect(uploadsResponse.ok()).toBeTruthy();
+    const uploadsJson = await uploadsResponse.json();
+    expect(Array.isArray(uploadsJson.items)).toBeTruthy();
+    // Find the upload with filename matching the uploaded file
+    const found = uploadsJson.items.find((it: UploadItem) =>
+      (it.fileName || '').includes('sample_resume')
+    );
+    expect(found).toBeTruthy();
+    const resumeId = found.id;
+
+    // Fetch the stored resume from backend to assert parsed fields persisted
+    const storedResume = await page.request.get(`/api/resumes/${resumeId}`);
+    expect(storedResume.ok()).toBeTruthy();
+    const storedJson = await storedResume.json();
+
+    // Assert the parsed/ persisted fields exist in the DB entry
+    expect(storedJson).toHaveProperty('id', resumeId);
+    expect(storedJson).toHaveProperty('resumeData');
+    expect(storedJson.resumeData).toHaveProperty('summary');
+    expect(typeof storedJson.resumeData.summary).toBe('string');
+    expect(Array.isArray(storedJson.resumeData.experience)).toBeTruthy();
+    expect(Array.isArray(storedJson.resumeData.skills)).toBeTruthy();
+  });
+
+  test('uploads are sorted by date descending (most recent first)', async ({ page }) => {
+    test.setTimeout(30000);
+    await page.goto(`${webUrl}/resume-upload`);
+
+    // Mock the uploads API with items that have different dates
+    const mockItems = [
+      {
+        id: 'id-1',
+        fileName: 'newest-resume.pdf',
+        lastUpdated: '2025-10-23T12:00:00.000Z',
+      },
+      {
+        id: 'id-2',
+        fileName: 'middle-resume.pdf',
+        lastUpdated: '2025-10-23T10:00:00.000Z',
+      },
+      {
+        id: 'id-3',
+        fileName: 'oldest-resume.pdf',
+        lastUpdated: '2025-10-23T08:00:00.000Z',
+      },
+    ];
+
+    await page.route('**/api/uploads', route =>
+      route.fulfill({
+        status: 200,
+        body: JSON.stringify({ items: mockItems }),
+      })
+    );
+
+    await page.reload();
+    await page.waitForSelector('text=newest-resume.pdf');
+
+    // Get all table rows in order
+    const rows = await page.locator('[data-testid="recent-uploads-table"] tbody tr').all();
+    expect(rows.length).toBe(3);
+
+    // Verify the order: newest should be first, oldest should be last
+    const firstRowText = await rows[0].textContent();
+    const lastRowText = await rows[2].textContent();
+
+    expect(firstRowText).toContain('newest-resume.pdf');
+    expect(lastRowText).toContain('oldest-resume.pdf');
+  });
+
+  test('recent uploads section shows correct title "All Uploaded Resumes"', async ({ page }) => {
+    await page.goto(`${webUrl}/resume-upload`);
+    await page.waitForSelector('[data-testid="recent-uploads-table"]');
+
+    // Verify the card title changed from "Recent Uploads" to "All Uploaded Resumes"
+    await expect(page.getByRole('heading', { name: /All Uploaded Resumes/i })).toBeVisible();
   });
 });
 

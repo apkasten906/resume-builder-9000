@@ -74,8 +74,9 @@ export const openApiSpec = createDocument({
     },
     '/api/resumes': {
       post: {
-        summary: 'Parse and extract resume data',
-        description: 'Upload a resume file and extract summary, experience, and skills',
+        summary: 'Upload, parse, and persist a resume file',
+        description:
+          'Upload a resume file (PDF, DOCX, TXT, MD), extract data, persist to database, and return the stored resume with ID and timestamp. File validation checks both extension and magic bytes/MIME type for PDF and DOCX files. If PDF parsing fails, fallback text is used and the resume is still persisted.',
         requestBody: {
           required: true,
           content: {
@@ -83,7 +84,11 @@ export const openApiSpec = createDocument({
               schema: {
                 type: 'object',
                 properties: {
-                  file: { type: 'string', format: 'binary' },
+                  file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'Resume file (PDF, DOCX, TXT, or MD) - max 5MB',
+                  },
                 },
               },
             },
@@ -91,20 +96,36 @@ export const openApiSpec = createDocument({
         },
         responses: {
           201: {
-            description: 'Parsed resume data',
+            description: 'Resume successfully parsed and persisted',
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
                   properties: {
-                    summary: { type: 'string' },
+                    id: {
+                      type: 'string',
+                      description: 'Unique identifier for the stored resume (UUID)',
+                      example: '038a5af3-7632-4f4e-bcf7-f49e95da4797',
+                    },
+                    summary: {
+                      type: 'string',
+                      description: 'Extracted summary text',
+                    },
                     experience: {
                       type: 'array',
                       items: { type: 'string' },
+                      description: 'Extracted experience entries',
                     },
                     skills: {
                       type: 'array',
                       items: { type: 'string' },
+                      description: 'Extracted skills',
+                    },
+                    createdAt: {
+                      type: 'string',
+                      format: 'date-time',
+                      description: 'Timestamp when resume was uploaded',
+                      example: '2025-10-23T10:00:24.323Z',
                     },
                   },
                 },
@@ -112,7 +133,7 @@ export const openApiSpec = createDocument({
             },
           },
           400: {
-            description: 'Bad request',
+            description: 'Bad request (e.g., missing file, unsupported file type)',
             content: {
               'application/json': {
                 schema: {
@@ -125,7 +146,7 @@ export const openApiSpec = createDocument({
             },
           },
           413: {
-            description: 'File too large',
+            description: 'File too large (max 5MB)',
             content: {
               'application/json': {
                 schema: {
@@ -139,6 +160,37 @@ export const openApiSpec = createDocument({
           },
           500: {
             description: 'Failed to process resume',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      get: {
+        summary: 'List all resumes',
+        description:
+          'Retrieve all uploaded resumes, sorted by creation date descending (most recent first)',
+        responses: {
+          200: {
+            description: 'List of all stored resumes',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/StoredResume' },
+                },
+              },
+            },
+          },
+          500: {
+            description: 'Failed to retrieve resumes',
             content: {
               'application/json': {
                 schema: {

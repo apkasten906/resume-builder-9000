@@ -7,7 +7,8 @@ const TEST_SECRET = process.env.TEST_ROUTE_SECRET || '';
 type OutboxEntry = { to: string; metadata?: { token?: string; type?: string } };
 
 async function waitForVerificationToken(email: string): Promise<string> {
-  const timeoutAt = Date.now() + 10000;
+  // Allow more time for email delivery in slower environments or CI
+  const timeoutAt = Date.now() + 30000;
   while (Date.now() < timeoutAt) {
     try {
       // Use test-support endpoint to get emails from in-memory outbox

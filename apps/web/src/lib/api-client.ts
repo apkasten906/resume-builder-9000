@@ -1,3 +1,5 @@
+import type { ParsedResumeUpdateRequest, ResumeDetailsApiResponse } from '@/types/resume-details';
+
 /**
  * Type-Safe API Service Generator
  * Extracts types directly from Next.js API routes
@@ -60,6 +62,7 @@ export const API = {
   auth: createAPIClient('auth'),
   uploads: createAPIClient('uploads'),
   resume: createAPIClient('resume'),
+  resumeDetails: createAPIClient('resume-details'),
   tailor: createAPIClient('tailor'),
   jobDescription: createAPIClient('jobDescription'),
 } as const;
@@ -102,3 +105,5 @@ export interface ParseJobDescriptionResponse {
   requirements?: string[];
   keywords?: string[];
 }
+
+export type { ParsedResumeUpdateRequest, ResumeDetailsApiResponse };
