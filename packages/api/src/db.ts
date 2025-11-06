@@ -58,14 +58,16 @@ export function connectDatabase(): SQLiteDatabase {
       // Normalize path separators first
       const cleaned = rawDbPath.replace(/\\/g, '/');
 
-      // Check if this is a repo-relative path (starts with 'packages/', '/packages/', 'apps/', '/apps/', or single segment like 'data/')
-      // These should be resolved relative to repo root, not treated as absolute even if they start with '/'
+      // Check if this is a repo-relative path (starts with 'packages/', '/packages/', 'apps/', '/apps/', or single segment like 'data/').
+      // These should be resolved relative to the repo root, not treated as absolute even if they start with '/'.
+      // Break complex boolean into a named variable for clarity.
+      const isNonWindowsRelative = !cleaned.includes(':') && !path.isAbsolute(cleaned.replace(/^\//, ''));
       const isRepoRelative =
         cleaned.startsWith('packages/') ||
         cleaned.startsWith('/packages/') ||
         cleaned.startsWith('apps/') ||
         cleaned.startsWith('/apps/') ||
-        (!cleaned.includes(':') && !path.isAbsolute(cleaned.replace(/^\//, ''))); // Remove leading / before checking if absolute
+        isNonWindowsRelative;
 
       if (isRepoRelative) {
         // For repo-relative paths, resolve against the repository root

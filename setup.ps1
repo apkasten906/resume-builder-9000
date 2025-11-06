@@ -1,5 +1,4 @@
 # Resume Builder 9000 Setup Script
-# Resume Builder 9000 Setup Script
 param(
   [switch]$Help,
   # When set, install Playwright browsers and run the E2E suite at the end of setup.
