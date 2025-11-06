@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { Resend } from 'resend';
+import { logger } from '../utils/logger.js';
 
 // Lazy initialization of Resend client to ensure env vars are loaded
 let resend: Resend | null = null;
@@ -12,12 +13,12 @@ function getResendClient(): Resend | null {
     if (process.env.RESEND_API_KEY) {
       resend = new Resend(process.env.RESEND_API_KEY);
       if (process.env.NODE_ENV !== 'production') {
-        console.log('📧 Resend client initialized successfully');
-        console.log('  - API Key: ✓ Set');
-        console.log('  - From Email:', process.env.RESEND_FROM_EMAIL || '✗ Not set');
+        logger.info('📧 Resend client initialized successfully');
+        logger.info('  - API Key: ✓ Set');
+        logger.info('  - From Email: %s', process.env.RESEND_FROM_EMAIL || '✗ Not set');
       }
     } else if (process.env.NODE_ENV !== 'production') {
-      console.log('📧 Resend not configured (RESEND_API_KEY not set)');
+      logger.info('📧 Resend not configured (RESEND_API_KEY not set)');
     }
   }
   return resend;
@@ -42,8 +43,8 @@ async function persistOutbox(): Promise<void> {
     await mkdir(directory, { recursive: true });
     await writeFile(outboxPath, JSON.stringify(emailOutbox, null, 2), 'utf-8');
   } catch (error) {
-    // eslint-disable-next-line no-console -- logging for operational visibility
-    console.warn('Failed to persist email outbox', error);
+    // Use structured logger instead of console for consistency
+    logger.warn('Failed to persist email outbox', { error });
   }
 }
 
@@ -97,10 +98,10 @@ export async function sendVerificationEmail({
   if (resendClient && process.env.RESEND_FROM_EMAIL) {
     try {
       if (process.env.NODE_ENV !== 'production') {
-        console.log('📤 Sending email via Resend:');
-        console.log('   From:', process.env.RESEND_FROM_EMAIL);
-        console.log('   To:', to);
-        console.log('   Subject:', subject);
+        logger.info('📤 Sending email via Resend:');
+        logger.info('   From: %s', process.env.RESEND_FROM_EMAIL);
+        logger.info('   To: %s', to);
+        logger.info('   Subject: %s', subject);
       }
 
       const result = await resendClient.emails.send({
@@ -112,20 +113,20 @@ export async function sendVerificationEmail({
       });
 
       if (process.env.NODE_ENV !== 'production') {
-        console.log('✅ Email sent successfully via Resend:', result);
-        console.log('   Email ID:', result.data?.id);
-        console.log('   Check your inbox at:', to);
+        logger.info('✅ Email sent successfully via Resend: %o', result);
+        logger.info('   Email ID: %s', result.data?.id);
+        logger.info('   Check your inbox at: %s', to);
       }
     } catch (error) {
       // Log error but don't throw - email outbox still has the message for testing
       if (process.env.NODE_ENV !== 'production') {
-        console.error('❌ Failed to send email via Resend:', error);
+        logger.error('❌ Failed to send email via Resend:', { error });
       }
     }
   } else if (process.env.NODE_ENV !== 'production') {
-    console.log('📧 Email would be sent to:', to);
-    console.log('📧 Verification URL:', verificationUrl);
-    console.log('💡 To send real emails, set RESEND_API_KEY and RESEND_FROM_EMAIL');
+    logger.info('📧 Email would be sent to: %s', to);
+    logger.info('📧 Verification URL: %s', verificationUrl);
+    logger.info('💡 To send real emails, set RESEND_API_KEY and RESEND_FROM_EMAIL');
   }
 }
 

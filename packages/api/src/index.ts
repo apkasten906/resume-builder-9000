@@ -2,9 +2,6 @@
 import './env.js';
 
 import express from 'express';
-import dotenv from 'dotenv';
-import fs from 'node:fs';
-import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 import cookieParser from 'cookie-parser';
 
