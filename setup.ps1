@@ -78,7 +78,8 @@ try {
   # Ensure DB_PATH is set (fall back to repo default if not provided)
   if (-not $env:DB_PATH -or $env:DB_PATH -eq '') {
     $repoRoot = (Get-Location).Path
-    $defaultDbPath = Join-Path $repoRoot 'packages\api\data\resume.db'
+    # Use Join-Path for platform independent construction; child path uses forward slashes
+    $defaultDbPath = Join-Path -Path $repoRoot -ChildPath 'packages/api/data/resume.db'
     $env:DB_PATH = $defaultDbPath
     Write-Host "DB_PATH not set; defaulting to $env:DB_PATH"
   }
@@ -87,12 +88,14 @@ try {
   }
 
   # Run the centralized DB initializer (idempotent)
-  Write-Host "Running packages/api/init-db.cjs to apply schema..."
-  node .\packages\api\init-db.cjs
+  $initScript = Join-Path -Path $repoRoot -ChildPath 'packages/api/init-db.cjs'
+  Write-Host "Running $initScript to apply schema..."
+  node $initScript
 
   # Seed the deterministic test user using the existing seeder script
-  Write-Host "Seeding test user via scripts/seed-users.js..."
-  node .\scripts\seed-users.js
+  $seedScript = Join-Path -Path $repoRoot -ChildPath 'scripts/seed-users.js'
+  Write-Host "Seeding test user via $seedScript..."
+  node $seedScript
 
   Write-Host "[OK] Database initialized with test user (user@example.com / ValidPassword1!)" -ForegroundColor Green
 }
