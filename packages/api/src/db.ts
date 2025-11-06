@@ -61,7 +61,8 @@ export function connectDatabase(): SQLiteDatabase {
       // Check if this is a repo-relative path (starts with 'packages/', '/packages/', 'apps/', '/apps/', or single segment like 'data/').
       // These should be resolved relative to the repo root, not treated as absolute even if they start with '/'.
       // Break complex boolean into a named variable for clarity.
-      const isNonWindowsRelative = !cleaned.includes(':') && !path.isAbsolute(cleaned.replace(/^\//, ''));
+      const isNonWindowsRelative =
+        !cleaned.includes(':') && !path.isAbsolute(cleaned.replace(/^\//, ''));
       const isRepoRelative =
         cleaned.startsWith('packages/') ||
         cleaned.startsWith('/packages/') ||
