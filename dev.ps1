@@ -348,7 +348,7 @@ function Stop-PortProcess {
         Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
       }
       catch {
-        Write-Host ("Failed to kill process { 0 } on port { 1 }: { 2 }" -f $procId, $Port, $_) -ForegroundColor Red
+            Write-Host ("Failed to kill process {0} on port {1}: {2}" -f $procId, $Port, $_) -ForegroundColor Red
       }
     }
   }
