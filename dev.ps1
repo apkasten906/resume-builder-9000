@@ -355,16 +355,38 @@ function Stop-PortProcess {
   }
 }
 
-$apiPort = $env:API_BASE.Split(':')[-1]
-$webPort = $env:WEB_BASE.Split(':')[-1]
-$env:WEB_PORT = $webPort
-$env:API_PORT = $apiPort
-# Ensure Next.js reads the intended port (it uses PORT env var)
-if (-not $env:PORT) { $env:PORT = $webPort }
+# Extract port numbers from WEB_BASE and API_BASE and validate them before use.
+# This avoids setting PORT to unexpected values when the base URLs are malformed.
+$apiPortRaw = $env:API_BASE.Split(':')[-1]
+$webPortRaw = $env:WEB_BASE.Split(':')[-1]
 
-Write-Host "Ensuring no stale dev servers are running on ports $apiPort and $webPort..." -ForegroundColor Cyan
-Stop-PortProcess -Port $apiPort
-Stop-PortProcess -Port $webPort
+function Is-ValidPort {
+  param([string]$p)
+  return ($p -match '^[0-9]+$' -and [int]$p -ge 1 -and [int]$p -le 65535)
+}
+
+$env:API_PORT = $null
+$env:WEB_PORT = $null
+
+if (Is-ValidPort $apiPortRaw) {
+  $env:API_PORT = [int]$apiPortRaw
+}
+else {
+  Write-Warning "API_BASE does not contain a valid port. API_PORT will not be set. (API_BASE='$env:API_BASE')"
+}
+
+if (Is-ValidPort $webPortRaw) {
+  $env:WEB_PORT = [int]$webPortRaw
+  # Ensure Next.js reads the intended port (it uses PORT env var)
+  if (-not $env:PORT) { $env:PORT = $env:WEB_PORT }
+}
+else {
+  Write-Warning "WEB_BASE does not contain a valid port. WEB_PORT and PORT will not be set. (WEB_BASE='$env:WEB_BASE')"
+}
+
+Write-Host "Ensuring no stale dev servers are running on ports $($env:API_PORT) and $($env:WEB_PORT)..." -ForegroundColor Cyan
+if ($env:API_PORT) { Stop-PortProcess -Port $env:API_PORT }
+if ($env:WEB_PORT) { Stop-PortProcess -Port $env:WEB_PORT }
 # --- End port/process cleanup ---
 
 # Track running processes so we can stop them if needed

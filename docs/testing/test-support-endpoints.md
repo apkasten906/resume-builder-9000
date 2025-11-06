@@ -58,6 +58,45 @@ All endpoints are rooted under `POST|GET /__test/...` on the API server (example
 - GET /\_\_test/user-exists?email=EMAIL
   - Query param `email` — returns 200 and JSON `{ exists: true }` or `{ exists: false }`.
 
+# Test-support endpoints (guarded debug / seed routes)
+
+This document describes the API endpoints that exist to make end-to-end (E2E) testing deterministic. They are intentionally opt-in and protected — only enable them when running tests (local dev or CI).
+
+## Overview
+
+- Purpose: Provide deterministic seeding, cleanup and visibility for Playwright tests (for example: seeding a verified test user, clearing and reading a test email outbox, and removing test users).
+- Safety: Routes are only mounted when either `NODE_ENV==='test'` or `ENABLE_TEST_ROUTES==='true'`.
+- Authorization: Calls must include the header `x-test-secret: <value>` matching `process.env.TEST_ROUTE_SECRET`. When `DOCKER_TESTING=true` the API also allows requests from Docker gateway IPs per `TEST_TRUSTED_SUBNET`.
+
+## Why use these endpoints
+
+1. Deterministic seeding: avoids intermittent failures caused by leftover test data.
+2. Safe teardown: remove test users and application data before and after test runs.
+3. Visibility: read the in-memory email outbox so tests can assert verification tokens without hitting an SMTP server.
+
+## Key endpoints
+
+All endpoints are rooted under `POST|GET /__test/...` on the API server (example base: `http://localhost:4001`). Replace `REPLACE_WITH_TEST_ROUTE_SECRET` with your secret.
+
+- POST /\_\_test/seed-verified-user
+  - Body: { "email": string, "password": string }
+  - Creates a user with email confirmed. Returns 201 on success.
+
+- POST /\_\_test/seed-unverified-user
+  - Body: { "email": string, "password": string }
+  - Creates a user without confirming email (used to test resend flows).
+
+- POST /\_\_test/delete-user
+  - Body: { "email": string }
+  - Deletes a user by email.
+
+- POST /\_\_test/cleanup-playwright-users
+  - Body: none
+  - Deletes accounts created by Playwright patterns (e.g., emails starting with `playwright-`). Useful for sweeping leftover accounts.
+
+- GET /\_\_test/user-exists?email=EMAIL
+  - Query param `email` — returns 200 and JSON `{ exists: true }` or `{ exists: false }`.
+
 - GET /\_\_test/count-users
   - Returns a small JSON object with current users count: `{ count: <number> }` — helpful to poll for cleanup completion.
 

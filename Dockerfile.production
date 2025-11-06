@@ -99,8 +99,10 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD node -e "require('http').get('http://localhost:4000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 ENTRYPOINT ["dumb-init", "--"]
-# Run database initialization before starting the server (if init script exists)
-CMD ["sh", "-c", "[ -f ./init-db.cjs ] && node init-db.cjs || true; node dist/index.js"]
+# Run database initialization before starting the server (if init script exists).
+# Fail fast if init-db.cjs exists and returns a non-zero exit code. This prevents
+# the container from starting with an uninitialized database.
+CMD ["sh", "-c", "if [ -f ./init-db.cjs ]; then node init-db.cjs; fi && node dist/index.js"]
 
 # ----------
 # Web runtime image

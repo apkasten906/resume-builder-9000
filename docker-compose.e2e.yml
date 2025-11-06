@@ -6,35 +6,44 @@ services:
     image: mcr.microsoft.com/playwright:v1.55.0-jammy
     working_dir: /work
     user: pwuser
-    tty: true
-    volumes:
-      - ./:/work:cached
-      - /dev/shm:/dev/shm
-    environment:
-      # Use internal hostnames so the runner talks to containers via the compose network
-      - DOCKER_TESTING=true
-      - WEB_BASE=http://web:3000
-      - API_BASE=http://api:4000
-      - PLAYWRIGHT_HEADLESS=true
-      - PLAYWRIGHT_TEST=true
-      - ENABLE_TEST_ROUTES=true
-      # TEST_ROUTE_SECRET must be provided by the caller (do NOT commit real secrets)
-      - TEST_ROUTE_SECRET=${TEST_ROUTE_SECRET}
-      # Optional: trusted subnet for test-support access (matches docker-compose network subnet)
-      - TEST_TRUSTED_SUBNET=${TEST_TRUSTED_SUBNET:-172.20.}
-    depends_on:
-      api:
-        condition: service_healthy
-      web:
-        condition: service_healthy
-    command:
-      [
-        "bash",
-        "-lc",
-        "npm ci --prefer-offline --no-audit && npx playwright install --with-deps && npx playwright test --config=apps/web/tests/e2e/playwright.config.ts --reporter=list",
-      ]
+    version: "3.8"
+
+    services:
+      # Playwright runner service (one-shot)
+      playwright:
+        image: mcr.microsoft.com/playwright:v1.55.0-jammy
+        working_dir: /work
+        user: pwuser
+        tty: true
+        volumes:
+          - ./:/work:cached
+          - /dev/shm:/dev/shm
+        environment:
+          # Use internal hostnames so the runner talks to containers via the compose network
+          - DOCKER_TESTING=true
+          - WEB_BASE=http://web:3000
+          - API_BASE=http://api:4000
+          - PLAYWRIGHT_HEADLESS=true
+          - PLAYWRIGHT_TEST=true
+          - ENABLE_TEST_ROUTES=true
+          # TEST_ROUTE_SECRET must be provided by the caller (do NOT commit real secrets)
+          - TEST_ROUTE_SECRET=${TEST_ROUTE_SECRET}
+          # Optional: trusted subnet for test-support access (matches docker-compose network subnet)
+          - TEST_TRUSTED_SUBNET=${TEST_TRUSTED_SUBNET:-172.20.}
+        depends_on:
+          api:
+            condition: service_healthy
+          web:
+            condition: service_healthy
+        command:
+          [
+            "bash",
+            "-lc",
+            "npm ci --prefer-offline --no-audit && npx playwright install --with-deps && npx playwright test --config=apps/web/tests/e2e/playwright.config.ts --reporter=list",
+          ]
+        networks:
+          - rb9k-network
+
     networks:
-      - rb9k-network
-networks:
-  rb9k-network:
-    external: false
+      rb9k-network:
+        external: false

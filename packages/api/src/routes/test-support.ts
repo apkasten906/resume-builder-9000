@@ -97,15 +97,30 @@ function ensureTestAccess(req: Request, res: Response, next: NextFunction): void
     return;
   }
 
-  // If the secret matches we allow access even if the request is not from localhost. This
-  // makes E2E runs in containerized or CI environments more reliable. We still log when
-  // access is non-local for visibility.
+  // If the secret matches we may allow non-local access, but only when explicitly
+  // running in DOCKER_TESTING mode. This limits exposure: even with a leak of the
+  // TEST_ROUTE_SECRET, non-local access won't be permitted unless DOCKER_TESTING=true
+  // is set. When not allowed, return 403 to be conservative.
   if (!isLocal) {
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console -- debug visibility for non-local but authorized calls
-      console.info('[test-support] Non-local request with valid secret - allowing access', { ip });
+    if (process.env.DOCKER_TESTING === 'true') {
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console -- debug visibility for non-local but authorized calls
+        console.info(
+          '[test-support] Non-local request with valid secret and DOCKER_TESTING=true - allowing access',
+          { ip }
+        );
+      }
+      return next();
     }
-    return next();
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console -- suspicious access attempts
+      console.warn(
+        '[test-support] Blocked non-local test-support access even though secret matched because DOCKER_TESTING!=true',
+        { ip }
+      );
+    }
+    res.status(403).json({ error: 'Forbidden' });
+    return;
   }
 
   // Debug logging only in dev/test

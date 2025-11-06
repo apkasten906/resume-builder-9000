@@ -58,26 +58,35 @@ export function connectDatabase(): SQLiteDatabase {
       // Normalize path separators first
       const cleaned = rawDbPath.replace(/\\/g, '/');
 
-      // Check if this is a repo-relative path (starts with 'packages/', '/packages/', 'apps/', '/apps/', or single segment like 'data/').
-      // These should be resolved relative to the repo root, not treated as absolute even if they start with '/'.
-      // Break complex boolean into a named variable for clarity.
-      const isNonWindowsRelative =
-        !cleaned.includes(':') && !path.isAbsolute(cleaned.replace(/^\//, ''));
+      // Check absolute path styles explicitly for clarity and cross-platform safety.
+      // Detect Windows absolute paths (e.g., C:\) and POSIX absolute paths (/abs/path).
+      const isWindowsAbsolute = /^[a-zA-Z]:\//.test(cleaned) || /^[a-zA-Z]:\\/.test(rawDbPath);
+      const isPosixAbsolute = cleaned.startsWith('/');
+      const isAbsolutePath =
+        isWindowsAbsolute || isPosixAbsolute || path.isAbsolute(cleaned.replace(/^\//, ''));
+
+      // A repo-relative path is one that begins with packages/ or apps/ (optionally with leading /)
+      // or looks like a simple relative path (no drive letter and not absolute). We resolve
+      // repo-relative paths against the repository root so callers can pass 'data/resume.db'
+      // or 'packages/api/data/resume.db' and have them behave as expected.
       const isRepoRelative =
         cleaned.startsWith('packages/') ||
         cleaned.startsWith('/packages/') ||
         cleaned.startsWith('apps/') ||
         cleaned.startsWith('/apps/') ||
-        isNonWindowsRelative;
+        (!cleaned.includes(':') && !isAbsolutePath);
 
       if (isRepoRelative) {
         // For repo-relative paths, resolve against the repository root
         const repoRoot = path.resolve(packageRoot, '..', '..');
         const withLeading = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
         dbPath = path.resolve(repoRoot, `.${withLeading}`);
-      } else {
+      } else if (isAbsolutePath) {
         // True absolute paths (e.g., C:\..., /absolute/posix/path) are used as-is
         dbPath = rawDbPath;
+      } else {
+        // Fallback: treat as relative to package root
+        dbPath = path.resolve(packageRoot, cleaned);
       }
     }
   } else {
