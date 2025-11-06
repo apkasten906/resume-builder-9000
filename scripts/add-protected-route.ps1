@@ -43,16 +43,16 @@ foreach ($page in $protectedPages) {
             }
 
             Set-Content -Path $pagePath -Value $content -NoNewline
-            Write-Host "✓ Updated: $page" -ForegroundColor Green
+            Write-Host "[OK] Updated: $page" -ForegroundColor Green
 
             # Format the file
             npx prettier --write $pagePath 2>&1 | Out-Null
-            Write-Host "✓ Formatted: $page" -ForegroundColor Green
+            Write-Host "[OK] Formatted: $page" -ForegroundColor Green
         } else {
             Write-Host "⊘ Already protected: $page" -ForegroundColor Yellow
         }
     } else {
-        Write-Host "✗ Not found: $pagePath" -ForegroundColor Red
+    Write-Host "[ERROR] Not found: $pagePath" -ForegroundColor Red
     }
 }
 

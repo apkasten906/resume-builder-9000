@@ -146,7 +146,7 @@ if ($Help) {
 
 # Clean if fresh flag is provided
 if ($Fresh) {
-  Write-Host "🧹 Cleaning node_modules for fresh install..." -ForegroundColor Cyan
+  Write-Host "Cleaning node_modules for fresh install..." -ForegroundColor Cyan 
   if (Test-Path .\node_modules) { Remove-Item .\node_modules -Recurse -Force }
   if (Test-Path .\apps\web\node_modules) { Remove-Item .\apps\web\node_modules -Recurse -Force }
   if (Test-Path .\packages\api\node_modules) { Remove-Item .\packages\api\node_modules -Recurse -Force }

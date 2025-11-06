@@ -44,17 +44,17 @@ function Write-Header {
 
 function Write-Success {
     param([string]$Message)
-    Write-ColorOutput "✅ $Message" $Green
+    Write-ColorOutput "[PASS] $Message" $Green
 }
 
 function Write-Warning {
     param([string]$Message)
-    Write-ColorOutput "⚠️  $Message" $Yellow
+    Write-ColorOutput "[WARN]  $Message" $Yellow
 }
 
 function Write-Error {
     param([string]$Message)
-    Write-ColorOutput "❌ $Message" $Red
+    Write-ColorOutput "[ERROR] $Message" $Red
 }
 
 # Directories to exclude from scanning
