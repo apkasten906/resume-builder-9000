@@ -83,11 +83,11 @@ function ensureTestAccess(req: Request, res: Response, next: NextFunction): void
     (process.env.DOCKER_TESTING === 'true' &&
       (ip.startsWith(`::ffff:${trustedSubnetPrefix}`) || ip.startsWith(trustedSubnetPrefix)));
 
-  if (!isLocal || !secret || provided !== secret) {
-    // Only log suspicious access attempts in dev/test, not production
+  // First, require that a secret is configured and that the caller provided the correct one.
+  if (!secret || provided !== secret) {
     if (process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console -- log suspicious access attempts for local debugging
-      console.warn('[test-support] Blocked test-support access', {
+      console.warn('[test-support] Blocked test-support access - missing or mismatched secret', {
         ip,
         hasSecret: Boolean(secret),
         provided: provided ? 'yes' : 'no',
@@ -95,6 +95,17 @@ function ensureTestAccess(req: Request, res: Response, next: NextFunction): void
     }
     res.status(403).json({ error: 'Forbidden' });
     return;
+  }
+
+  // If the secret matches we allow access even if the request is not from localhost. This
+  // makes E2E runs in containerized or CI environments more reliable. We still log when
+  // access is non-local for visibility.
+  if (!isLocal) {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console -- debug visibility for non-local but authorized calls
+      console.info('[test-support] Non-local request with valid secret - allowing access', { ip });
+    }
+    return next();
   }
 
   // Debug logging only in dev/test
@@ -161,10 +172,10 @@ if (isTestEnvironment) {
       const email = (req.query.email as string) || '';
       if (!email) return res.status(400).json({ error: 'email is required' });
       const db = connectDatabase();
-      const row = db.prepare('SELECT 1 FROM users WHERE email = ?').get(email) as
-        | { '1': number }
+      const row = db.prepare('SELECT 1 as exists FROM users WHERE email = ?').get(email) as
+        | { exists: number }
         | undefined;
-      return res.status(200).json({ exists: Boolean(row) });
+      return res.status(200).json({ exists: Boolean(row?.exists) });
     } catch (err) {
       // eslint-disable-next-line no-console -- test route error visibility
       console.warn('[test-support] Failed to check user existence', err);

@@ -146,7 +146,7 @@ if ($Help) {
 
 # Clean if fresh flag is provided
 if ($Fresh) {
-  Write-Host "Cleaning node_modules for fresh install..." -ForegroundColor Cyan 
+  Write-Host "Cleaning node_modules for fresh install..." -ForegroundColor Cyan
   if (Test-Path .\node_modules) { Remove-Item .\node_modules -Recurse -Force }
   if (Test-Path .\apps\web\node_modules) { Remove-Item .\apps\web\node_modules -Recurse -Force }
   if (Test-Path .\packages\api\node_modules) { Remove-Item .\packages\api\node_modules -Recurse -Force }
@@ -290,7 +290,8 @@ if ($installOutput -match "Failed to load SWC binary") {
     $nextConfig = Get-Content -Path ".\apps\web\next.config.js" -Raw
 
     if (-not ($nextConfig -match "swcMinify: false")) {
-      $nextConfig = $nextConfig -replace "const nextConfig = \ { ", "const nextConfig = { `n  swcMinify: false, `n  experimental: { `n    forceSwcTransforms: false, `n }, "
+      # Use a robust regex that tolerates variable whitespace around the assignment and object start
+      $nextConfig = $nextConfig -replace 'const\s+nextConfig\s*=\s*\{', "const nextConfig = { `n  swcMinify: false, `n  experimental: { `n    forceSwcTransforms: false, `n  },"
       Set-Content -Path ".\apps\web\next.config.js" -Value $nextConfig
     }
   }
@@ -348,7 +349,7 @@ function Stop-PortProcess {
         Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
       }
       catch {
-            Write-Host ("Failed to kill process {0} on port {1}: {2}" -f $procId, $Port, $_) -ForegroundColor Red
+        Write-Host ("Failed to kill process {0} on port {1}: {2}" -f $procId, $Port, $_) -ForegroundColor Red
       }
     }
   }

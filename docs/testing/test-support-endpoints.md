@@ -19,6 +19,26 @@ This document describes the API endpoints that exist to make end-to-end (E2E) te
 
 All endpoints are rooted under `POST|GET /__test/...` on the API server (example base: `http://localhost:4001`). Replace `REPLACE_WITH_TEST_ROUTE_SECRET` with your secret.
 
+# Test-support endpoints (guarded debug / seed routes)
+
+This document describes the API endpoints that exist to make end-to-end (E2E) testing deterministic. They are intentionally opt-in and protected — only enable them when running tests (local dev or CI).
+
+## Overview
+
+- Purpose: Provide deterministic seeding, cleanup and visibility for Playwright tests (for example: seeding a verified test user, clearing and reading a test email outbox, and removing test users).
+- Safety: Routes are only mounted when either `NODE_ENV==='test'` or `ENABLE_TEST_ROUTES==='true'`.
+- Authorization: Calls must include the header `x-test-secret: <value>` matching `process.env.TEST_ROUTE_SECRET`. When `DOCKER_TESTING=true` the API also allows requests from Docker gateway IPs per `TEST_TRUSTED_SUBNET`.
+
+## Why use these endpoints
+
+1. Deterministic seeding: avoids intermittent failures caused by leftover test data.
+2. Safe teardown: remove test users and application data before and after test runs.
+3. Visibility: read the in-memory email outbox so tests can assert verification tokens without hitting an SMTP server.
+
+## Key endpoints
+
+All endpoints are rooted under `POST|GET /__test/...` on the API server (example base: `http://localhost:4001`). Replace `REPLACE_WITH_TEST_ROUTE_SECRET` with your secret.
+
 - POST /\_\_test/seed-verified-user
   - Body: { "email": string, "password": string }
   - Creates a user with email confirmed. Returns 201 on success.
@@ -65,7 +85,6 @@ curl -s -X POST \
 
 curl -s -H "x-test-secret: REPLACE_WITH_TEST_ROUTE_SECRET" http://localhost:4001/__test/emails
 ```
-````
 
 ## Recommended Playwright sequence
 
@@ -89,7 +108,4 @@ curl -s -H "x-test-secret: REPLACE_WITH_TEST_ROUTE_SECRET" http://localhost:4001
 - `docs/db-path-resolution.md` — database path resolution rules and Windows notes.
 
 If you update or add new test-support routes, please update this document and add a small unit test that verifies `ensureTestAccess()` authorization behavior.
-
-```
-
-```
+````

@@ -48,7 +48,7 @@ RUN npm ci --omit=dev
 
 WORKDIR /app/packages/api
 # install production deps for api and link local core
-RUN npm ci --omit=dev && npm link ../core || true
+RUN npm ci --omit=dev && npm link ../core
 
 EXPOSE ${API_PORT}
 
