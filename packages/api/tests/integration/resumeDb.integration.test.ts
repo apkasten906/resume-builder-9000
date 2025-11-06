@@ -8,6 +8,8 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
+import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
 import {
@@ -28,8 +30,10 @@ const __dirname = path.dirname(__filename);
 const ORIGINAL_DB_PATH = process.env.DB_PATH;
 
 describe('Resume Database Integration Tests', () => {
-  // Generate a unique test database path for this test run to avoid conflicts
-  const TEST_DB_PATH = path.join(__dirname, `test-resume-integration-${Date.now()}.db`);
+  // We'll generate a unique test database path for each test run inside beforeEach
+  // to avoid collisions across workers or CI runs. Tests will set this variable
+  // before creating the DB so it's available to afterEach for cleanup.
+  let TEST_DB_PATH: string;
 
   // Sample data for testing
   const mockResumeData: ResumeData = {
@@ -80,6 +84,10 @@ describe('Resume Database Integration Tests', () => {
   beforeEach(() => {
     // Create a fresh test database before each test
     try {
+      // Create a unique DB path in the OS temp directory to avoid repo-relative
+      // collisions and ensure isolation across CI workers.
+      TEST_DB_PATH = path.join(os.tmpdir(), `test-resume-integration-${randomUUID()}.db`);
+      logger.debug(`Using TEST_DB_PATH=${TEST_DB_PATH}`);
       // Close any existing database connection
       closeDatabase();
 
@@ -123,7 +131,7 @@ describe('Resume Database Integration Tests', () => {
 
     // Clean up after each test
     try {
-      if (fs.existsSync(TEST_DB_PATH)) {
+      if (TEST_DB_PATH && fs.existsSync(TEST_DB_PATH)) {
         fs.unlinkSync(TEST_DB_PATH);
         logger.debug(`Cleaned up test database at ${TEST_DB_PATH}`);
       }
