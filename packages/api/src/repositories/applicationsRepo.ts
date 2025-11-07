@@ -2,8 +2,12 @@
 import { randomUUID } from 'crypto';
 import { connectDatabase } from '../db.js';
 
-// Get the database connection
-const db = connectDatabase();
+// Do not create a DB connection at module load time. Tests set process.env.DB_PATH
+// before calling repository methods; creating the connection lazily ensures the
+// correct DB_PATH is respected and prevents cross-test pollution.
+function getDb() {
+  return connectDatabase();
+}
 
 export type Stage = 'Prospect' | 'Applied' | 'Interview' | 'Offer' | 'Rejected' | 'Accepted';
 export type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
@@ -63,7 +67,7 @@ export const applicationsRepo = {
     const stage = app.stage ?? 'Prospect';
     const salary = app.salary || {};
 
-    const stmt = db.prepare(`INSERT INTO applications (
+    const stmt = getDb().prepare(`INSERT INTO applications (
       id, company, role, location, stage, last_updated, created_at, job_description,
       currency, salary_base, salary_bonus, salary_equity, salary_notes
     ) VALUES (
@@ -107,7 +111,7 @@ export const applicationsRepo = {
   },
 
   list(): Application[] {
-    const rows = db
+    const rows = getDb()
       .prepare('SELECT * FROM applications ORDER BY datetime(last_updated) DESC')
       .all() as ApplicationRow[];
     return rows.map((r: ApplicationRow) => ({
@@ -130,19 +134,19 @@ export const applicationsRepo = {
   },
 
   updateStage(appId: string, toStage: Stage, note?: string): void {
-    const tx = db.transaction(() => {
-      const fromStageRow = db.prepare('SELECT stage FROM applications WHERE id = ?').get(appId) as
-        | { stage: string }
-        | undefined;
+    const tx = getDb().transaction(() => {
+      const fromStageRow = getDb()
+        .prepare('SELECT stage FROM applications WHERE id = ?')
+        .get(appId) as { stage: string } | undefined;
       const fromStage = fromStageRow?.stage ?? null;
-      db.prepare('UPDATE applications SET stage=?, last_updated=? WHERE id=?').run(
-        toStage,
-        new Date().toISOString(),
-        appId
-      );
-      db.prepare(
-        'INSERT INTO application_status_history (id, application_id, from_stage, to_stage, note) VALUES (?,?,?,?,?)'
-      ).run(randomUUID(), appId, fromStage, toStage, note ?? null);
+      getDb()
+        .prepare('UPDATE applications SET stage=?, last_updated=? WHERE id=?')
+        .run(toStage, new Date().toISOString(), appId);
+      getDb()
+        .prepare(
+          'INSERT INTO application_status_history (id, application_id, from_stage, to_stage, note) VALUES (?,?,?,?,?)'
+        )
+        .run(randomUUID(), appId, fromStage, toStage, note ?? null);
     });
     tx();
   },
@@ -154,15 +158,17 @@ export const applicationsRepo = {
     mimeType?: string,
     url?: string
   ): void {
-    db.prepare(
-      'INSERT INTO attachments (id, application_id, type, filename, mime_type, url) VALUES (?,?,?,?,?,?)'
-    ).run(
-      randomUUID(),
-      appId,
-      type,
-      filename ?? undefined,
-      mimeType ?? undefined,
-      url ?? undefined
-    );
+    getDb()
+      .prepare(
+        'INSERT INTO attachments (id, application_id, type, filename, mime_type, url) VALUES (?,?,?,?,?,?)'
+      )
+      .run(
+        randomUUID(),
+        appId,
+        type,
+        filename ?? undefined,
+        mimeType ?? undefined,
+        url ?? undefined
+      );
   },
 };

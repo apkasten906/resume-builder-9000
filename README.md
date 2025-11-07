@@ -14,6 +14,8 @@ Welcome to the Resume Builder 9000! This project is designed to help you create 
 
 Run the following commands to set up the project:
 
+Note for Windows PowerShell users: some docs show shell chaining with `&&` or `||` (POSIX/cmd style). When running commands in PowerShell, prefer either separate commands on their own line or use `;` to separate commands. To set environment variables use `$env:NAME = 'value'` (PowerShell) rather than `NAME=value` or `set NAME=value`.
+
 1. Install dependencies:
 
    ```bash
@@ -61,12 +63,31 @@ Run the following commands to set up the project:
    npm test
    ```
 
-6. Default test user (for development):
+Developer setup notes
 
-   ```text
-   Email: user@example.com
-   Password: ValidPassword1!
-   ```
+DB_PATH defaults
+
+- Container runtime default: `/app/data/resume.db` (used by Docker Compose and containers).
+- Local development default: `packages/api/data/resume.db`.
+- The `DB_PATH` environment variable overrides either default; set it when you need to target a specific DB file.
+
+Optional E2E in `setup.ps1`
+
+- `setup.ps1` now accepts a `-RunE2E` switch. By default the script installs, builds and seeds the DB and runs unit tests but skips Playwright E2E to avoid long, environment-dependent runs.
+- To run E2E as part of setup (dev machines only), run:
+
+```powershell
+.\setup.ps1 -RunE2E
+```
+
+- Make sure the web and api servers are reachable at the ports Playwright expects (defaults used in this repo: web 8080, api 8081) before enabling E2E.
+
+Default test user (for development):
+
+```text
+Email: user@example.com
+Password: ValidPassword1!
+```
 
 ## Running the Environment
 

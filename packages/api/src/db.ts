@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 import { logger } from './utils/logger.js';
 import { StoredResume, DatabaseRow } from './types/database.js';
@@ -32,8 +33,67 @@ export function connectDatabase(): SQLiteDatabase {
     return db;
   }
 
-  // Get DB path from environment or use default
-  const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
+  // Resolve DB path robustly:
+  // - If DB_PATH is provided and absolute, use it as-is
+  // - If DB_PATH is provided and relative, resolve it relative to the API package
+  //   directory (not process.cwd()) so callers can pass 'data/resume.db' and
+  //   it will resolve to 'packages/api/data/resume.db'.
+  // - If DB_PATH is not provided, default to '<packageRoot>/data/resume.db'.
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const packageRoot = path.resolve(__dirname, '..');
+
+  const rawDbPath =
+    process.env.DB_PATH && process.env.DB_PATH.length > 0 ? process.env.DB_PATH : undefined;
+
+  // Decide final DB path. Preserve special SQLite URIs such as ':memory:' or
+  // 'file:...' exactly as provided by tests or callers. If a relative path is
+  // provided, resolve it relative to the api package root so callers can pass
+  // 'data/resume.db'. If none provided, default to packages/api/data/resume.db.
+  let dbPath: string;
+  if (rawDbPath) {
+    if (rawDbPath === ':memory:' || rawDbPath.startsWith('file:')) {
+      dbPath = rawDbPath; // in-memory or file URI -- do not resolve
+    } else {
+      // Normalize path separators first
+      const cleaned = rawDbPath.replace(/\\/g, '/');
+
+      // Check absolute path styles explicitly for clarity and cross-platform safety.
+      // Detect Windows absolute paths (e.g., C:\) and POSIX absolute paths (/abs/path).
+      const isWindowsAbsolute = /^[a-zA-Z]:\//.test(cleaned) || /^[a-zA-Z]:\\/.test(rawDbPath);
+      const isPosixAbsolute = cleaned.startsWith('/');
+      const isAbsolutePath =
+        isWindowsAbsolute || isPosixAbsolute || path.isAbsolute(cleaned.replace(/^\//, ''));
+
+      // A repo-relative path is one that begins with packages/ or apps/ (optionally with leading /)
+      // or looks like a simple relative path (no drive letter and not absolute). We resolve
+      // repo-relative paths against the repository root so callers can pass 'data/resume.db'
+      // or 'packages/api/data/resume.db' and have them behave as expected.
+      const isRepoRelative =
+        cleaned.startsWith('packages/') ||
+        cleaned.startsWith('/packages/') ||
+        cleaned.startsWith('apps/') ||
+        cleaned.startsWith('/apps/') ||
+        (!cleaned.includes(':') && !isAbsolutePath);
+
+      if (isRepoRelative) {
+        // For repo-relative paths, resolve against the repository root
+        const repoRoot = path.resolve(packageRoot, '..', '..');
+        const withLeading = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+        dbPath = path.resolve(repoRoot, `.${withLeading}`);
+      } else if (isAbsolutePath) {
+        // True absolute paths (e.g., C:\..., /absolute/posix/path) are used as-is
+        dbPath = rawDbPath;
+      } else {
+        // Fallback: treat as relative to package root
+        dbPath = path.resolve(packageRoot, cleaned);
+      }
+    }
+  } else {
+    dbPath = path.join(packageRoot, 'data', 'resume.db');
+  }
+
+  logger.info(`Resolved DB path: ${dbPath}`);
   // Ensure parent directory exists before opening the database file
   const dbDir = path.dirname(dbPath);
   try {

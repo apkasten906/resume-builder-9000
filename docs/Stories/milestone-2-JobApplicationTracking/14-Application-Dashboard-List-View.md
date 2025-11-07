@@ -131,7 +131,20 @@ CREATE INDEX IF NOT EXISTS idx_applications_updated_at ON applications(updated_a
 ## Runbook
 
 - npm install
-- npm run db:migrate && npm run db:seed
+
+- Run migrations and seed data
+  - POSIX / Bash:
+
+    ```bash
+    npm run db:migrate && npm run db:seed
+    ```
+
+  - Windows PowerShell:
+
+    ```powershell
+    npm run db:migrate; npm run db:seed
+    ```
+
 - npm run dev # web+api
 - npm run test:unit
 - npm run test:e2e -- apps/web/tests/e2e/applications/dashboard.spec.ts

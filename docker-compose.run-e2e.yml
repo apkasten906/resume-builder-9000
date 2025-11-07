@@ -1,0 +1,110 @@
+version: "3.8"
+
+# docker-compose file for running E2E in Docker. Ports and endpoints are driven
+# from `.env.docker` (or environment variables) to avoid hard-coded ports.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: api-runtime
+    image: rb9k-api:latest
+    container_name: rb9k-api
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${API_PORT:-4000}
+      DATABASE_URL: ${DATABASE_URL:-/app/data/resume.db}
+      JWT_SECRET: ${JWT_SECRET:-change-me-use-strong-secret-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Test route toggles and secrets (ensure these are provided via --env-file or CI secrets)
+      ENABLE_TEST_ROUTES: ${ENABLE_TEST_ROUTES:-false}
+      TEST_ROUTE_SECRET: ${TEST_ROUTE_SECRET:-}
+      DOCKER_TESTING: ${DOCKER_TESTING:-false}
+      # Trusted subnet prefix for Docker gateway IPs allowed to access test routes
+      TEST_TRUSTED_SUBNET: ${TEST_TRUSTED_SUBNET:-172.20.}
+    # Host port is driven by PLAYWRIGHT_API_PORT in .env.docker (or overridden in the environment)
+    ports:
+      - "${PLAYWRIGHT_API_PORT:-8081}:${API_PORT:-4000}"
+    volumes:
+      - api_data:/app/data
+      - upload_data:/app/uploads
+    networks:
+      - rb9k-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:${API_PORT:-4000}/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: web-runtime
+    image: rb9k-web:latest
+    container_name: rb9k-web
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${WEB_PORT:-3000}
+      HOSTNAME: ${HOSTNAME:-0.0.0.0}
+      NEXT_TELEMETRY_DISABLED: ${NEXT_TELEMETRY_DISABLED:-1}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:${PLAYWRIGHT_API_PORT:-8081}}
+      # API_BASE is used by Next.js server-side route handlers to reach the API
+      API_BASE: ${API_URL:-http://api:${API_PORT:-4000}}
+      API_URL: ${API_URL:-http://api:${API_PORT:-4000}}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:${PLAYWRIGHT_WEB_PORT:-8080}}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-use-strong-secret-in-production}
+    ports:
+      - "${PLAYWRIGHT_WEB_PORT:-8080}:${WEB_PORT:-3000}"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - rb9k-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:${WEB_PORT:-3000}/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  rb9k-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  api_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      # bind to the API package data dir so repo-local scripts and tests see the same DB
+      device: ./packages/api/data
+
+  upload_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./packages/api/uploads

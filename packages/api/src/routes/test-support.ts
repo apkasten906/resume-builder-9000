@@ -20,7 +20,7 @@ if (process.env.NODE_ENV !== 'production') {
       'NODE_ENV=',
       process.env.NODE_ENV
     );
-  } catch (e) {
+  } catch {
     // ignore
   }
 }
@@ -83,15 +83,41 @@ function ensureTestAccess(req: Request, res: Response, next: NextFunction): void
     (process.env.DOCKER_TESTING === 'true' &&
       (ip.startsWith(`::ffff:${trustedSubnetPrefix}`) || ip.startsWith(trustedSubnetPrefix)));
 
-  if (!isLocal || !secret || provided !== secret) {
-    // Only log suspicious access attempts in dev/test, not production
+  // First, require that a secret is configured and that the caller provided the correct one.
+  if (!secret || provided !== secret) {
     if (process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console -- log suspicious access attempts for local debugging
-      console.warn('[test-support] Blocked test-support access', {
+      console.warn('[test-support] Blocked test-support access - missing or mismatched secret', {
         ip,
         hasSecret: Boolean(secret),
         provided: provided ? 'yes' : 'no',
       });
+    }
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+
+  // If the secret matches we may allow non-local access, but only when explicitly
+  // running in DOCKER_TESTING mode. This limits exposure: even with a leak of the
+  // TEST_ROUTE_SECRET, non-local access won't be permitted unless DOCKER_TESTING=true
+  // is set. When not allowed, return 403 to be conservative.
+  if (!isLocal) {
+    if (process.env.DOCKER_TESTING === 'true') {
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console -- debug visibility for non-local but authorized calls
+        console.info(
+          '[test-support] Non-local request with valid secret and DOCKER_TESTING=true - allowing access',
+          { ip }
+        );
+      }
+      return next();
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console -- suspicious access attempts
+      console.warn(
+        '[test-support] Blocked non-local test-support access even though secret matched because DOCKER_TESTING!=true',
+        { ip }
+      );
     }
     res.status(403).json({ error: 'Forbidden' });
     return;
@@ -152,6 +178,40 @@ if (isTestEnvironment) {
       // eslint-disable-next-line no-console -- test route error visibility
       console.warn('[test-support] Failed to clear email outbox', err);
       return res.status(500).json({ error: 'Failed to clear email outbox' });
+    }
+  });
+
+  // Test-only endpoint to check if a specific user exists by email
+  router.get('/__test/user-exists', async (req, res) => {
+    try {
+      const email = (req.query.email as string) || '';
+      if (!email) return res.status(400).json({ error: 'email is required' });
+      const db = connectDatabase();
+      const row = db.prepare('SELECT 1 as exists FROM users WHERE email = ?').get(email) as
+        | { exists: number }
+        | undefined;
+      return res.status(200).json({ exists: Boolean(row?.exists) });
+    } catch (err) {
+      // eslint-disable-next-line no-console -- test route error visibility
+      console.warn('[test-support] Failed to check user existence', err);
+      return res.status(500).json({ error: 'Failed to check user existence' });
+    }
+  });
+
+  // Test-only endpoint to count users whose emails start with a given prefix
+  router.get('/__test/count-users', async (req, res) => {
+    try {
+      const prefix = (req.query.prefix as string) || '';
+      if (!prefix) return res.status(400).json({ error: 'prefix is required' });
+      const db = connectDatabase();
+      const row = db
+        .prepare('SELECT COUNT(*) as count FROM users WHERE email LIKE ?')
+        .get(`${prefix}%`) as { count: number } | undefined;
+      return res.status(200).json({ count: row?.count ?? 0 });
+    } catch (err) {
+      // eslint-disable-next-line no-console -- test route error visibility
+      console.warn('[test-support] Failed to count users', err);
+      return res.status(500).json({ error: 'Failed to count users' });
     }
   });
 

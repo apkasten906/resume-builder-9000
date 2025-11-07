@@ -2,9 +2,6 @@
 import './env.js';
 
 import express from 'express';
-import dotenv from 'dotenv';
-import fs from 'node:fs';
-import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 import cookieParser from 'cookie-parser';
 
@@ -25,7 +22,11 @@ import authRoutes from './routes/auth.js';
 const app = express();
 const defaultPort = 4000;
 const apiBase = process.env.API_BASE;
-let port = Number(process.env.PORT || process.env.API_PORT);
+// Prefer API_PORT explicitly; do not use the generic PORT env var here because
+// the dev orchestration sets PORT for the web frontend and that caused the API
+// to accidentally bind to the web port. Use API_PORT first, then fall back to
+// parsing API_BASE or the default below.
+let port = Number(process.env.API_PORT);
 
 if (!port || Number.isNaN(port)) {
   if (apiBase) {
@@ -39,6 +40,8 @@ if (!port || Number.isNaN(port)) {
     port = defaultPort;
   }
 }
+
+logger.info(`API server starting on API_BASE=${apiBase}, API_PORT=${process.env.API_PORT}`);
 
 // Middleware
 app.use(httpLogger); // HTTP request logging
@@ -107,14 +110,14 @@ app.use(
 const enableTestRoutes =
   process.env.NODE_ENV === 'test' || process.env.ENABLE_TEST_ROUTES === 'true';
 
-async function mountOptionalRoutesAndStart() {
+async function mountOptionalRoutesAndStart(): Promise<void> {
   if (enableTestRoutes) {
     // dynamic import so the module sees the environment variables loaded above
     // and so logs like NODE_ENV are accurate.
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires -- dynamic import
-      const module = await import('./routes/test-support.js');
-      const testSupportRoutes = module.default;
+      const testModule = await import('./routes/test-support.js');
+      const testSupportRoutes = testModule.default;
       app.use('/', testSupportRoutes);
     } catch (err) {
       // If test routes fail to load, log but continue startup (non-fatal)
@@ -131,7 +134,7 @@ async function mountOptionalRoutesAndStart() {
 
     // Start server
     app.listen(port, () => {
-      logger.info(`API server running on http://localhost:${port}`);
+      logger.info(`API server running on apiBase=${apiBase} (port ${port})`);
     });
   } catch (err) {
     logger.error('Failed to connect to database:', { error: err });
@@ -139,7 +142,15 @@ async function mountOptionalRoutesAndStart() {
   }
 }
 
-// Execute mounting and startup
-mountOptionalRoutesAndStart();
+// Execute mounting and startup when running outside of test environment.
+// When running tests we avoid auto-starting the server so importing this
+// module does not create side effects (like opening DB connections).
+if (process.env.NODE_ENV !== 'test') {
+  mountOptionalRoutesAndStart();
+} else {
+  // In test mode we intentionally do not start the server. Tests that
+  // need the full server lifecycle should call mountOptionalRoutesAndStart()
+  // or start the server explicitly. This keeps imports side-effect free.
+}
 
 export default app;

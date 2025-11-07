@@ -34,6 +34,7 @@ Write-Host "  PLAYWRIGHT_HEADLESS=$($env:PLAYWRIGHT_HEADLESS)"
 # Forward all args to npx playwright test; if -Args passed, use that; otherwise pass through $args
 if ($PlaywrightArgs) {
   npx playwright test $PlaywrightArgs
-} else {
+}
+else {
   npx playwright test
 }

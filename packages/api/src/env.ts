@@ -23,7 +23,7 @@ try {
     dotenv.config();
     console.log('📁 Loaded environment from default location');
   }
-} catch (err) {
+} catch {
   // Fallback to default behavior
   dotenv.config();
   console.log('📁 Loaded environment (fallback)');
@@ -36,7 +36,7 @@ try {
     dotenv.config({ path: localEnv, override: true });
     console.log('📁 Loaded local environment overrides from:', localEnv);
   }
-} catch (err) {
+} catch {
   // Ignore errors
 }
 

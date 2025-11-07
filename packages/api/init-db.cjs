@@ -1,9 +1,21 @@
 #!/usr/bin/env node
 /**
- * Database Initialization Script for Docker Container
+ * Database Initialization Script
  *
  * This script ensures the database schema is created before the API server starts.
  * It runs migrations and creates required tables if they don't exist.
+ *
+ * DB_PATH behavior (important):
+ * - If the environment variable DB_PATH is provided, that path will be used.
+ * - In Docker/container runtime we expect DB_PATH to point at a container mount,
+ *   by convention: /app/data/resume.db
+ * - For local development the repository convention is to use
+ *   packages/api/data/resume.db (setup scripts default to this path).
+ *
+ * Summary:
+ * - Container default: /app/data/resume.db
+ * - Local dev default: packages/api/data/resume.db
+ * - DB_PATH env var overrides both when set
  */
 
 const Database = require('better-sqlite3');

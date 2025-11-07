@@ -26,7 +26,6 @@ RUN npm install && \
     echo 'declare module "swagger-ui-express";' > ./types/swagger-ui-express.d.ts && \
     echo 'declare module "swagger-jsdoc";' > ./types/swagger-jsdoc.d.ts && \
     npm run build
-
 # Expose port
 EXPOSE 4000
 

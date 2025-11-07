@@ -34,12 +34,18 @@ export default async function globalSetup(): Promise<void> {
   // Only remove the database file when running in CI or when explicitly requested.
   // If Playwright is reusing an existing dev server (local test-explorer workflow),
   // deleting the repo DB may fail with EBUSY because the running server holds the file open.
-  const shouldRemoveDb = process.env.CI === 'true' || process.env.PLAYWRIGHT_REMOVE_DB === '1';
+  // Only remove the database file when running in CI or when explicitly requested.
+  // However, when testing against Docker containers we must NOT attempt to unlink
+  // the mounted DB because the container may hold the file open (causes EBUSY).
+  const shouldRemoveDb =
+    (process.env.CI === 'true' || process.env.PLAYWRIGHT_REMOVE_DB === '1') &&
+    process.env.DOCKER_TESTING !== 'true';
+
   if (shouldRemoveDb) {
     await rm(dbPath, { force: true });
   } else {
     console.warn(
-      `Skipping removal of database at ${dbPath} (CI=${process.env.CI}). Set PLAYWRIGHT_REMOVE_DB=1 to force removal.`
+      `Skipping removal of database at ${dbPath} (CI=${process.env.CI}, DOCKER_TESTING=${process.env.DOCKER_TESTING}). Set PLAYWRIGHT_REMOVE_DB=1 and DOCKER_TESTING= to force removal when safe.`
     );
   }
 
@@ -85,9 +91,91 @@ export default async function globalSetup(): Promise<void> {
   // Seed users: for Docker testing, use API endpoint to seed into container DB.
   // For local dev, use the seed-users.js script.
   if (isDockerTesting) {
+    // When running against Docker, ensure container DB state is clean so tests are
+    // deterministic. We cannot unlink the mounted DB file (EBUSY), so instead use
+    // the test-support endpoints to clear data that Playwright tests expect.
+    try {
+      console.log('🧹 Cleaning up container test state via test-support endpoints...');
+      const fetch = globalThis.fetch;
+
+      // Clear Playwright-created users by prefix
+      await fetch(`${apiBaseUrl}/__test/cleanup-playwright-users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-test-secret': process.env.TEST_ROUTE_SECRET || '',
+        },
+      });
+
+      // Verify cleanup completed: poll user counts for common test prefixes
+      const prefixes = ['playwright-', 'pw-', 'test-'];
+      const maxRetries = 8;
+      const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
+      for (const prefix of prefixes) {
+        let ok = false;
+        for (let i = 0; i < maxRetries; i++) {
+          try {
+            const resp = await fetch(
+              `${apiBaseUrl}/__test/count-users?prefix=${encodeURIComponent(prefix)}`,
+              {
+                method: 'GET',
+                headers: { 'x-test-secret': process.env.TEST_ROUTE_SECRET || '' },
+              }
+            );
+            if (resp.ok) {
+              const data = await resp.json();
+              if (!data.count) {
+                ok = true;
+                break;
+              }
+            }
+          } catch {
+            // ignore and retry
+          }
+          await sleep(200);
+        }
+        if (!ok) {
+          console.warn(`Warning: cleanup may be incomplete for prefix=${prefix}`);
+        }
+      }
+
+      // Clear applications table
+      await fetch(`${apiBaseUrl}/clear-applications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-test-secret': process.env.TEST_ROUTE_SECRET || '',
+        },
+      });
+
+      // Clear in-memory email outbox
+      await fetch(`${apiBaseUrl}/__test/clear-emails`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-test-secret': process.env.TEST_ROUTE_SECRET || '',
+        },
+      });
+      console.log('🧹 Container test state cleanup complete');
+    } catch (e) {
+      console.warn('Failed to clean container state via test-support endpoints', e);
+    }
+
     console.log('🌱 Seeding verified test user via API endpoint for Docker...');
     try {
-      const fetch = globalThis.fetch;
+      // Ensure no lingering user with the seeded email exists by attempting deletion first.
+      try {
+        await fetch(`${apiBaseUrl}/__test/delete-user`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-test-secret': process.env.TEST_ROUTE_SECRET || '',
+          },
+          body: JSON.stringify({ email: 'user@example.com' }),
+        });
+      } catch {
+        // ignore delete failures; seed endpoint also performs upsert semantics
+      }
       const seedRes = await fetch(`${apiBaseUrl}/__test/seed-verified-user`, {
         method: 'POST',
         headers: {
