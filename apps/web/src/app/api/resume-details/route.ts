@@ -62,7 +62,6 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
 
   const apiBase = process.env.API_BASE || 'http://localhost:4000';
   const headers = buildAuthHeaders(req);
-  headers['Content-Type'] = 'application/json';
 
   const body = await req.json();
 

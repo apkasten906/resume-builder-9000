@@ -51,7 +51,9 @@ function serializeMultiline(values: readonly string[]): string {
   return values.join('\n');
 }
 
-function mapExperienceToState(experience: readonly ParsedResumeExperience[]): ParsedResumeExperience[] {
+function mapExperienceToState(
+  experience: readonly ParsedResumeExperience[]
+): ParsedResumeExperience[] {
   return experience.map(entry => ({ ...entry }));
 }
 
@@ -183,10 +185,10 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
     setLastSavedFingerprint(optimisticFingerprint);
 
     try {
-      const updated = await API.resumeDetails.put<ParsedResumeUpdateRequest, ResumeDetailsApiResponse>(
-        payload,
-        `?id=${uploadId}`
-      );
+      const updated = await API.resumeDetails.put<
+        ParsedResumeUpdateRequest,
+        ResumeDetailsApiResponse
+      >(payload, `?id=${uploadId}`);
       const normalized = cloneParsedFields(updated.parsedFields);
       setFormState(normalized);
       setLastSavedFingerprint(fingerprintPayload(buildUpdatePayload(normalized)));
@@ -215,7 +217,10 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
       setFormState(normalized);
       setLastSavedFingerprint(fingerprintPayload(buildUpdatePayload(normalized)));
       setHistory(restored.history.map(cloneHistoryEntry));
-      toast({ title: 'Snapshot restored', description: 'Parsed resume fields reverted successfully.' });
+      toast({
+        title: 'Snapshot restored',
+        description: 'Parsed resume fields reverted successfully.',
+      });
     } catch (err) {
       console.error('Failed to restore parsed resume snapshot', err);
       setSaveError('Unable to restore this snapshot. Please try again.');
@@ -226,7 +231,10 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
 
   function handleDownload(): void {
     if (!formState) {
-      toast({ title: 'Download unavailable', description: 'Resume details are still loading. Please try again shortly.' });
+      toast({
+        title: 'Download unavailable',
+        description: 'Resume details are still loading. Please try again shortly.',
+      });
       return;
     }
 
@@ -246,7 +254,10 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
       }, 0);
     } catch (err) {
       console.error('Failed to download parsed resume fields', err);
-      toast({ title: 'Download failed', description: 'Unable to export parsed resume fields. Please try again.' });
+      toast({
+        title: 'Download failed',
+        description: 'Unable to export parsed resume fields. Please try again.',
+      });
     }
   }
 
@@ -358,9 +369,7 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
     if (target === 'summary') {
       setFormState({
         ...formState,
-        parsedSummary: formState.parsedSummary
-          ? `${formState.parsedSummary}\n${text}`
-          : text,
+        parsedSummary: formState.parsedSummary ? `${formState.parsedSummary}\n${text}` : text,
       });
       return;
     }
@@ -385,20 +394,10 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
     }
   }
 
-  if (loading) {
-    return (
-      <ProtectedRoute>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
-            <p className="text-gray-600 dark:text-gray-400">Loading resume details...</p>
-          </div>
-        </div>
-      </ProtectedRoute>
-    );
-  }
-
-  const currentPayload = useMemo(() => (formState ? buildUpdatePayload(formState) : null), [formState]);
+  const currentPayload = useMemo(
+    () => (formState ? buildUpdatePayload(formState) : null),
+    [formState]
+  );
 
   const currentFingerprint = useMemo(
     () => (currentPayload ? fingerprintPayload(currentPayload) : null),
@@ -420,18 +419,31 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
   const statusMessage = restoring
     ? 'Restoring snapshot...'
     : hasUnsavedChanges
-    ? 'Unsaved changes'
-    : saving
-    ? 'All changes saved • Syncing...'
-    : 'All changes saved';
+      ? 'Unsaved changes'
+      : saving
+        ? 'All changes saved • Syncing...'
+        : 'All changes saved';
 
   const statusClassName = restoring
     ? 'text-blue-600 dark:text-blue-400'
     : hasUnsavedChanges
-    ? 'text-amber-600 dark:text-amber-400'
-    : saving
-    ? 'text-blue-600 dark:text-blue-400'
-    : 'text-emerald-600 dark:text-emerald-400';
+      ? 'text-amber-600 dark:text-amber-400'
+      : saving
+        ? 'text-blue-600 dark:text-blue-400'
+        : 'text-emerald-600 dark:text-emerald-400';
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="text-center">
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
+            <p className="text-gray-600 dark:text-gray-400">Loading resume details...</p>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
   if (loadError) {
     return (
@@ -502,28 +514,36 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                 label="Emails"
                 helperText="One address per line"
                 value={serializeMultiline(formState.personalInfo.emails)}
-                onChange={event => updatePersonalInfo('emails', parseMultiline(event.currentTarget.value))}
+                onChange={event =>
+                  updatePersonalInfo('emails', parseMultiline(event.currentTarget.value))
+                }
               />
 
               <Textarea
                 label="Phone Numbers"
                 helperText="One number per line"
                 value={serializeMultiline(formState.personalInfo.phones)}
-                onChange={event => updatePersonalInfo('phones', parseMultiline(event.currentTarget.value))}
+                onChange={event =>
+                  updatePersonalInfo('phones', parseMultiline(event.currentTarget.value))
+                }
               />
 
               <Textarea
                 label="Addresses"
                 helperText="One address per line"
                 value={serializeMultiline(formState.personalInfo.addresses)}
-                onChange={event => updatePersonalInfo('addresses', parseMultiline(event.currentTarget.value))}
+                onChange={event =>
+                  updatePersonalInfo('addresses', parseMultiline(event.currentTarget.value))
+                }
               />
 
               <Textarea
                 label="Websites"
                 helperText="One URL per line"
                 value={serializeMultiline(formState.personalInfo.websites)}
-                onChange={event => updatePersonalInfo('websites', parseMultiline(event.currentTarget.value))}
+                onChange={event =>
+                  updatePersonalInfo('websites', parseMultiline(event.currentTarget.value))
+                }
               />
             </CardContent>
           </Card>
@@ -545,7 +565,9 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                     <Input
                       label="Title"
                       value={item.title}
-                      onChange={event => updateExperience(index, { title: event.currentTarget.value })}
+                      onChange={event =>
+                        updateExperience(index, { title: event.currentTarget.value })
+                      }
                     />
                     <Button
                       type="button"
@@ -558,24 +580,32 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                   <Input
                     label="Company"
                     value={item.company ?? ''}
-                    onChange={event => updateExperience(index, { company: event.currentTarget.value })}
+                    onChange={event =>
+                      updateExperience(index, { company: event.currentTarget.value })
+                    }
                   />
                   <div className="grid gap-4 md:grid-cols-2">
                     <Input
                       label="Start Date"
                       value={item.startDate ?? ''}
-                      onChange={event => updateExperience(index, { startDate: event.currentTarget.value })}
+                      onChange={event =>
+                        updateExperience(index, { startDate: event.currentTarget.value })
+                      }
                     />
                     <Input
                       label="End Date"
                       value={item.endDate ?? ''}
-                      onChange={event => updateExperience(index, { endDate: event.currentTarget.value })}
+                      onChange={event =>
+                        updateExperience(index, { endDate: event.currentTarget.value })
+                      }
                     />
                   </div>
                   <Textarea
                     label="Description"
                     value={item.description ?? ''}
-                    onChange={event => updateExperience(index, { description: event.currentTarget.value })}
+                    onChange={event =>
+                      updateExperience(index, { description: event.currentTarget.value })
+                    }
                   />
                 </div>
               ))}
@@ -585,7 +615,9 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
           <Card>
             <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
               <CardTitle>Education</CardTitle>
-              <Button type="button" onClick={() => addEducation('New Education')}>Add Education</Button>
+              <Button type="button" onClick={() => addEducation('New Education')}>
+                Add Education
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {formState.education.length === 0 && (
@@ -597,7 +629,9 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                     <Input
                       label="Institution"
                       value={item.institution}
-                      onChange={event => updateEducation(index, { institution: event.currentTarget.value })}
+                      onChange={event =>
+                        updateEducation(index, { institution: event.currentTarget.value })
+                      }
                     />
                     <Button
                       type="button"
@@ -610,17 +644,23 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                   <Input
                     label="Degree"
                     value={item.degree}
-                    onChange={event => updateEducation(index, { degree: event.currentTarget.value })}
+                    onChange={event =>
+                      updateEducation(index, { degree: event.currentTarget.value })
+                    }
                   />
                   <Input
                     label="Field of Study"
                     value={item.fieldOfStudy ?? ''}
-                    onChange={event => updateEducation(index, { fieldOfStudy: event.currentTarget.value })}
+                    onChange={event =>
+                      updateEducation(index, { fieldOfStudy: event.currentTarget.value })
+                    }
                   />
                   <Input
                     label="Graduation Date"
                     value={item.graduationDate ?? ''}
-                    onChange={event => updateEducation(index, { graduationDate: event.currentTarget.value })}
+                    onChange={event =>
+                      updateEducation(index, { graduationDate: event.currentTarget.value })
+                    }
                   />
                   <Textarea
                     label="Notes"
@@ -651,7 +691,10 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                 helperText="One certification per line"
                 value={serializeMultiline(formState.certifications)}
                 onChange={event =>
-                  setFormState({ ...formState, certifications: parseMultiline(event.currentTarget.value) })
+                  setFormState({
+                    ...formState,
+                    certifications: parseMultiline(event.currentTarget.value),
+                  })
                 }
               />
               <Textarea
@@ -730,19 +773,39 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                   </p>
                 )}
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="secondary" onClick={() => handleSelection('summary')}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => handleSelection('summary')}
+                  >
                     Add to Summary
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => handleSelection('skill')}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => handleSelection('skill')}
+                  >
                     Add Skill
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => handleSelection('experience')}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => handleSelection('experience')}
+                  >
                     Add Experience Entry
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => handleSelection('education')}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => handleSelection('education')}
+                  >
                     Add Education Entry
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => handleSelection('award')}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => handleSelection('award')}
+                  >
                     Add Award
                   </Button>
                 </div>
@@ -760,7 +823,11 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
               ) : (
                 <ul className="space-y-3" data-testid="parsed-history-list">
                   {history.slice(0, 5).map(entry => (
-                    <li key={entry.id} className="rounded-lg border p-3" data-testid="parsed-history-entry">
+                    <li
+                      key={entry.id}
+                      className="rounded-lg border p-3"
+                      data-testid="parsed-history-entry"
+                    >
                       <p className="text-xs text-muted-foreground">
                         {new Date(entry.createdAt).toLocaleString()}
                       </p>
@@ -802,7 +869,8 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                   <span className="font-medium">File:</span> {resumeData.content}
                 </p>
                 <p>
-                  <span className="font-medium">Uploaded:</span> {new Date(resumeData.createdAt).toLocaleString()}
+                  <span className="font-medium">Uploaded:</span>{' '}
+                  {new Date(resumeData.createdAt).toLocaleString()}
                 </p>
               </CardContent>
             </Card>

@@ -67,7 +67,9 @@ export async function login(req: Request, res: Response): Promise<Response> {
 export async function me(req: Request, res: Response): Promise<Response> {
   const user = await authService.getUserFromRequest(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
-  return res.json({ user });
+  // Include an explicit `authenticated` flag for frontend consumers.
+  // Some clients expect { user, authenticated } to determine route protection.
+  return res.json({ user, authenticated: true });
 }
 
 export async function logout(req: Request, res: Response): Promise<Response> {

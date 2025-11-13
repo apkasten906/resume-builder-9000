@@ -34,7 +34,26 @@ const dbPath =
     : defaultDbPath;
 
 process.env.DB_PATH = dbPath;
-process.env.API_BASE = process.env.API_BASE || 'http://localhost:4000';
+
+// Configure URLs based on environment (Docker vs development)
+const playwrightWebPort = process.env.PLAYWRIGHT_WEB_PORT || '3000';
+const playwrightApiPort = process.env.PLAYWRIGHT_API_PORT || '4000';
+
+const webBaseUrl = process.env.WEB_BASE || `http://localhost:${playwrightWebPort}`;
+const apiBaseUrl = process.env.API_BASE || `http://localhost:${playwrightApiPort}`;
+
+console.log('🎭 Playwright Configuration:');
+console.log('   Web URL:', webBaseUrl);
+console.log('   API URL:', apiBaseUrl);
+console.log('   Database:', dbPath);
+
+// Check if we're testing against Docker containers.
+// Prefer the explicit `DOCKER_TESTING` flag; fall back to production port checks.
+const isDockerTesting =
+  process.env.DOCKER_TESTING === 'true' || // Explicit Docker flag
+  webBaseUrl.includes(':8080') ||
+  apiBaseUrl.includes(':8081'); // Production container ports as a fallback
+console.log('   Docker Mode:', isDockerTesting);
 
 // Ensure test route credentials are available to test code
 // These should be set in your local .env or passed via command line
@@ -66,49 +85,52 @@ export default defineConfig({
   fullyParallel: false,
   globalSetup: './global-setup.ts',
   use: {
-    baseURL: process.env.WEB_BASE || 'http://localhost:3000',
+    baseURL: webBaseUrl,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  // When PLAYWRIGHT_REUSE_EXISTING_SERVERS=1 is set, tests should run against
-  // dev servers started externally (for example via the repository dev.ps1).
-  // In that mode we omit webServer entries so Playwright won't start/stop servers.
-  webServer:
-    process.env.PLAYWRIGHT_REUSE_EXISTING_SERVERS === '1'
-      ? undefined
-      : [
-          {
-            command: 'npm run dev',
-            cwd: path.join(repoRoot, 'packages/api'),
-            url: (process.env.API_BASE || 'http://localhost:4000') + '/api/health',
-            reuseExistingServer: !process.env.CI,
-            stdout: 'pipe',
-            stderr: 'pipe',
-            timeout: 120000,
-            env: {
-              ...process.env,
-              NODE_ENV: 'development',
-              DB_PATH: dbPath,
-            },
+  // Only start web servers if not testing against Docker containers
+  webServer: isDockerTesting
+    ? []
+    : [
+        {
+          command: 'npm run dev',
+          cwd: path.join(repoRoot, 'packages/api'),
+          url: `${apiBaseUrl}/api/health`,
+          // Allow forcing reuse of existing servers even in CI by setting
+          // PLAYWRIGHT_REUSE_EXISTING=true. Defaults to disabling reuse in CI.
+          reuseExistingServer:
+            String(process.env.PLAYWRIGHT_REUSE_EXISTING).toLowerCase() === 'true' ||
+            !process.env.CI,
+          stdout: 'pipe',
+          stderr: 'pipe',
+          timeout: 120000,
+          env: {
+            ...process.env,
+            NODE_ENV: 'development',
+            DB_PATH: dbPath,
           },
-          {
-            command: 'npm run dev',
-            cwd: path.join(repoRoot, 'apps/web'),
-            url: process.env.WEB_BASE || 'http://localhost:3000',
-            reuseExistingServer: !process.env.CI,
-            stdout: 'pipe',
-            stderr: 'pipe',
-            timeout: 180000,
-            env: {
-              ...process.env,
-              NODE_ENV: 'development',
-              DB_PATH: dbPath,
-              API_BASE: process.env.API_BASE || 'http://localhost:4000',
-              PORT: process.env.WEB_PORT || '3000',
-            },
+        },
+        {
+          command: 'npm run dev',
+          cwd: path.join(repoRoot, 'apps/web'),
+          url: webBaseUrl,
+          reuseExistingServer:
+            String(process.env.PLAYWRIGHT_REUSE_EXISTING).toLowerCase() === 'true' ||
+            !process.env.CI,
+          stdout: 'pipe',
+          stderr: 'pipe',
+          timeout: 180000,
+          env: {
+            ...process.env,
+            NODE_ENV: 'development',
+            DB_PATH: dbPath,
+            API_BASE: apiBaseUrl,
+            PORT: playwrightWebPort,
           },
-        ],
+        },
+      ],
   projects: [
     {
       name: 'chromium',

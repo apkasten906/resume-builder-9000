@@ -4,7 +4,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const WEB_BASE = process.env.WEB_BASE || 'http://localhost:3000';
+// Configure URLs based on environment (Docker vs development)
+const playwrightWebPort = process.env.PLAYWRIGHT_WEB_PORT || '3000';
+export const WEB_BASE = process.env.WEB_BASE || `http://localhost:${playwrightWebPort}`;
 
 /**
  * Workspace-level Playwright metadata for maintainers

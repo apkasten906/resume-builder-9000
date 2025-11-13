@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
+import cookieParser from 'cookie-parser';
 
 import applicationsRoutes from './routes/applications.js';
 import { parseJobDescription } from './controllers/jobDescription.js';
@@ -41,7 +42,16 @@ if (!port || Number.isNaN(port)) {
 
 // Middleware
 app.use(httpLogger); // HTTP request logging
-app.use(cors());
+// Configure CORS using env var so browser fetches with credentials are allowed
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || true, // reflect request origin when not set
+  credentials: true,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Test-Secret'],
+};
+app.use(cors(corsOptions));
+// Parse cookies on incoming requests so req.cookies is available
+app.use(cookieParser());
 // NOTE: We purposely avoid a static import of test-support here because
 // ESM static imports are hoisted and would execute before dotenv.config()
 // runs above, causing process.env values such as NODE_ENV to be undefined

@@ -12,6 +12,7 @@ import { authService } from '../services/authService.js';
 import { upsertParsedResume } from '../repositories/parsedResumeRepository.js';
 import type { ParsedExperience } from '../types/parsedResume.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { extractResumeFieldsFromText } from '../utils/resumeTextParser.js';
 import {
   getResumeParsedFields,
   updateResumeParsedFields,
@@ -24,6 +25,70 @@ const resumeRoutes = Router();
 
 // Multer setup for file uploads (memory storage, 5MB limit)
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+interface LegacyParsedSections {
+  summary?: string;
+  experience: string[];
+  skills: string[];
+  personalInfo?: {
+    name?: string;
+    emails: string[];
+    phones: string[];
+    addresses: string[];
+    websites: string[];
+  };
+}
+
+function legacyParseResumeLines(text: string): LegacyParsedSections {
+  let summary = '';
+  const experience: string[] = [];
+  let skills: string[] = [];
+  const personalInfo = {
+    name: undefined as string | undefined,
+    emails: [] as string[],
+    phones: [] as string[],
+    addresses: [] as string[],
+    websites: [] as string[],
+  };
+  const lines = text.split(/\r?\n/).map((line: string) => line.trim());
+  const stopIndex = lines.findIndex(line =>
+    /^(languages?|experienced|experience|relevant work experience|summary)/i.test(line)
+  );
+  const headerLines = (stopIndex === -1 ? lines : lines.slice(0, stopIndex)).filter(Boolean);
+  for (const line of headerLines) {
+    if (!personalInfo.name && /^[A-Za-z]+(?:\s+[A-Za-z]+)+$/.test(line)) {
+      personalInfo.name = line;
+    }
+    const emailMatches = line.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi);
+    if (emailMatches) {
+      personalInfo.emails.push(...emailMatches);
+    }
+    const phoneMatches = line.match(/(\+?\d[\d\s().\-]{6,})/g);
+    if (phoneMatches) {
+      personalInfo.phones.push(...phoneMatches.map(match => match.trim()));
+    }
+    if (/\d/.test(line) && /[A-Za-z]/.test(line) && line.includes(',')) {
+      personalInfo.addresses.push(line);
+    }
+  }
+
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    if (lower.startsWith('summary:')) {
+      summary = line.trim();
+    } else if (lower.startsWith('experience:')) {
+      experience.push(line.replace(/^experience:/i, '').trim());
+    } else if (lower.startsWith('skills:')) {
+      skills = line
+        .replace(/^skills:/i, '')
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+    }
+  }
+
+  return { summary, experience, skills, personalInfo };
+}
 
 /**
  * @swagger
@@ -139,47 +204,115 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
       text = `Summary: Uploaded file ${file.originalname}\nExperience: No experience found.\nSkills: None`;
     }
 
-    // Improved parsing for E2E test reliability:
-    // Extract summary, experience, and skills from the text using explicit line matching
-    let summary = '';
-    let experience: string[] = [];
-    let skills: string[] = [];
-    const lines = text.split(/\r?\n/).map((l: string) => l.trim());
+    const extracted = extractResumeFieldsFromText(text);
+    const legacyParsed = legacyParseResumeLines(text);
+    const combinedPersonalInfo = {
+      name: extracted.personalInfo.name ?? legacyParsed.personalInfo?.name,
+      emails:
+        extracted.personalInfo.emails.length > 0
+          ? extracted.personalInfo.emails
+          : legacyParsed.personalInfo?.emails ?? [],
+      phones:
+        extracted.personalInfo.phones.length > 0
+          ? extracted.personalInfo.phones
+          : legacyParsed.personalInfo?.phones ?? [],
+      addresses:
+        extracted.personalInfo.addresses.length > 0
+          ? extracted.personalInfo.addresses
+          : legacyParsed.personalInfo?.addresses ?? [],
+      websites:
+        extracted.personalInfo.websites.length > 0
+          ? extracted.personalInfo.websites
+          : legacyParsed.personalInfo?.websites ?? [],
+    };
+    combinedPersonalInfo.emails = Array.from(new Set(combinedPersonalInfo.emails));
+    combinedPersonalInfo.phones = Array.from(new Set(combinedPersonalInfo.phones));
+    combinedPersonalInfo.addresses = Array.from(new Set(combinedPersonalInfo.addresses));
+    combinedPersonalInfo.websites = Array.from(new Set(combinedPersonalInfo.websites));
 
-    for (const line of lines) {
-      if (line.toLowerCase().startsWith('summary:')) {
-        summary = line.trim(); // Keep the full line for test match
-      } else if (line.toLowerCase().startsWith('experience:')) {
-        experience.push(line.replace(/^experience:/i, '').trim());
-      } else if (line.toLowerCase().startsWith('skills:')) {
-        skills = line
-          .replace(/^skills:/i, '')
-          .split(',')
-          .map((s: string) => s.trim());
-      }
+    let summary = extracted.summary ?? legacyParsed.summary ?? 'Summary: No summary found.';
+    if (!summary.toLowerCase().startsWith('summary')) {
+      summary = `Summary: ${summary}`;
     }
-    if (!summary) summary = 'Summary: No summary found.';
-    if (experience.length === 0) experience = ['No experience found.'];
-    if (skills.length === 0) skills = ['No skills found.'];
+
+    let structuredExperience = extracted.experiences;
+    if (structuredExperience.length === 0 && legacyParsed.experience.length > 0) {
+      structuredExperience = legacyParsed.experience.map(raw => ({
+        title: raw || 'Experience',
+        company: '',
+        description: raw,
+      }));
+    }
+    if (structuredExperience.length === 0) {
+      structuredExperience = [
+        {
+          title: 'Experience',
+          company: '',
+          description: 'No experience found.',
+        },
+      ];
+    }
+
+    let skills = extracted.skills.length > 0 ? extracted.skills : legacyParsed.skills;
+    if (skills.length === 0) {
+      skills = ['No skills found.'];
+    }
+
+    const experienceSummaries = structuredExperience.map(exp => {
+      const parts: string[] = [];
+      parts.push(exp.title.trim());
+      if (exp.company) {
+        parts.push(`– ${exp.company.trim()}`);
+      }
+      const start = exp.startDate?.trim();
+      const end = exp.endDate?.trim();
+      const hasDates = Boolean(start || end);
+      if (hasDates) {
+        const dateRange = [start, end || 'Present'].filter(Boolean).join(' to ');
+        parts.push(`(${dateRange})`);
+      }
+      return [parts.join(' '), exp.description?.replace(/\s+/g, ' ').trim()]
+        .filter(Boolean)
+        .join(': ');
+    });
 
     // Persist parsed resume to DB
     try {
       const createdAt = new Date().toISOString();
-      // Build minimal typed shapes expected by StoredResume/ResumeData
+      // Build typed shapes expected by StoredResume/ResumeData
       const resumeDataTyped = {
         personalInfo: {
-          fullName: '',
-          email: '',
+          fullName: combinedPersonalInfo.name ?? '',
+          email: combinedPersonalInfo.emails[0] ?? '',
+          phone: combinedPersonalInfo.phones[0] ?? undefined,
+          location: combinedPersonalInfo.addresses[0] ?? undefined,
+          linkedIn: combinedPersonalInfo.websites.find(url =>
+            url.toLowerCase().includes('linkedin')
+          ),
+          website: combinedPersonalInfo.websites.find(
+            url => !url.toLowerCase().includes('linkedin')
+          ),
         },
         summary,
-        experience: experience.map(exp => ({
-          title: exp || 'Experience',
-          company: '',
-          startDate: '',
-          current: false,
-          responsibilities: [],
+        experience: structuredExperience.map(exp => ({
+          title: exp.title || 'Experience',
+          company: exp.company || '',
+          startDate: exp.startDate || '',
+          endDate: exp.endDate && exp.endDate !== 'Present' ? exp.endDate : '',
+          current: !exp.endDate || exp.endDate === 'Present',
+          responsibilities: exp.description
+            ? exp.description
+                .split(/\n+/)
+                .map(line => line.trim())
+                .filter(Boolean)
+            : [],
         })),
-        education: [],
+        education: extracted.education.map(entry => ({
+          degree: entry.degree || entry.institution || 'Education',
+          institution: entry.institution || entry.degree || 'Education',
+          graduationDate: entry.graduationDate || '',
+          highlights: [],
+        })),
         skills: skills.map(s => ({ name: s })),
         certifications: [],
         projects: [],
@@ -211,15 +344,22 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
         upsertParsedResume(authenticatedUser.id, storedId, {
           parsedSummary: summary,
           personalInfo: {
-            name: '',
-            emails: [],
-            phones: [],
-            addresses: [],
-            websites: [],
+            name: combinedPersonalInfo.name ?? '',
+            emails: combinedPersonalInfo.emails,
+            phones: combinedPersonalInfo.phones,
+            addresses: combinedPersonalInfo.addresses,
+            websites: combinedPersonalInfo.websites,
           },
           experience: experienceEntries,
           skills,
-          education: [],
+          education: resumeDataTyped.education.map(entry => ({
+            id: `${storedId}-edu-${entry.degree}-${entry.institution}`,
+            institution: entry.institution,
+            degree: entry.degree,
+            graduationDate: entry.graduationDate,
+            fieldOfStudy: undefined,
+            notes: undefined,
+          })),
           certifications: [],
           awards: [],
           hobbies: [],
@@ -229,7 +369,7 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
       }
 
       // Return parsed data with id and createdAt so the client can refresh Recent Uploads
-      res.status(201).json({ id: storedId, summary, experience, skills, createdAt });
+      res.status(201).json({ id: storedId, summary, experience: experienceSummaries, skills, createdAt });
       return;
     } catch (dbErr) {
       logger.error('Failed to persist resume', { error: dbErr });

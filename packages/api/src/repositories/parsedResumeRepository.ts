@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import type Database from 'better-sqlite3';
 import { connectDatabase } from '../db.js';
 import type {
   ParsedResumeFields,
@@ -10,6 +9,8 @@ import type {
   ParsedResumeHistoryEntry,
 } from '../types/parsedResume.js';
 import { ParsedResumeHistoryEntrySchema, ParsedResumeFieldsSchema } from '../types/parsedResume.js';
+
+type SQLiteDatabase = ReturnType<typeof connectDatabase>;
 
 interface ParsedResumeRow {
   id: string;
@@ -183,7 +184,7 @@ export function getParsedResumeByUser(
   return mapRow(row);
 }
 
-function recordHistory(db: Database, existing: ParsedResumeRow): void {
+function recordHistory(db: SQLiteDatabase, existing: ParsedResumeRow): void {
   const historyId = randomUUID();
   const snapshot = serialize(mapRow(existing));
   const createdAt = new Date().toISOString();
