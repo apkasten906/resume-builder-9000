@@ -721,7 +721,7 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
               type="button"
               variant="secondary"
               onClick={handleDownload}
-              disabled={loading || restoring || formState === null}
+              disabled={restoring}
               data-testid="download-parsed-json-button"
             >
               Download JSON
@@ -865,8 +865,9 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                 <CardTitle>Upload Metadata</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <p>
-                  <span className="font-medium">File:</span> {resumeData.content}
+                <p className="break-all">
+                  <span className="font-medium">File:</span>{' '}
+                  <span className="break-all">{resumeData.content}</span>
                 </p>
                 <p>
                   <span className="font-medium">Uploaded:</span>{' '}

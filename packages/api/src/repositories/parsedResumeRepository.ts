@@ -108,7 +108,8 @@ function parseSnapshot(snapshot: string): ParsedResumeFields {
     if (validation.success) {
       return validation.data;
     }
-  } catch {
+  } catch (error) {
+    console.error('Failed to parse resume snapshot:', error);
     // Ignore parse errors and fall back to an empty structure
   }
   return createEmptyParsedResume();
@@ -144,27 +145,28 @@ function mapHistoryRow(row: ParsedResumeHistoryRow): ParsedResumeHistoryEntry {
   return ParsedResumeHistoryEntrySchema.parse(candidate);
 }
 
-function fingerprintRecord(record: ParsedResumeRecord): string {
-  return JSON.stringify(
-    {
-      parsedSummary: record.parsedSummary ?? undefined,
-      personalInfo: record.personalInfo,
-      experience: record.experience,
-      skills: record.skills,
-      education: record.education,
-      certifications: record.certifications,
-      awards: record.awards,
-      hobbies: record.hobbies,
-    },
-    (_, value) => (value === undefined ? null : value)
-  );
+function normalizeRecordForFingerprint(record: ParsedResumeRecord) {
+  return {
+    parsedSummary: record.parsedSummary ?? undefined,
+    personalInfo: record.personalInfo ?? clone(DEFAULT_PERSONAL_INFO),
+    experience: Array.isArray(record.experience) ? record.experience : clone(EMPTY_EXPERIENCE),
+    skills: Array.isArray(record.skills) ? record.skills : clone(EMPTY_STRINGS),
+    education: Array.isArray(record.education) ? record.education : clone(EMPTY_EDUCATION),
+    certifications: Array.isArray(record.certifications) ? record.certifications : clone(EMPTY_STRINGS),
+    awards: Array.isArray(record.awards) ? record.awards : clone(EMPTY_STRINGS),
+    hobbies: Array.isArray(record.hobbies) ? record.hobbies : clone(EMPTY_STRINGS),
+  };
 }
 
-function buildQueryParams(uploadId: string | null): { comparison: string; args: readonly unknown[] } {
+function fingerprintRecord(record: ParsedResumeRecord): string {
+  return JSON.stringify(normalizeRecordForFingerprint(record));
+}
+
+function buildQueryParams(uploadId: string | null): { isNull: boolean; args: readonly unknown[] } {
   if (uploadId === null) {
-    return { comparison: 'upload_id IS NULL', args: [] };
+    return { isNull: true, args: [] };
   }
-  return { comparison: 'upload_id = ?', args: [uploadId] };
+  return { isNull: false, args: [uploadId] };
 }
 
 export function getParsedResumeByUser(
@@ -172,12 +174,11 @@ export function getParsedResumeByUser(
   uploadId: string | null
 ): ParsedResumeRecord | undefined {
   const db = connectDatabase();
-  const { comparison, args } = buildQueryParams(uploadId);
-  const row = db
-    .prepare(
-      `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND ${comparison} LIMIT 1`
-    )
-    .get(userId, ...args) as ParsedResumeRow | undefined;
+  const { isNull, args } = buildQueryParams(uploadId);
+  const query = isNull
+    ? `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id IS NULL LIMIT 1`
+    : `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id = ? LIMIT 1`;
+  const row = db.prepare(query).get(userId, ...(isNull ? [] : args)) as ParsedResumeRow | undefined;
   if (!row) {
     return undefined;
   }
@@ -209,10 +210,13 @@ export function upsertParsedResume(
 ): ParsedResumeRecord {
   const db = connectDatabase();
   const now = new Date().toISOString();
-  const { comparison, args } = buildQueryParams(uploadId);
+  const { isNull, args } = buildQueryParams(uploadId);
+  const selectExistingQuery = isNull
+    ? `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id IS NULL LIMIT 1`
+    : `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id = ? LIMIT 1`;
   const existing = db
-    .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND ${comparison} LIMIT 1`)
-    .get(userId, ...args) as ParsedResumeRow | undefined;
+    .prepare(selectExistingQuery)
+    .get(userId, ...(isNull ? [] : args)) as ParsedResumeRow | undefined;
 
   const personalInfo = payload.personalInfo ?? DEFAULT_PERSONAL_INFO;
   const experience = payload.experience ? clone(payload.experience) : clone(EMPTY_EXPERIENCE);
@@ -332,15 +336,19 @@ export function getParsedResumeHistoryByUser(
   uploadId: string | null
 ): ParsedResumeHistoryEntry[] {
   const db = connectDatabase();
-  const { comparison, args } = buildQueryParams(uploadId);
-  const rows = db
-    .prepare(
-      `SELECT *
+  const { isNull, args } = buildQueryParams(uploadId);
+  const historyQuery = isNull
+    ? `SELECT *
        FROM profile_parsed_fields_history
-       WHERE user_id = ? AND ${comparison}
+       WHERE user_id = ? AND upload_id IS NULL
        ORDER BY datetime(created_at) DESC`
-    )
-    .all(userId, ...args) as ParsedResumeHistoryRow[];
+    : `SELECT *
+       FROM profile_parsed_fields_history
+       WHERE user_id = ? AND upload_id = ?
+       ORDER BY datetime(created_at) DESC`;
+  const rows = db
+    .prepare(historyQuery)
+    .all(userId, ...(isNull ? [] : args)) as ParsedResumeHistoryRow[];
 
   return rows.map(mapHistoryRow);
 }

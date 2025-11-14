@@ -193,15 +193,22 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
 
     // file is guaranteed defined after validation
     let text = '';
+    let parseWarningMessage: string | null = null;
     try {
       text = await parseFileText(file);
     } catch (parseErr) {
-      // Log the parsing error but continue — some PDFs fail to parse cleanly in tests
+      // Log the parsing error but continue -- some PDFs fail to parse cleanly in tests
       // and we prefer to persist a best-effort record so the UI and E2E can proceed.
       logger.error('Error extracting file text', { error: parseErr, fileName: file.originalname });
 
       // Fallback minimal content so downstream parsing still works
-      text = `Summary: Uploaded file ${file.originalname}\nExperience: No experience found.\nSkills: None`;
+      const fallbackName = file.originalname || 'uploaded file';
+      parseWarningMessage = `Text extraction failed for ${fallbackName}. Manual review required.`;
+      text = [
+        `Summary: ${parseWarningMessage}`,
+        `Experience: ${parseWarningMessage}`,
+        'Skills: Manual entry required.',
+      ].join('\n');
     }
 
     const extracted = extractResumeFieldsFromText(text);
@@ -234,6 +241,9 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
     if (!summary.toLowerCase().startsWith('summary')) {
       summary = `Summary: ${summary}`;
     }
+    if (parseWarningMessage) {
+      summary = `Summary: ${parseWarningMessage}`;
+    }
 
     let structuredExperience = extracted.experiences;
     if (structuredExperience.length === 0 && legacyParsed.experience.length > 0) {
@@ -243,7 +253,15 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
         description: raw,
       }));
     }
-    if (structuredExperience.length === 0) {
+    if (parseWarningMessage) {
+      structuredExperience = [
+        {
+          title: 'Parsing Failed',
+          company: '',
+          description: parseWarningMessage,
+        },
+      ];
+    } else if (structuredExperience.length === 0) {
       structuredExperience = [
         {
           title: 'Experience',
@@ -254,7 +272,9 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
     }
 
     let skills = extracted.skills.length > 0 ? extracted.skills : legacyParsed.skills;
-    if (skills.length === 0) {
+    if (parseWarningMessage) {
+      skills = ['Parsing failed - manual entry required.'];
+    } else if (skills.length === 0) {
       skills = ['No skills found.'];
     }
 
@@ -369,14 +389,24 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
       }
 
       // Return parsed data with id and createdAt so the client can refresh Recent Uploads
-      res.status(201).json({ id: storedId, summary, experience: experienceSummaries, skills, createdAt });
+      const responsePayload: {
+        id: string;
+        summary: string;
+        experience: string[];
+        skills: string[];
+        createdAt: string;
+        parseWarnings?: string[];
+      } = { id: storedId, summary, experience: experienceSummaries, skills, createdAt };
+      if (parseWarningMessage) {
+        responsePayload.parseWarnings = [parseWarningMessage];
+      }
+      res.status(201).json(responsePayload);
       return;
     } catch (dbErr) {
       logger.error('Failed to persist resume', { error: dbErr });
       res.status(500).json({ error: 'Failed to save resume' });
       return;
     }
-    return;
   } catch (error) {
     logger.error('Error processing resume upload', { error });
     res.status(500).json({ error: 'Failed to process resume' });
