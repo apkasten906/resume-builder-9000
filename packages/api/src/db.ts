@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
+import fs from 'fs';
 import path from 'path';
 
 import { logger } from './utils/logger.js';
@@ -33,6 +34,10 @@ export function connectDatabase(): SQLiteDatabase {
 
   // Get DB path from environment or use default
   const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
   logger.info(`Opening new database connection to ${dbPath}`);
   db = new Database(dbPath, {
     fileMustExist: false,

@@ -245,7 +245,8 @@ function looksLikeName(line: string): boolean {
   if (JOB_KEYWORDS.some(keyword => lowerLine.includes(keyword))) {
     return false;
   }
-  return tokens.every(token => /^[A-Z][a-z'’\-]+$/.test(token));
+  // Allow ASCII apostrophes, Unicode left/right single quotes, or hyphens inside names
+  return tokens.every(token => /^[A-Z][a-z'\u2019\u2018-]+$/.test(token));
 }
 
 function extractPersonalInfo(lines: readonly string[]): ExtractedPersonalInfo {

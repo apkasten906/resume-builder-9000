@@ -28,14 +28,37 @@ function ensureIndex(sql) {
   db.exec(sql);
 }
 
+const ALLOWED_TABLE_COLUMNS = {
+  profile_parsed_fields: new Set([
+    'upload_id',
+    'parsed_summary',
+    'personal_info',
+    'experience',
+    'skills',
+    'education',
+    'certifications',
+    'awards',
+    'hobbies',
+    'created_at',
+    'updated_at',
+  ]),
+};
+
 function tableColumns(tableName) {
+  if (!(tableName in ALLOWED_TABLE_COLUMNS)) {
+    throw new Error(`Unsupported table requested: ${tableName}`);
+  }
   return db.prepare(`PRAGMA table_info(${tableName})`).all().map(col => col.name);
 }
 
 function ensureColumn(tableName, columnName, definition) {
+  const allowedColumns = ALLOWED_TABLE_COLUMNS[tableName];
+  if (!allowedColumns || !allowedColumns.has(columnName)) {
+    throw new Error(`Unsupported column requested: ${tableName}.${columnName}`);
+  }
   const columns = tableColumns(tableName);
   if (!columns.includes(columnName)) {
-    db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${definition}`);
+    db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
     console.log(`Added column ${columnName} to ${tableName}`);
   }
 }
@@ -105,24 +128,24 @@ ensureTable(`
 `);
 
 // Ensure newly introduced columns exist for older databases
-ensureColumn('profile_parsed_fields', 'upload_id', 'upload_id TEXT');
-ensureColumn('profile_parsed_fields', 'parsed_summary', 'parsed_summary TEXT');
-ensureColumn('profile_parsed_fields', 'personal_info', 'personal_info TEXT');
-ensureColumn('profile_parsed_fields', 'experience', 'experience TEXT');
-ensureColumn('profile_parsed_fields', 'skills', 'skills TEXT');
-ensureColumn('profile_parsed_fields', 'education', 'education TEXT');
-ensureColumn('profile_parsed_fields', 'certifications', 'certifications TEXT');
-ensureColumn('profile_parsed_fields', 'awards', 'awards TEXT');
-ensureColumn('profile_parsed_fields', 'hobbies', 'hobbies TEXT');
+ensureColumn('profile_parsed_fields', 'upload_id', 'TEXT');
+ensureColumn('profile_parsed_fields', 'parsed_summary', 'TEXT');
+ensureColumn('profile_parsed_fields', 'personal_info', 'TEXT');
+ensureColumn('profile_parsed_fields', 'experience', 'TEXT');
+ensureColumn('profile_parsed_fields', 'skills', 'TEXT');
+ensureColumn('profile_parsed_fields', 'education', 'TEXT');
+ensureColumn('profile_parsed_fields', 'certifications', 'TEXT');
+ensureColumn('profile_parsed_fields', 'awards', 'TEXT');
+ensureColumn('profile_parsed_fields', 'hobbies', 'TEXT');
 ensureColumn(
   'profile_parsed_fields',
   'created_at',
-  "created_at TEXT NOT NULL DEFAULT (datetime('now'))"
+  "TEXT NOT NULL DEFAULT (datetime('now'))"
 );
 ensureColumn(
   'profile_parsed_fields',
   'updated_at',
-  "updated_at TEXT NOT NULL DEFAULT (datetime('now'))"
+  "TEXT NOT NULL DEFAULT (datetime('now'))"
 );
 
 ensureIndex(`

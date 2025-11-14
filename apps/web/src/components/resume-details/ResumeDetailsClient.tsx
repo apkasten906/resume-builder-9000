@@ -51,14 +51,24 @@ function serializeMultiline(values: readonly string[]): string {
   return values.join('\n');
 }
 
+type CloneFunction = <TValue>(value: TValue) => TValue;
+
+function deepClone<T>(value: T): T {
+  const structuredCloneFn = (globalThis as { structuredClone?: CloneFunction }).structuredClone;
+  if (typeof structuredCloneFn === 'function') {
+    return structuredCloneFn(value);
+  }
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 function mapExperienceToState(
   experience: readonly ParsedResumeExperience[]
 ): ParsedResumeExperience[] {
-  return experience.map(entry => ({ ...entry }));
+  return experience.map(entry => deepClone(entry));
 }
 
 function mapEducationToState(education: readonly ParsedResumeEducation[]): ParsedResumeEducation[] {
-  return education.map(entry => ({ ...entry }));
+  return education.map(entry => deepClone(entry));
 }
 
 function cloneParsedFields(payload: ParsedResumeFieldsPayload): FormState {

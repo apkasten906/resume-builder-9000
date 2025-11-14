@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 
-export function buildAuthHeaders(req: NextRequest): HeadersInit {
+export function buildAuthHeaders(req: NextRequest): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };

@@ -20,10 +20,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const apiBase = process.env.API_BASE || 'http://localhost:4000';
-  const headers = {
-    ...(buildAuthHeaders(req) as Record<string, string>),
-    'Content-Type': 'application/json',
-  };
+  const headers = buildAuthHeaders(req);
 
   const response = await fetch(
     `${apiBase}/api/resumes/${uploadId}/parsed-fields/history/${historyId}/restore`,

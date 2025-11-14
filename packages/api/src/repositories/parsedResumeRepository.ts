@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { connectDatabase } from '../db.js';
+import { logger } from '../utils/logger.js';
 import type {
   ParsedResumeFields,
   ParsedResumeUpsertInput,
@@ -109,7 +110,7 @@ function parseSnapshot(snapshot: string): ParsedResumeFields {
       return validation.data;
     }
   } catch (error) {
-    console.error('Failed to parse resume snapshot:', error);
+    logger.error('Failed to parse resume snapshot', { error });
     // Ignore parse errors and fall back to an empty structure
   }
   return createEmptyParsedResume();
