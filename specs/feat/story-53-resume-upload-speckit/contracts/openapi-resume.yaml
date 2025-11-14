@@ -4,7 +4,7 @@ info:
   version: 0.1.0
   description: API contract for resume upload, parse preview, and save flow (MVP text-layer PDFs only)
 paths:
-  /api/resume/parse:
+  /api/resumes/parse:
     post:
       summary: Upload a resume (PDF) and return parsed regions (transient)
       requestBody:
@@ -14,7 +14,7 @@ paths:
             schema:
               type: object
               properties:
-                file:
+                resume:
                   type: string
                   format: binary
       responses:
@@ -35,7 +35,7 @@ paths:
         '400':
           description: Invalid file or parse error
 
-  /api/resume/save:
+  /api/resumes/save:
     post:
       summary: Save reviewed parsed regions into the user's profile draft
       requestBody:
@@ -44,19 +44,31 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - consent
               properties:
                 resumeId:
                   type: string
                   nullable: true
                 consent:
                   type: boolean
+                  description: Explicit user consent to persist parsed PII
                 regions:
                   type: array
                   items:
                     $ref: '#/components/schemas/ParsedRegion'
       responses:
-        '200':
+        '201':
           description: Save successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  savedId:
+                    type: string
         '400':
           description: Validation error (missing consent or invalid regions)
 
@@ -70,12 +82,12 @@ components:
         page:
           type: integer
         bbox:
-          type: object
-          properties:
-            x: { type: number }
-            y: { type: number }
-            width: { type: number }
-            height: { type: number }
+          type: array
+          description: '[x, y, width, height] in PDF points (tuple of 4 numbers)'
+          items:
+            type: number
+          minItems: 4
+          maxItems: 4
         text:
           type: string
         category:

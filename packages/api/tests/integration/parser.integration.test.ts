@@ -36,12 +36,12 @@ describe('resume parser integration (unmocked)', () => {
     expect(regions.length).toBeGreaterThan(0);
 
     const r = regions[0];
-  // id is optional in the schema; bbox is a tuple [x,y,width,height]
-  expect(r).toHaveProperty('page');
-  expect(r).toHaveProperty('bbox');
-  expect(r).toHaveProperty('text');
-  expect(Array.isArray(r.bbox)).toBe(true);
-  expect(r.bbox.length).toBe(4);
-  for (const v of r.bbox) expect(typeof v).toBe('number');
+    // id is optional in the schema; bbox is a tuple [x,y,width,height]
+    expect(r).toHaveProperty('page');
+    expect(r).toHaveProperty('bbox');
+    expect(r).toHaveProperty('text');
+    expect(Array.isArray(r.bbox)).toBe(true);
+    expect(r.bbox.length).toBe(4);
+    for (const v of r.bbox) expect(typeof v).toBe('number');
   }, 20_000);
 });

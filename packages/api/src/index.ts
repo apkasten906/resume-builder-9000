@@ -107,6 +107,7 @@ async function mountOptionalRoutesAndStart() {
       // eslint-disable-next-line @typescript-eslint/no-var-requires -- dynamic import
       const module = await import('./routes/test-support.js');
       const testSupportRoutes = module.default;
+      // Mount test routes at root - they use specific paths like /__test/* or have ensureTestAccess middleware
       app.use('/', testSupportRoutes);
     } catch (err) {
       // If test routes fail to load, log but continue startup (non-fatal)

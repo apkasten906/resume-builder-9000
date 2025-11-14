@@ -1,6 +1,5 @@
-// Use require to avoid missing type declarations for pdf-parse in this workspace.
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
-const pdfParse: any = require('pdf-parse');
+// We'll dynamically import `pdf-parse` only when needed so this module works
+// in ESM environments and when `pdfjs-dist` is available.
 
 /**
  * PAGE-PARSER: Prefer `pdfjs-dist` for page-level extraction (text + bbox when available).
@@ -73,7 +72,10 @@ export async function parsePdfBuffer(buffer: Buffer, maxPages = 3): Promise<unkn
     }
   } catch {
     // pdfjs-dist not available or failed; fall back to pdf-parse
+    // Dynamically import `pdf-parse` so we don't rely on CommonJS `require` at top-level.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfParseMod: any = await import('pdf-parse');
+    const pdfParse = pdfParseMod.default ?? pdfParseMod;
     const data = await pdfParse(buffer as any);
     const text = data && data.text ? String(data.text).trim() : '';
     if (!text) return [];

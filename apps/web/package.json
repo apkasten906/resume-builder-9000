@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "dev:stable": "next build && next start",
+    "dev": "next dev -p 3002",
+    "dev:stable": "next build && next start -p 3002",
     "dev:polling": "WATCHPACK_POLLING=true next dev",
     "dev:production": "next build && next start",
     "build": "next build",

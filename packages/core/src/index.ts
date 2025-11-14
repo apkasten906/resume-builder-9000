@@ -234,6 +234,9 @@ export {
   type TestLoggerOptions,
 } from './logger.js';
 
+// Log redaction helpers (PII masking)
+export { redact, redactString } from './lib/log-redact.js';
+
 // Authentication utilities
 export {
   PASSWORD_POLICY_RULES,

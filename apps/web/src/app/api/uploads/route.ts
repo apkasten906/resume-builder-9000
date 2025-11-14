@@ -21,8 +21,8 @@ export async function GET(): Promise<NextResponse> {
       return NextResponse.json({ error: 'Failed to fetch uploads' }, { status: 500 });
     }
     type BackendResumeItem = {
-      content: string;
-      createdAt: string;
+      fileName: string;
+      lastUpdated: string;
       id: string;
     };
 
@@ -33,21 +33,13 @@ export async function GET(): Promise<NextResponse> {
       // If response is not valid JSON, treat as error
       return NextResponse.json({ error: 'Invalid backend response' }, { status: 500 });
     }
-    // Map backend response to dashboard format
+    // Backend already returns the correct format, just pass through
 
     let items: ResumeUploadItem[] = [];
     if (Array.isArray(data)) {
-      items = data.map((r: BackendResumeItem) => ({
-        fileName: r.content,
-        lastUpdated: r.createdAt,
-        id: r.id,
-      }));
+      items = data;
     } else if ('items' in data && Array.isArray(data.items)) {
-      items = data.items.map((r: BackendResumeItem) => ({
-        fileName: r.content,
-        lastUpdated: r.createdAt,
-        id: r.id,
-      }));
+      items = data.items;
     }
     return NextResponse.json({ items }, { status: 200 });
   } catch {

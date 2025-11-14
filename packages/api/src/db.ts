@@ -88,6 +88,45 @@ export function connectDatabase(): SQLiteDatabase {
   `);
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS applications (
+      id TEXT PRIMARY KEY,
+      company TEXT NOT NULL,
+      role TEXT NOT NULL,
+      location TEXT,
+      stage TEXT NOT NULL CHECK (
+        stage IN (
+          'Prospect',
+          'Applied',
+          'Interview',
+          'Offer',
+          'Rejected',
+          'Accepted'
+        )
+      ),
+      last_updated TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      jd_text TEXT,
+      currency TEXT CHECK (currency IN ('USD', 'EUR', 'GBP', 'CAD', 'AUD')),
+      salary_base REAL,
+      salary_bonus REAL,
+      salary_equity TEXT,
+      salary_notes TEXT
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS application_status_history (
+      id TEXT PRIMARY KEY,
+      application_id TEXT NOT NULL,
+      from_stage TEXT,
+      to_stage TEXT NOT NULL,
+      note TEXT,
+      changed_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user_id
     ON email_verification_tokens(user_id)
   `);

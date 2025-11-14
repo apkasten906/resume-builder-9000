@@ -6,7 +6,7 @@ Plan: `specs/feat/story-53-resume-upload-speckit/plan.md`
 
 Phase 1 — Setup
 
-- [ ] T001 Initialize feature contracts directory and add OpenAPI stub `specs/feat/story-53-resume-upload-speckit/contracts/openapi-resume.yaml`
+- [x] T001 Initialize feature contracts directory and add OpenAPI stub `specs/feat/story-53-resume-upload-speckit/contracts/openapi-resume.yaml`
 - [x] T002 [P] Add parser helper module (stub) for text-layer PDF extraction `apps/api/src/lib/pdf-parser.ts`
 - [x] T003 [P] Add upload route scaffold `apps/api/src/routes/resume/parse.route.ts` (POST /api/resume/parse)
 - [x] T004 [P] Add save route scaffold `apps/api/src/routes/resume/save.route.ts` (POST /api/resume/save)
@@ -18,7 +18,7 @@ Phase 2 — Foundational (blocking prerequisites)
 - [x] T007 Implement file validation middleware `apps/api/src/middleware/file-validation.ts` (limit 10MB, MIME application/pdf)
 - [x] T008 [P] Implement transient DTOs and serializers `packages/core/src/dtos/parsed-region.dto.ts` and `packages/core/src/dtos/resume-upload.dto.ts`
 - [x] T009 [P] Implement server-side parsing integration that calls `apps/api/src/lib/pdf-parser.ts` and returns parsed regions `apps/api/src/routes/resume/parse.route.ts`
-- [ ] T010 Create API contract test `apps/api/test/parse.route.spec.ts` that POSTs example PDF and asserts JSON shape
+- [x] T010 Create API contract test `apps/api/test/parse.route.spec.ts` that POSTs example PDF and asserts JSON shape
 
 Phase 3 — User Story Phases (priority order)
 
@@ -38,23 +38,23 @@ Additional remaining work for US1 (tests & fixtures)
 
 US2: Review and correct (Priority: P2)
 
-- [ ] T016 [US2] Implement overlay preview component `apps/web/src/components/ResumePreviewOverlay.tsx` that renders PDF page and highlights parsed region bboxes
-- [ ] T017 [US2] Implement region editing UI `apps/web/src/components/RegionEditor.tsx` (edit text, change category, delete) and wire to client state
-- [ ] T018 [US2] Implement Add-region UI `apps/web/src/components/AddRegionForm.tsx` (draw/select area or paste text) and normalization logic
-- [ ] T019 [US2] Implement client Save flow to POST reviewed regions to `POST /api/resume/save` and show success/failure feedback `apps/web/src/services/resume-service.ts`
-- [ ] T020 [US2] Add integration test `apps/web/test/review-and-save.e2e.ts` that simulates edits and asserts `POST /api/resume/save` payload shape
+- [x] T016 [US2] Implement overlay preview component `apps/web/src/components/ResumePreviewOverlay.tsx` that renders PDF page and highlights parsed region bboxes
+- [x] T017 [US2] Implement region editing UI `apps/web/src/components/RegionEditor.tsx` (edit text, change category, delete) and wire to client state
+- [x] T018 [US2] Implement Add-region UI `apps/web/src/components/AddRegionForm.tsx` (draw/select area or paste text) and normalization logic
+- [x] T019 [US2] Implement client Save flow to POST reviewed regions to `POST /api/resume/save` and show success/failure feedback `apps/web/src/services/resume-service.ts`
+- [x] T020 [US2] Add integration test `apps/web/test/review-and-save.e2e.ts` that simulates edits and asserts `POST /api/resume/save` payload shape
 
 US3: Privacy and consent (Priority: P3)
 
-- [ ] T021 [US3] Add consent banner component `apps/web/src/components/ConsentNotice.tsx` shown during review flow with explicit Save/Cancel actions
-- [ ] T022 [US3] Ensure server `POST /api/resume/save` requires explicit consent flag and returns 400 when missing `apps/api/src/routes/resume/save.route.ts`
-- [ ] T023 [US3] Implement server-side persistence service `apps/api/src/services/resume-save.service.ts` to write structured fields into user profile draft tables
-- [ ] T024 [US3] Add E2E acceptance test `apps/web/test/privacy-consent.e2e.ts` verifying no DB writes without consent and data saved when consent provided
+- [x] T021 [US3] Add consent banner component `apps/web/src/components/ConsentNotice.tsx` shown during review flow with explicit Save/Cancel actions
+- [x] T022 [US3] Ensure server `POST /api/resume/save` requires explicit consent flag and returns 400 when missing `apps/api/src/routes/resume/save.route.ts`
+- [x] T023 [US3] Implement server-side persistence service `apps/api/src/services/resume-save.service.ts` to write structured fields into user profile draft tables
+- [x] T024 [US3] Add E2E acceptance test `apps/web/test/privacy-consent.e2e.ts` verifying no DB writes without consent and data saved when consent provided
 
 Final Phase — Polish & Cross-cutting
 
-- [ ] T025 Add logging redaction utilities `packages/core/src/lib/log-redact.ts` and update server routes to redact PII
-- [ ] T026 Add documentation `specs/feat/story-53-resume-upload-speckit/quickstart.md` with local dev steps to exercise the feature
+- [x] T025 Add logging redaction utilities `packages/core/src/lib/log-redact.ts` and update server routes to redact PII
+- [x] T026 Add documentation `specs/feat/story-53-resume-upload-speckit/quickstart.md` with local dev steps to exercise the feature
 - [ ] T027 Add CI integration for feature tests or update existing CI to include the new tests `ci/workflows/resume-upload.yml` (or update `vitest.config.ts`)
 - [ ] T028 [P] Accessibility review task: audit overlay and editor with axe-core and fix issues in `apps/web/src/components/*`
 

@@ -110,7 +110,7 @@ if (isTestEnvironment) {
     router.use(ensureTestAccess);
   }
   // Test-only endpoint to create an application without authentication
-  router.post('/applications', async (req, res) => {
+  router.post('/__test/applications', async (req, res) => {
     const { company, role, location } = req.body || {};
     if (!company || !role) {
       return res.status(400).json({ error: 'company and role are required' });
@@ -120,7 +120,7 @@ if (isTestEnvironment) {
   });
 
   // Test-only endpoint to clear all applications
-  router.post('/clear-applications', async (_req, res) => {
+  router.post('/__test/clear-applications', async (_req, res) => {
     // Get direct DB connection instead of using the repository
     const db = connectDatabase();
     db.prepare('DELETE FROM applications').run();

@@ -44,7 +44,13 @@ test.describe('Logout Cookie Clearing', () => {
     testLogger.log('Authentication successful - testing authenticated state and logout');
 
     // 4. Verify navigation menu is visible when authenticated
+    // Wait for the navigation to appear (auth context needs to update)
     const navigationBeforeLogout = page.locator('aside nav');
+    await page.waitForSelector('aside nav', { timeout: 5000 }).catch(() => {
+      testLogger.warn(
+        'Navigation menu did not appear within 5s - auth context may not have updated'
+      );
+    });
     expect(await navigationBeforeLogout.count()).toBeGreaterThan(0);
     testLogger.log('[TEST] Verified: Navigation menu is visible when authenticated');
 

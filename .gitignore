@@ -66,3 +66,20 @@ packages/api/logs/combined.log
 resume.db
 *.db-journal
 commit-message.txt
+
+# Recommended additions
+# ESLint/Prettier caches
+.eslintcache
+.prettiercache
+
+# JS tool caches and outputs
+.cache/
+.nyc_output/
+
+# Local DB files
+*.sqlite
+*.sqlite3
+*.db
+
+# pnpm lockfile (monorepos may use pnpm)
+pnpm-lock.yaml

@@ -77,6 +77,7 @@ export default async function globalSetup(): Promise<void> {
       stdio: 'inherit',
       env: {
         ...sharedEnv,
+        NODE_ENV: 'production', // Next.js requires 'production' or 'development' NODE_ENV
         API_BASE: process.env.API_BASE ?? 'http://localhost:4000',
       },
     });

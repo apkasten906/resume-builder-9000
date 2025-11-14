@@ -14,7 +14,7 @@ export const metadata = {
 
 // TODO: Fix AuthContext to work with SSR/SSG instead of forcing dynamic rendering
 // This breaks client-side hydration in E2E tests
-// export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 
 const RootLayout: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
