@@ -10,7 +10,9 @@ const educationDegree = 'B.Sc. Computer Science';
 const skillExample = 'C# .NET';
 
 test.describe('Resume upload parsing fidelity', () => {
-  test('uploads Brian Faker resume and surfaces structured data in details view', async ({ page }) => {
+  test('uploads Brian Faker resume and surfaces structured data in details view', async ({
+    page,
+  }) => {
     await page.goto(`${WEB_BASE}/resume-upload`);
 
     // Add test header so backend can treat the upload as an automated test run if needed.
@@ -43,16 +45,23 @@ test.describe('Resume upload parsing fidelity', () => {
     await expect(page.getByTestId('parsed-skills')).toContainText(skillExample);
 
     const uploadsResponse = await uploadsResponsePromise;
-    const uploadsPayload = (await uploadsResponse.json()) as { items?: Array<{ id: string; fileName: string }> };
+    const uploadsPayload = (await uploadsResponse.json()) as {
+      items?: Array<{ id: string; fileName: string }>;
+    };
     const targetUpload =
       uploadsPayload.items?.find(item =>
         item.fileName.includes('Resume_BrianFaker_SoftwareDeveloper_English_v1.pdf')
       ) ?? null;
-    expect(targetUpload, 'Uploaded resume should appear in recent uploads API payload').not.toBeNull();
+    expect(
+      targetUpload,
+      'Uploaded resume should appear in recent uploads API payload'
+    ).not.toBeNull();
 
-    await page.goto(`${WEB_BASE}/resume-details?id=${targetUpload!.id}`, { waitUntil: 'networkidle' });
+    await page.goto(`${WEB_BASE}/resume-details?id=${targetUpload!.id}`, {
+      waitUntil: 'networkidle',
+    });
     await expect(page.getByTestId('parsed-summary-input')).toHaveValue(
-      new RegExp(summarySnippet.slice(0, 40)),
+      new RegExp(summarySnippet.slice(0, 40))
     );
     await expect(page.getByLabel('Name')).toHaveValue(/Brian Faker/);
     await expect(page.getByLabel('Emails')).toHaveValue(/brian\.faker@gmail\.com/i);
@@ -62,7 +71,7 @@ test.describe('Resume upload parsing fidelity', () => {
     await expect(page.getByLabel('Company').first()).toHaveValue(new RegExp(companyName, 'i'));
     await expect(page.getByLabel('Skills')).toHaveValue(new RegExp(skillExample));
     await expect(page.getByLabel('Institution').first()).toHaveValue(
-      new RegExp(educationInstitution, 'i'),
+      new RegExp(educationInstitution, 'i')
     );
     await expect(page.getByLabel('Degree').first()).toHaveValue(new RegExp(educationDegree, 'i'));
   });

@@ -24,7 +24,10 @@ test.describe('Resume Details interactions', (): void => {
             company: 'Acme Corp',
             startDate: '2020',
             endDate: '2024',
-            responsibilities: ['Designed GraphQL APIs for critical services', 'Mentored engineering team members'],
+            responsibilities: [
+              'Designed GraphQL APIs for critical services',
+              'Mentored engineering team members',
+            ],
           },
         ],
         education: [
@@ -34,10 +37,7 @@ test.describe('Resume Details interactions', (): void => {
             graduationDate: '2015',
           },
         ],
-        skills: [
-          { name: 'TypeScript' },
-          { name: 'GraphQL' },
-        ],
+        skills: [{ name: 'TypeScript' }, { name: 'GraphQL' }],
         certifications: ['AWS Solutions Architect'],
         projects: ['Realtime collaboration platform'],
       },
@@ -88,7 +88,7 @@ test.describe('Resume Details interactions', (): void => {
       updatedAt: new Date('2023-01-03T12:00:00Z').toISOString(),
     };
 
-    const cloneParsed = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+    const cloneParsed = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
     type HistoryEntry = {
       id: string;
       parsedResumeId: string;
@@ -169,7 +169,8 @@ test.describe('Resume Details interactions', (): void => {
             ...payload.personalInfo,
             emails: payload.personalInfo?.emails ?? currentParsedFields.personalInfo.emails,
             phones: payload.personalInfo?.phones ?? currentParsedFields.personalInfo.phones,
-            addresses: payload.personalInfo?.addresses ?? currentParsedFields.personalInfo.addresses,
+            addresses:
+              payload.personalInfo?.addresses ?? currentParsedFields.personalInfo.addresses,
             websites: payload.personalInfo?.websites ?? currentParsedFields.personalInfo.websites,
           },
           experience: payload.experience ?? currentParsedFields.experience,
@@ -254,7 +255,9 @@ test.describe('Resume Details interactions', (): void => {
     await expect(saveStatus).toHaveText('All changes saved');
 
     await addSkillButton.click();
-    await expect(page.getByRole('alert')).toHaveText('Select text in the preview to map it to a category.');
+    await expect(page.getByRole('alert')).toHaveText(
+      'Select text in the preview to map it to a category.'
+    );
 
     await page.evaluate((): void => {
       const container = document.querySelector('[data-testid="resume-preview"] pre');
