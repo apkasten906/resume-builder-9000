@@ -55,7 +55,7 @@ type CloneFunction = <TValue>(value: TValue) => TValue;
 
 function deepClone<T>(value: T): T {
   const structuredCloneFn = (globalThis as { structuredClone?: CloneFunction }).structuredClone;
-  if (typeof structuredCloneFn === 'function') {
+  if (structuredCloneFn && typeof structuredCloneFn === 'function') {
     return structuredCloneFn(value);
   }
   return JSON.parse(JSON.stringify(value)) as T;
@@ -109,8 +109,24 @@ function buildUpdatePayload(state: FormState): ParsedResumeUpdateRequest {
   };
 }
 
+function normalizeUndefinedToNull<T>(input: T): T {
+  if (Array.isArray(input)) {
+    return input.map(item =>
+      item === undefined ? null : normalizeUndefinedToNull(item)
+    ) as unknown as T;
+  }
+  if (input && typeof input === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(input)) {
+      result[key] = value === undefined ? null : normalizeUndefinedToNull(value);
+    }
+    return result as T;
+  }
+  return input;
+}
+
 function fingerprintPayload(payload: ParsedResumeUpdateRequest): string {
-  return JSON.stringify(payload, (_, value) => (value === undefined ? null : value));
+  return JSON.stringify(normalizeUndefinedToNull(payload));
 }
 
 function cloneHistoryEntry(entry: ParsedResumeHistoryEntry): ParsedResumeHistoryEntry {
@@ -180,7 +196,7 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
   }, [resumeData]);
 
   async function handleSave(): Promise<void> {
-    if (!formState) {
+    if (!formState || saving) {
       return;
     }
 

@@ -137,7 +137,11 @@ function extractExperienceSections(lines: readonly string[]): ExtractedExperienc
       break;
     }
 
-    if (/^relevant work experience$/i.test(line) || /^core responsibilities$/i.test(line) || /^selected achievements$/i.test(line)) {
+    if (
+      /^relevant work experience$/i.test(line) ||
+      /^core responsibilities$/i.test(line) ||
+      /^selected achievements$/i.test(line)
+    ) {
       continue;
     }
 
@@ -176,7 +180,10 @@ function extractSkills(blocks: readonly string[]): string[] {
   const knowledgeBlock = blocks.find(block => /^knowledge/i.test(block));
   if (!knowledgeBlock) return [];
 
-  const lines = knowledgeBlock.split('\n').map(line => line.trim()).filter(Boolean);
+  const lines = knowledgeBlock
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
   const skills = new Set<string>();
 
   for (const line of lines) {
@@ -203,7 +210,10 @@ function extractEducation(blocks: readonly string[]): ExtractedEducation[] {
   const educationBlock = blocks.find(block => /^education/i.test(block));
   if (!educationBlock) return [];
 
-  const lines = educationBlock.split('\n').map(line => line.trim()).filter(Boolean);
+  const lines = educationBlock
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
   const queue = lines.filter(line => !/^education/i.test(line));
   const entries: ExtractedEducation[] = [];
 
@@ -232,9 +242,16 @@ function extractEducation(blocks: readonly string[]): ExtractedEducation[] {
   return entries;
 }
 
-const CONTACT_STOP_REGEX =
-  /^(languages?|experienced|experience|summary|relevant work experience)/i;
-const JOB_KEYWORDS = ['developer', 'engineer', 'manager', 'coach', 'consultant', 'lead', 'director'];
+const CONTACT_STOP_REGEX = /^(languages?|experienced|experience|summary|relevant work experience)/i;
+const JOB_KEYWORDS = [
+  'developer',
+  'engineer',
+  'manager',
+  'coach',
+  'consultant',
+  'lead',
+  'director',
+];
 
 function looksLikeName(line: string): boolean {
   const tokens = line.trim().split(/\s+/);
@@ -246,7 +263,7 @@ function looksLikeName(line: string): boolean {
     return false;
   }
   // Allow ASCII apostrophes, Unicode left/right single quotes, or hyphens inside names
-  return tokens.every(token => /^[A-Z][a-z'\u2019\u2018-]+$/.test(token));
+  return tokens.every(token => /^[A-Z][a-z'\u2019\u2018\-]+$/.test(token));
 }
 
 function extractPersonalInfo(lines: readonly string[]): ExtractedPersonalInfo {

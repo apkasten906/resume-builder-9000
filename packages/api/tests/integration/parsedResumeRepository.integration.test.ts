@@ -3,11 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
-import {
-  connectDatabase,
-  closeDatabase,
-  insertResume,
-} from '../../src/db.js';
+import { connectDatabase, closeDatabase, insertResume } from '../../src/db.js';
 import {
   upsertParsedResume,
   getParsedResumeByUser,

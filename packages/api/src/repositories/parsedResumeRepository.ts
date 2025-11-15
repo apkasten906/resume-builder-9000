@@ -46,6 +46,8 @@ const DEFAULT_PERSONAL_INFO: ParsedPersonalInfo = {
   websites: [],
 };
 
+// Parsed resume structures only contain JSON-serializable primitives/arrays,
+// so JSON cloning is safe for copying their shape.
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
@@ -111,6 +113,9 @@ function parseSnapshot(snapshot: string): ParsedResumeFields {
     }
   } catch (error) {
     logger.error('Failed to parse resume snapshot', { error });
+    logger.warn('Falling back to empty parsed resume snapshot due to parse failure', {
+      snapshot: snapshot,
+    });
     // Ignore parse errors and fall back to an empty structure
   }
   return createEmptyParsedResume();
@@ -146,16 +151,35 @@ function mapHistoryRow(row: ParsedResumeHistoryRow): ParsedResumeHistoryEntry {
   return ParsedResumeHistoryEntrySchema.parse(candidate);
 }
 
+function toUndefined<T>(value: T | null | undefined): T | undefined {
+  return value === null ? undefined : value;
+}
+
+function normalizePersonalInfo(info: ParsedPersonalInfo | null | undefined): ParsedPersonalInfo {
+  const normalized = info ?? clone(DEFAULT_PERSONAL_INFO);
+  return {
+    name: toUndefined(normalized.name),
+    emails: Array.isArray(normalized.emails) ? normalized.emails : clone(EMPTY_STRINGS),
+    phones: Array.isArray(normalized.phones) ? normalized.phones : clone(EMPTY_STRINGS),
+    addresses: Array.isArray(normalized.addresses) ? normalized.addresses : clone(EMPTY_STRINGS),
+    websites: Array.isArray(normalized.websites) ? normalized.websites : clone(EMPTY_STRINGS),
+  };
+}
+
+function ensureArray<T>(value: T[] | null | undefined, fallback: T[]): T[] {
+  return Array.isArray(value) ? value : clone(fallback);
+}
+
 function normalizeRecordForFingerprint(record: ParsedResumeRecord) {
   return {
-    parsedSummary: record.parsedSummary ?? undefined,
-    personalInfo: record.personalInfo ?? clone(DEFAULT_PERSONAL_INFO),
-    experience: Array.isArray(record.experience) ? record.experience : clone(EMPTY_EXPERIENCE),
-    skills: Array.isArray(record.skills) ? record.skills : clone(EMPTY_STRINGS),
-    education: Array.isArray(record.education) ? record.education : clone(EMPTY_EDUCATION),
-    certifications: Array.isArray(record.certifications) ? record.certifications : clone(EMPTY_STRINGS),
-    awards: Array.isArray(record.awards) ? record.awards : clone(EMPTY_STRINGS),
-    hobbies: Array.isArray(record.hobbies) ? record.hobbies : clone(EMPTY_STRINGS),
+    parsedSummary: toUndefined(record.parsedSummary),
+    personalInfo: normalizePersonalInfo(record.personalInfo),
+    experience: ensureArray(record.experience, EMPTY_EXPERIENCE),
+    skills: ensureArray(record.skills, EMPTY_STRINGS),
+    education: ensureArray(record.education, EMPTY_EDUCATION),
+    certifications: ensureArray(record.certifications, EMPTY_STRINGS),
+    awards: ensureArray(record.awards, EMPTY_STRINGS),
+    hobbies: ensureArray(record.hobbies, EMPTY_STRINGS),
   };
 }
 
@@ -190,9 +214,8 @@ function recordHistory(db: SQLiteDatabase, existing: ParsedResumeRow): void {
   const historyId = randomUUID();
   const snapshot = serialize(mapRow(existing));
   const createdAt = new Date().toISOString();
-  db
-    .prepare(
-      `INSERT INTO profile_parsed_fields_history (
+  db.prepare(
+    `INSERT INTO profile_parsed_fields_history (
         id,
         parsed_resume_id,
         user_id,
@@ -200,8 +223,7 @@ function recordHistory(db: SQLiteDatabase, existing: ParsedResumeRow): void {
         snapshot,
         created_at
       ) VALUES (?, ?, ?, ?, ?, ?)`
-    )
-    .run(historyId, existing.id, existing.user_id, existing.upload_id, snapshot, createdAt);
+  ).run(historyId, existing.id, existing.user_id, existing.upload_id, snapshot, createdAt);
 }
 
 export function upsertParsedResume(
@@ -215,15 +237,17 @@ export function upsertParsedResume(
   const selectExistingQuery = isNull
     ? `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id IS NULL LIMIT 1`
     : `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id = ? LIMIT 1`;
-  const existing = db
-    .prepare(selectExistingQuery)
-    .get(userId, ...(isNull ? [] : args)) as ParsedResumeRow | undefined;
+  const existing = db.prepare(selectExistingQuery).get(userId, ...(isNull ? [] : args)) as
+    | ParsedResumeRow
+    | undefined;
 
   const personalInfo = payload.personalInfo ?? DEFAULT_PERSONAL_INFO;
   const experience = payload.experience ? clone(payload.experience) : clone(EMPTY_EXPERIENCE);
   const skills = payload.skills ? clone(payload.skills) : clone(EMPTY_STRINGS);
   const education = payload.education ? clone(payload.education) : clone(EMPTY_EDUCATION);
-  const certifications = payload.certifications ? clone(payload.certifications) : clone(EMPTY_STRINGS);
+  const certifications = payload.certifications
+    ? clone(payload.certifications)
+    : clone(EMPTY_STRINGS);
   const awards = payload.awards ? clone(payload.awards) : clone(EMPTY_STRINGS);
   const hobbies = payload.hobbies ? clone(payload.hobbies) : clone(EMPTY_STRINGS);
 

@@ -404,7 +404,8 @@ export const openApiSpec = createDocument({
     '/api/resumes/{id}/parsed-fields/history': {
       get: {
         summary: 'Get parsed resume change history',
-        description: 'Retrieve the historical snapshots of parsed resume fields for the authenticated user.',
+        description:
+          'Retrieve the historical snapshots of parsed resume fields for the authenticated user.',
         parameters: [
           {
             name: 'id',

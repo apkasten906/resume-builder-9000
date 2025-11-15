@@ -309,7 +309,11 @@ describe('API Routes', () => {
       .post('/api/resumes/test-resume-id/parsed-fields/history/history-1/restore')
       .set('Authorization', 'Bearer token');
 
-    expect(mockedRestoreParsedResumeFromHistory).toHaveBeenCalledWith('user-1', 'test-resume-id', 'history-1');
+    expect(mockedRestoreParsedResumeFromHistory).toHaveBeenCalledWith(
+      'user-1',
+      'test-resume-id',
+      'history-1'
+    );
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty('error', 'History entry not found');
   });

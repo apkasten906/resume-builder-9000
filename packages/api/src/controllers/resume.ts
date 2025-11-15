@@ -218,19 +218,19 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
       emails:
         extracted.personalInfo.emails.length > 0
           ? extracted.personalInfo.emails
-          : legacyParsed.personalInfo?.emails ?? [],
+          : (legacyParsed.personalInfo?.emails ?? []),
       phones:
         extracted.personalInfo.phones.length > 0
           ? extracted.personalInfo.phones
-          : legacyParsed.personalInfo?.phones ?? [],
+          : (legacyParsed.personalInfo?.phones ?? []),
       addresses:
         extracted.personalInfo.addresses.length > 0
           ? extracted.personalInfo.addresses
-          : legacyParsed.personalInfo?.addresses ?? [],
+          : (legacyParsed.personalInfo?.addresses ?? []),
       websites:
         extracted.personalInfo.websites.length > 0
           ? extracted.personalInfo.websites
-          : legacyParsed.personalInfo?.websites ?? [],
+          : (legacyParsed.personalInfo?.websites ?? []),
     };
     combinedPersonalInfo.emails = Array.from(new Set(combinedPersonalInfo.emails));
     combinedPersonalInfo.phones = Array.from(new Set(combinedPersonalInfo.phones));
@@ -352,14 +352,16 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
 
       const authenticatedUser = await authService.getUserFromRequest(req);
       if (authenticatedUser) {
-        const experienceEntries: ParsedExperience[] = resumeDataTyped.experience.map((exp, index) => ({
-          id: `${storedId}-exp-${index}`,
-          title: exp.title,
-          company: exp.company,
-          startDate: exp.startDate,
-          endDate: exp.endDate,
-          description: exp.responsibilities.join('\n'),
-        }));
+        const experienceEntries: ParsedExperience[] = resumeDataTyped.experience.map(
+          (exp, index) => ({
+            id: `${storedId}-exp-${index}`,
+            title: exp.title,
+            company: exp.company,
+            startDate: exp.startDate,
+            endDate: exp.endDate,
+            description: exp.responsibilities.join('\n'),
+          })
+        );
 
         upsertParsedResume(authenticatedUser.id, storedId, {
           parsedSummary: summary,
@@ -385,7 +387,9 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
           hobbies: [],
         });
       } else {
-        logger.warn('Resume parsed without authenticated user context; skipping parsed field storage');
+        logger.warn(
+          'Resume parsed without authenticated user context; skipping parsed field storage'
+        );
       }
 
       // Return parsed data with id and createdAt so the client can refresh Recent Uploads

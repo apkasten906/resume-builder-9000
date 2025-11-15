@@ -45,7 +45,10 @@ function shouldLog(messageLevel: LevelName, threshold: LevelName): boolean {
   return LEVEL_WEIGHTS[messageLevel] >= LEVEL_WEIGHTS[threshold];
 }
 
-function buildPayload(base: Record<string, unknown>, meta: unknown): Record<string, unknown> | undefined {
+function buildPayload(
+  base: Record<string, unknown>,
+  meta: unknown
+): Record<string, unknown> | undefined {
   const payload: Record<string, unknown> = { ...base };
 
   if (isRecord(meta)) {

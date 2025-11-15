@@ -108,14 +108,8 @@ export function connectDatabase(): SQLiteDatabase {
   ensureParsedColumn('certifications', 'TEXT');
   ensureParsedColumn('awards', 'TEXT');
   ensureParsedColumn('hobbies', 'TEXT');
-  ensureParsedColumn(
-    'created_at',
-    "TEXT NOT NULL DEFAULT (datetime('now'))"
-  );
-  ensureParsedColumn(
-    'updated_at',
-    "TEXT NOT NULL DEFAULT (datetime('now'))"
-  );
+  ensureParsedColumn('created_at', "TEXT NOT NULL DEFAULT (datetime('now'))");
+  ensureParsedColumn('updated_at', "TEXT NOT NULL DEFAULT (datetime('now'))");
 
   db.exec(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_profile_parsed_fields_user_upload

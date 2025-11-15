@@ -28,7 +28,9 @@ interface ParsedFieldsResponse {
   history: ParsedResumeHistoryEntry[];
 }
 
-function buildDefaultsFromResume(resume: ReturnType<typeof getResumeFromDb>): ParsedResumeUpsertInput {
+function buildDefaultsFromResume(
+  resume: ReturnType<typeof getResumeFromDb>
+): ParsedResumeUpsertInput {
   if (!resume) {
     return {};
   }
@@ -42,8 +44,11 @@ function buildDefaultsFromResume(resume: ReturnType<typeof getResumeFromDb>): Pa
       emails: personalInfoDefaults.email ? [personalInfoDefaults.email] : [],
       phones: personalInfoDefaults.phone ? [personalInfoDefaults.phone] : [],
       addresses: personalInfoDefaults.location ? [personalInfoDefaults.location] : [],
-      websites: [personalInfoDefaults.linkedIn, personalInfoDefaults.website, personalInfoDefaults.github]
-        .filter((value): value is string => !!value),
+      websites: [
+        personalInfoDefaults.linkedIn,
+        personalInfoDefaults.website,
+        personalInfoDefaults.github,
+      ].filter((value): value is string => !!value),
     },
     experience: resume.resumeData.experience.map((experience, index) => ({
       id: `${resume.id}-exp-${index}`,
@@ -68,17 +73,11 @@ function buildDefaultsFromResume(resume: ReturnType<typeof getResumeFromDb>): Pa
   };
 }
 
-function respondWithParsedFields(
-  res: Response,
-  payload: ParsedFieldsResponse
-): void {
+function respondWithParsedFields(res: Response, payload: ParsedFieldsResponse): void {
   res.json(payload);
 }
 
-export async function getResumeParsedFields(
-  req: Request,
-  res: Response
-): Promise<void> {
+export async function getResumeParsedFields(req: Request, res: Response): Promise<void> {
   const authedRequest = req as AuthenticatedRequest;
   const uploadId = req.params.id;
   if (!uploadId) {
@@ -106,10 +105,7 @@ export async function getResumeParsedFields(
   respondWithParsedFields(res, { parsedFields: created, history: [] });
 }
 
-export async function updateResumeParsedFields(
-  req: Request,
-  res: Response
-): Promise<void> {
+export async function updateResumeParsedFields(req: Request, res: Response): Promise<void> {
   const authedRequest = req as AuthenticatedRequest;
   const uploadId = req.params.id;
   if (!uploadId) {
@@ -130,10 +126,7 @@ export async function updateResumeParsedFields(
   respondWithParsedFields(res, { parsedFields: updated, history });
 }
 
-export async function getResumeParsedFieldsHistory(
-  req: Request,
-  res: Response
-): Promise<void> {
+export async function getResumeParsedFieldsHistory(req: Request, res: Response): Promise<void> {
   const authedRequest = req as AuthenticatedRequest;
   const uploadId = req.params.id;
   if (!uploadId) {
@@ -145,10 +138,7 @@ export async function getResumeParsedFieldsHistory(
   res.json({ history });
 }
 
-export async function restoreResumeParsedFields(
-  req: Request,
-  res: Response
-): Promise<void> {
+export async function restoreResumeParsedFields(req: Request, res: Response): Promise<void> {
   const authedRequest = req as AuthenticatedRequest;
   const uploadId = req.params.id;
   const historyId = req.params.historyId;

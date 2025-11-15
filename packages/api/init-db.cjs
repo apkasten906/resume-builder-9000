@@ -46,15 +46,24 @@ const ALLOWED_TABLE_COLUMNS = {
 
 function tableColumns(tableName) {
   if (!(tableName in ALLOWED_TABLE_COLUMNS)) {
-    throw new Error(`Unsupported table requested: ${tableName}`);
+    console.warn(`Unsupported table requested: ${tableName}. Skipping introspection.`);
+    return [];
   }
-  return db.prepare(`PRAGMA table_info(${tableName})`).all().map(col => col.name);
+  return db
+    .prepare(`PRAGMA table_info(${tableName})`)
+    .all()
+    .map(col => col.name);
 }
 
 function ensureColumn(tableName, columnName, definition) {
   const allowedColumns = ALLOWED_TABLE_COLUMNS[tableName];
-  if (!allowedColumns || !allowedColumns.has(columnName)) {
-    throw new Error(`Unsupported column requested: ${tableName}.${columnName}`);
+  if (!allowedColumns) {
+    console.warn(`Unsupported table requested: ${tableName}. Skipping column ensure.`);
+    return;
+  }
+  if (!allowedColumns.has(columnName)) {
+    console.warn(`Unsupported column requested: ${tableName}.${columnName}. Skipping.`);
+    return;
   }
   const columns = tableColumns(tableName);
   if (!columns.includes(columnName)) {
@@ -137,16 +146,8 @@ ensureColumn('profile_parsed_fields', 'education', 'TEXT');
 ensureColumn('profile_parsed_fields', 'certifications', 'TEXT');
 ensureColumn('profile_parsed_fields', 'awards', 'TEXT');
 ensureColumn('profile_parsed_fields', 'hobbies', 'TEXT');
-ensureColumn(
-  'profile_parsed_fields',
-  'created_at',
-  "TEXT NOT NULL DEFAULT (datetime('now'))"
-);
-ensureColumn(
-  'profile_parsed_fields',
-  'updated_at',
-  "TEXT NOT NULL DEFAULT (datetime('now'))"
-);
+ensureColumn('profile_parsed_fields', 'created_at', "TEXT NOT NULL DEFAULT (datetime('now'))");
+ensureColumn('profile_parsed_fields', 'updated_at', "TEXT NOT NULL DEFAULT (datetime('now'))");
 
 ensureIndex(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_profile_parsed_fields_user_upload
