@@ -42,6 +42,15 @@ export interface ParsedResumeFieldsPayload {
   readonly updatedAt: string;
 }
 
+export interface ParsedResumeHistoryEntry {
+  readonly id: string;
+  readonly parsedResumeId: string;
+  readonly userId: string;
+  readonly uploadId: string | null;
+  readonly snapshot: ParsedResumeFieldsPayload;
+  readonly createdAt: string;
+}
+
 export interface ParsedResumeUpdateRequest {
   readonly parsedSummary?: string;
   readonly personalInfo?: ParsedResumePersonalInfo;
@@ -51,6 +60,11 @@ export interface ParsedResumeUpdateRequest {
   readonly certifications?: readonly string[];
   readonly awards?: readonly string[];
   readonly hobbies?: readonly string[];
+}
+
+export interface ParsedResumeRestoreRequest {
+  readonly uploadId: string;
+  readonly historyId: string;
 }
 
 export interface StoredResumeResponse {
@@ -63,6 +77,7 @@ export interface StoredResumeResponse {
 
 export interface ResumeDetailsApiResponse {
   readonly parsedFields: ParsedResumeFieldsPayload;
+  readonly history: readonly ParsedResumeHistoryEntry[];
   readonly resume: StoredResumeResponse | null;
   readonly resumeError?: unknown;
 }

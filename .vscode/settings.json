@@ -15,8 +15,9 @@
   "playwright.env": {},
   "testing.automaticallyOpenPeekView": "never",
   "testExplorer.addToEditorContextMenu": true,
-  "javascript.suggest.completeFunctionCalls": true,
   "typescript.suggest.completeFunctionCalls": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always"

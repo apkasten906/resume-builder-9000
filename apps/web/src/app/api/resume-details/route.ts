@@ -1,23 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-function buildAuthHeaders(req: NextRequest): Record<string, string> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  const authHeader = req.headers.get('authorization');
-  if (authHeader) {
-    headers.Authorization = authHeader;
-    return headers;
-  }
-
-  const sessionCookie = req.cookies.get('session');
-  if (sessionCookie) {
-    headers.Authorization = `Bearer ${sessionCookie.value}`;
-  }
-
-  return headers;
-}
+import { buildAuthHeaders } from './utils';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const uploadId = req.nextUrl.searchParams.get('id');
@@ -45,7 +27,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     });
   }
 
-  const parsedFields = await parsedFieldsResponse.json();
+  const parsedPayload = await parsedFieldsResponse.json();
+  const parsedFields = parsedPayload.parsedFields ?? parsedPayload;
+  const history = parsedPayload.history ?? [];
 
   const resumeResponse = await fetch(`${apiBase}/api/resumes/${uploadId}`, {
     method: 'GET',
@@ -58,6 +42,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       {
         parsedFields,
+        history,
         resume: null,
         resumeError,
       },
@@ -66,7 +51,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const resume = await resumeResponse.json();
-  return NextResponse.json({ parsedFields, resume }, { status: 200 });
+  return NextResponse.json({ parsedFields, history, resume }, { status: 200 });
 }
 
 export async function PUT(req: NextRequest): Promise<NextResponse> {
@@ -87,5 +72,11 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
   });
 
   const data = await response.json().catch(() => ({}));
-  return NextResponse.json(data, { status: response.status });
+  if (!response.ok) {
+    return NextResponse.json(data, { status: response.status });
+  }
+
+  const parsedFields = data?.parsedFields ?? data;
+  const history = data?.history ?? [];
+  return NextResponse.json({ parsedFields, history }, { status: response.status });
 }

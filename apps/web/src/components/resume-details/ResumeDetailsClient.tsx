@@ -16,6 +16,8 @@ import type {
   ParsedResumeEducation,
   ResumeDetailsApiResponse,
   StoredResumeResponse,
+  ParsedResumeHistoryEntry,
+  ParsedResumeRestoreRequest,
 } from '@/types/resume-details';
 
 interface ResumeDetailsClientProps {
@@ -49,73 +51,128 @@ function serializeMultiline(values: readonly string[]): string {
   return values.join('\n');
 }
 
-function genLocalId(prefix: string, index: number): string {
-  // Use crypto.randomUUID() when available (more collision-resistant). Fallback to
-  // a timestamp+random string for older browsers.
-  const webCrypto =
-    typeof crypto !== 'undefined'
-      ? (crypto as unknown as { randomUUID?: () => string })
-      : undefined;
+type CloneFunction = <TValue>(value: TValue) => TValue;
 
-  let uuid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
-  if (webCrypto && typeof webCrypto.randomUUID === 'function') {
-    uuid = webCrypto.randomUUID();
+function deepClone<T>(value: T): T {
+  const structuredCloneFn = (globalThis as { structuredClone?: CloneFunction }).structuredClone;
+  if (structuredCloneFn && typeof structuredCloneFn === 'function') {
+    return structuredCloneFn(value);
   }
-
-  return `${prefix}-${index}-${uuid}`;
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
 function mapExperienceToState(
   experience: readonly ParsedResumeExperience[]
 ): ParsedResumeExperience[] {
-  return experience.map((entry, idx) => ({
-    ...entry,
-    id: entry.id ?? genLocalId('exp', idx),
-  }));
+  return experience.map(entry => deepClone(entry));
 }
 
 function mapEducationToState(education: readonly ParsedResumeEducation[]): ParsedResumeEducation[] {
-  return education.map((entry, idx) => ({
+  return education.map(entry => deepClone(entry));
+}
+
+function cloneParsedFields(payload: ParsedResumeFieldsPayload): FormState {
+  return {
+    ...payload,
+    experience: mapExperienceToState(payload.experience),
+    education: mapEducationToState(payload.education),
+    skills: [...payload.skills],
+    certifications: [...payload.certifications],
+    awards: [...payload.awards],
+    hobbies: [...payload.hobbies],
+    personalInfo: {
+      ...payload.personalInfo,
+      emails: [...payload.personalInfo.emails],
+      phones: [...payload.personalInfo.phones],
+      addresses: [...payload.personalInfo.addresses],
+      websites: [...payload.personalInfo.websites],
+    },
+  };
+}
+
+function buildUpdatePayload(state: FormState): ParsedResumeUpdateRequest {
+  return {
+    parsedSummary: state.parsedSummary ?? undefined,
+    personalInfo: {
+      name: state.personalInfo.name ?? undefined,
+      emails: [...state.personalInfo.emails],
+      phones: [...state.personalInfo.phones],
+      addresses: [...state.personalInfo.addresses],
+      websites: [...state.personalInfo.websites],
+    },
+    experience: mapExperienceToState(state.experience),
+    skills: [...state.skills],
+    education: mapEducationToState(state.education),
+    certifications: [...state.certifications],
+    awards: [...state.awards],
+    hobbies: [...state.hobbies],
+  };
+}
+
+function normalizeUndefinedToNull<T>(input: T): T {
+  if (Array.isArray(input)) {
+    return input.map(item =>
+      item === undefined ? null : normalizeUndefinedToNull(item)
+    ) as unknown as T;
+  }
+  if (input && typeof input === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(input)) {
+      result[key] = value === undefined ? null : normalizeUndefinedToNull(value);
+    }
+    return result as T;
+  }
+  return input;
+}
+
+function fingerprintPayload(payload: ParsedResumeUpdateRequest): string {
+  return JSON.stringify(normalizeUndefinedToNull(payload));
+}
+
+function cloneHistoryEntry(entry: ParsedResumeHistoryEntry): ParsedResumeHistoryEntry {
+  return {
     ...entry,
-    id: entry.id ?? genLocalId('edu', idx),
-  }));
+    snapshot: cloneParsedFields(entry.snapshot),
+  };
+}
+
+function formatSummaryPreview(entry: ParsedResumeHistoryEntry): string {
+  const summary = entry.snapshot.parsedSummary ?? '';
+  if (!summary) {
+    return 'No summary recorded in this snapshot.';
+  }
+  const normalized = summary.replace(/\s+/g, ' ').trim();
+  return normalized.length > 140 ? `${normalized.slice(0, 137)}…` : normalized;
 }
 
 export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): React.ReactElement {
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectionError, setSelectionError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [formState, setFormState] = useState<FormState | null>(null);
   const [resumeData, setResumeData] = useState<StoredResumeResponse | null>(null);
+  const [history, setHistory] = useState<ParsedResumeHistoryEntry[]>([]);
+  const [restoringHistoryId, setRestoringHistoryId] = useState<string | null>(null);
+  const [lastSavedFingerprint, setLastSavedFingerprint] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     async function loadDetails(): Promise<void> {
       setLoading(true);
-      setError(null);
+      setLoadError(null);
+      setSaveError(null);
       try {
         const response = await API.resumeDetails.get<ResumeDetailsApiResponse>(`?id=${uploadId}`);
-        setFormState({
-          ...response.parsedFields,
-          experience: mapExperienceToState(response.parsedFields.experience),
-          education: mapEducationToState(response.parsedFields.education),
-          skills: [...response.parsedFields.skills],
-          certifications: [...response.parsedFields.certifications],
-          awards: [...response.parsedFields.awards],
-          hobbies: [...response.parsedFields.hobbies],
-          personalInfo: {
-            ...response.parsedFields.personalInfo,
-            emails: [...response.parsedFields.personalInfo.emails],
-            phones: [...response.parsedFields.personalInfo.phones],
-            addresses: [...response.parsedFields.personalInfo.addresses],
-            websites: [...response.parsedFields.personalInfo.websites],
-          },
-        });
+        const cloned = cloneParsedFields(response.parsedFields);
+        setFormState(cloned);
+        setLastSavedFingerprint(fingerprintPayload(buildUpdatePayload(cloned)));
         setResumeData(response.resume);
+        setHistory(response.history.map(cloneHistoryEntry));
       } catch (err) {
         console.error('Failed to load resume details', err);
-        setError('Unable to load resume details. Please try again later.');
+        setLoadError('Unable to load resume details. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -139,58 +196,94 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
   }, [resumeData]);
 
   async function handleSave(): Promise<void> {
-    if (!formState) {
+    if (!formState || saving) {
       return;
     }
 
     setSaving(true);
     setSelectionError(null);
-    setError(null);
+    setSaveError(null);
 
-    const payload: ParsedResumeUpdateRequest = {
-      parsedSummary: formState.parsedSummary,
-      personalInfo: {
-        name: formState.personalInfo.name,
-        emails: [...formState.personalInfo.emails],
-        phones: [...formState.personalInfo.phones],
-        addresses: [...formState.personalInfo.addresses],
-        websites: [...formState.personalInfo.websites],
-      },
-      experience: mapExperienceToState(formState.experience),
-      skills: [...formState.skills],
-      education: mapEducationToState(formState.education),
-      certifications: [...formState.certifications],
-      awards: [...formState.awards],
-      hobbies: [...formState.hobbies],
-    };
+    const payload = buildUpdatePayload(formState);
+    const optimisticFingerprint = fingerprintPayload(payload);
+    const previousFingerprint = lastSavedFingerprint;
+
+    setLastSavedFingerprint(optimisticFingerprint);
 
     try {
       const updated = await API.resumeDetails.put<
         ParsedResumeUpdateRequest,
-        ParsedResumeFieldsPayload
+        ResumeDetailsApiResponse
       >(payload, `?id=${uploadId}`);
-      setFormState({
-        ...updated,
-        experience: mapExperienceToState(updated.experience),
-        education: mapEducationToState(updated.education),
-        skills: [...updated.skills],
-        certifications: [...updated.certifications],
-        awards: [...updated.awards],
-        hobbies: [...updated.hobbies],
-        personalInfo: {
-          ...updated.personalInfo,
-          emails: [...updated.personalInfo.emails],
-          phones: [...updated.personalInfo.phones],
-          addresses: [...updated.personalInfo.addresses],
-          websites: [...updated.personalInfo.websites],
-        },
-      });
+      const normalized = cloneParsedFields(updated.parsedFields);
+      setFormState(normalized);
+      setLastSavedFingerprint(fingerprintPayload(buildUpdatePayload(normalized)));
+      setHistory(updated.history.map(cloneHistoryEntry));
       toast({ title: 'Changes saved', description: 'Parsed resume details updated successfully.' });
     } catch (err) {
       console.error('Failed to save parsed resume details', err);
-      setError('Unable to save changes. Please try again.');
+      setSaveError('Unable to save changes. Please try again.');
+      setLastSavedFingerprint(previousFingerprint ?? null);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleRestore(historyId: string): Promise<void> {
+    setRestoringHistoryId(historyId);
+    setSelectionError(null);
+    setSaveError(null);
+
+    try {
+      const restored = await API.resumeDetails.post<
+        ParsedResumeRestoreRequest,
+        ResumeDetailsApiResponse
+      >({ uploadId, historyId }, '/history/restore');
+      const normalized = cloneParsedFields(restored.parsedFields);
+      setFormState(normalized);
+      setLastSavedFingerprint(fingerprintPayload(buildUpdatePayload(normalized)));
+      setHistory(restored.history.map(cloneHistoryEntry));
+      toast({
+        title: 'Snapshot restored',
+        description: 'Parsed resume fields reverted successfully.',
+      });
+    } catch (err) {
+      console.error('Failed to restore parsed resume snapshot', err);
+      setSaveError('Unable to restore this snapshot. Please try again.');
+    } finally {
+      setRestoringHistoryId(null);
+    }
+  }
+
+  function handleDownload(): void {
+    if (!formState) {
+      toast({
+        title: 'Download unavailable',
+        description: 'Resume details are still loading. Please try again shortly.',
+      });
+      return;
+    }
+
+    try {
+      const exportBlob = new Blob([JSON.stringify(formState, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(exportBlob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `parsed-resume-${uploadId}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 0);
+    } catch (err) {
+      console.error('Failed to download parsed resume fields', err);
+      toast({
+        title: 'Download failed',
+        description: 'Unable to export parsed resume fields. Please try again.',
+      });
     }
   }
 
@@ -327,6 +420,44 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
     }
   }
 
+  const currentPayload = useMemo(
+    () => (formState ? buildUpdatePayload(formState) : null),
+    [formState]
+  );
+
+  const currentFingerprint = useMemo(
+    () => (currentPayload ? fingerprintPayload(currentPayload) : null),
+    [currentPayload]
+  );
+
+  const restoring = restoringHistoryId !== null;
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!currentFingerprint) {
+      return false;
+    }
+    if (!lastSavedFingerprint) {
+      return true;
+    }
+    return currentFingerprint !== lastSavedFingerprint;
+  }, [currentFingerprint, lastSavedFingerprint]);
+
+  const statusMessage = restoring
+    ? 'Restoring snapshot...'
+    : hasUnsavedChanges
+      ? 'Unsaved changes'
+      : saving
+        ? 'All changes saved • Syncing...'
+        : 'All changes saved';
+
+  const statusClassName = restoring
+    ? 'text-blue-600 dark:text-blue-400'
+    : hasUnsavedChanges
+      ? 'text-amber-600 dark:text-amber-400'
+      : saving
+        ? 'text-blue-600 dark:text-blue-400'
+        : 'text-emerald-600 dark:text-emerald-400';
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -340,7 +471,7 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
     );
   }
 
-  if (error) {
+  if (loadError) {
     return (
       <ProtectedRoute>
         <div className="mx-auto max-w-3xl">
@@ -350,7 +481,7 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
             </CardHeader>
             <CardContent>
               <p className="text-red-600" role="alert">
-                {error}
+                {loadError}
               </p>
             </CardContent>
           </Card>
@@ -388,6 +519,7 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
               <Textarea
                 label="Summary"
                 value={formState.parsedSummary ?? ''}
+                data-testid="parsed-summary-input"
                 onChange={event =>
                   setFormState({ ...formState, parsedSummary: event.currentTarget.value })
                 }
@@ -575,6 +707,7 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
                 label="Skills"
                 helperText="One skill per line"
                 value={serializeMultiline(formState.skills)}
+                data-testid="skills-textarea"
                 onChange={event =>
                   setFormState({ ...formState, skills: parseMultiline(event.currentTarget.value) })
                 }
@@ -609,10 +742,37 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
             </CardContent>
           </Card>
 
-          <div className="flex justify-end">
-            <Button type="button" onClick={() => void handleSave()} disabled={saving}>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleDownload}
+              disabled={restoring}
+              data-testid="download-parsed-json-button"
+            >
+              Download JSON
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving || restoring || !hasUnsavedChanges}
+              data-testid="save-changes-button"
+            >
               {saving ? 'Saving...' : 'Save Changes'}
             </Button>
+          </div>
+          <div className="space-y-2">
+            <p
+              className={`text-sm font-medium ${statusClassName}`}
+              data-testid="save-status-message"
+            >
+              {statusMessage}
+            </p>
+            {saveError && (
+              <p className="text-sm text-red-600" role="alert" data-testid="save-error-message">
+                {saveError}
+              </p>
+            )}
           </div>
         </div>
 
@@ -625,6 +785,7 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
               <div
                 ref={previewRef}
                 className="prose max-h-[540px] overflow-auto rounded-lg border p-4 text-sm"
+                data-testid="resume-preview"
               >
                 <pre className="whitespace-pre-wrap break-words">{previewMarkdown}</pre>
               </div>
@@ -678,14 +839,61 @@ export function ResumeDetailsClient({ uploadId }: ResumeDetailsClientProps): Rea
             </CardContent>
           </Card>
 
+          <Card data-testid="parsed-history-card">
+            <CardHeader>
+              <CardTitle>Change History</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {history.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No edits have been saved yet.</p>
+              ) : (
+                <ul className="space-y-3" data-testid="parsed-history-list">
+                  {history.slice(0, 5).map(entry => (
+                    <li
+                      key={entry.id}
+                      className="rounded-lg border p-3"
+                      data-testid="parsed-history-entry"
+                    >
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(entry.createdAt).toLocaleString()}
+                      </p>
+                      <p className="text-sm font-medium">
+                        {entry.snapshot.personalInfo.name || 'Unnamed candidate'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{formatSummaryPreview(entry)}</p>
+                      <div className="mt-2 flex justify-end">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => void handleRestore(entry.id)}
+                          disabled={restoring}
+                          data-testid="parsed-history-restore-button"
+                        >
+                          {restoringHistoryId === entry.id ? 'Restoring…' : 'Restore snapshot'}
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {history.length > 5 && (
+                <p className="text-xs text-muted-foreground">
+                  Showing the 5 most recent updates out of {history.length} snapshots.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
           {resumeData && (
             <Card>
               <CardHeader>
                 <CardTitle>Upload Metadata</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <p>
-                  <span className="font-medium">File:</span> {resumeData.content}
+                <p className="break-all">
+                  <span className="font-medium">File:</span>{' '}
+                  <span className="break-all">{resumeData.content}</span>
                 </p>
                 <p>
                   <span className="font-medium">Uploaded:</span>{' '}

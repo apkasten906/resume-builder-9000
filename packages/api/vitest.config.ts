@@ -18,6 +18,10 @@ export default defineConfig({
     alias: {
       '@rb9k/core': path.resolve(__dirname, '../core/src/index.ts'),
       '@rb9k/core/testLogger': path.resolve(__dirname, '../core/src/testLogger.ts'),
+      pino: path.resolve(__dirname, 'tests/mocks/pino.ts'),
+      bcryptjs: path.resolve(__dirname, 'tests/mocks/bcryptjs.ts'),
+      jsonwebtoken: path.resolve(__dirname, 'tests/mocks/jsonwebtoken.ts'),
+      resend: path.resolve(__dirname, 'tests/mocks/resend.ts'),
     },
   },
 });

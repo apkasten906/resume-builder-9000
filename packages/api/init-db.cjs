@@ -1,152 +1,188 @@
 #!/usr/bin/env node
 /**
- * Database Initialization Script for Docker Container
+ * Initialize the SQLite database with the core schema used by the API service.
  *
- * This script ensures the database schema is created before the API server starts.
- * It runs migrations and creates required tables if they don't exist.
+ * This script mirrors the table definitions in packages/api/src/db.ts so that
+ * local databases created outside the service (for example when seeding data or
+ * preparing automated tests) contain the same structure, including the parsed
+ * resume fields introduced for story #53.
  */
-
-const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
+const Database = require('better-sqlite3');
 
-// Determine database path from environment or use a container-friendly default
-// In the container runtime the production compose mounts data at /app/data
-const dbPath = process.env.DB_PATH || '/app/data/resume.db';
-const dataDir = path.dirname(dbPath);
+const DEFAULT_DB_PATH = path.join(__dirname, 'resume.db');
+const dbPath = process.env.DB_PATH ? path.resolve(process.env.DB_PATH) : DEFAULT_DB_PATH;
 
-console.log('[init-db] Starting database initialization...');
-console.log('[init-db] Database path:', dbPath);
-console.log('[init-db] Data directory:', dataDir);
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-// Ensure data directory exists
-if (!fs.existsSync(dataDir)) {
-  console.log('[init-db] Creating data directory:', dataDir);
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Connect to database
 const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
+
 db.pragma('foreign_keys = ON');
 
-console.log('[init-db] Connected to database');
-
-// Define schema SQL (CREATE TABLE IF NOT EXISTS ensures idempotency)
-const schemaSql = `
--- Core users table for authentication
-CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  email TEXT NOT NULL UNIQUE COLLATE NOCASE,
-  password_hash TEXT NOT NULL,
-  name TEXT,
-  email_confirmed INTEGER DEFAULT 0,
-  email_confirmed_at TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
--- Schema migrations tracking
-CREATE TABLE IF NOT EXISTS schema_migrations (
-  id TEXT PRIMARY KEY,
-  applied_at TEXT NOT NULL
-);
-
--- Resumes table
-CREATE TABLE IF NOT EXISTS resumes (
-  id TEXT PRIMARY KEY,
-  user_id TEXT,
-  content TEXT NOT NULL,
-  resume_data TEXT NOT NULL,
-  job_details TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Applications table for job tracking
-CREATE TABLE IF NOT EXISTS applications (
-  id TEXT PRIMARY KEY,
-  user_id TEXT,
-  company TEXT NOT NULL,
-  role TEXT NOT NULL,
-  location TEXT,
-  stage TEXT NOT NULL CHECK (stage IN ('Prospect','Applied','Interview','Offer','Rejected','Accepted')),
-  last_updated TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  jd_text TEXT,
-  currency TEXT CHECK (currency IN ('USD','EUR','GBP','CAD','AUD')),
-  salary_base REAL,
-  salary_bonus REAL,
-  salary_equity TEXT,
-  salary_notes TEXT,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Application status history
-CREATE TABLE IF NOT EXISTS application_status_history (
-  id TEXT PRIMARY KEY,
-  application_id TEXT NOT NULL,
-  from_stage TEXT,
-  to_stage TEXT NOT NULL,
-  note TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE
-);
-
--- Attachments for applications
-CREATE TABLE IF NOT EXISTS attachments (
-  id TEXT PRIMARY KEY,
-  application_id TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('resume','cover_letter','other')),
-  filename TEXT,
-  mime_type TEXT,
-  url TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE
-);
-
--- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_resumes_user_id ON resumes(user_id);
-CREATE INDEX IF NOT EXISTS idx_applications_user_id ON applications(user_id);
-CREATE INDEX IF NOT EXISTS idx_applications_stage ON applications(stage);
-CREATE INDEX IF NOT EXISTS idx_application_status_history_app_id ON application_status_history(application_id);
-CREATE INDEX IF NOT EXISTS idx_attachments_app_id ON attachments(application_id);
-`;
-
-try {
-  console.log('[init-db] Applying schema...');
-  db.exec(schemaSql);
-  console.log('[init-db] Schema applied successfully');
-
-  // Verify critical tables exist
-  const tables = db
-    .prepare(
-      `
-    SELECT name FROM sqlite_master
-    WHERE type='table'
-    AND name IN ('users', 'applications', 'resumes', 'schema_migrations')
-    ORDER BY name
-  `
-    )
-    .all();
-
-  console.log('[init-db] Verified tables:', tables.map(t => t.name).join(', '));
-
-  // Insert migration record
-  const migrationId = 'docker-init-schema-v1';
-  db.prepare(
-    `
-    INSERT OR IGNORE INTO schema_migrations (id, applied_at)
-    VALUES (?, datetime('now'))
-  `
-  ).run(migrationId);
-
-  console.log('[init-db] Database initialization complete ✓');
-  db.close();
-  process.exit(0);
-} catch (error) {
-  console.error('[init-db] Error during initialization:', error.message);
-  console.error('[init-db] Stack trace:', error.stack);
-  db.close();
-  process.exit(1);
+function ensureTable(sql) {
+  db.exec(sql);
 }
+
+function ensureIndex(sql) {
+  db.exec(sql);
+}
+
+const ALLOWED_TABLE_COLUMNS = {
+  profile_parsed_fields: new Set([
+    'upload_id',
+    'parsed_summary',
+    'personal_info',
+    'experience',
+    'skills',
+    'education',
+    'certifications',
+    'awards',
+    'hobbies',
+    'created_at',
+    'updated_at',
+  ]),
+};
+
+function tableColumns(tableName) {
+  if (!(tableName in ALLOWED_TABLE_COLUMNS)) {
+    console.warn(`Unsupported table requested: ${tableName}. Skipping introspection.`);
+    return [];
+  }
+  return db
+    .prepare(`PRAGMA table_info(${tableName})`)
+    .all()
+    .map(col => col.name);
+}
+
+function ensureColumn(tableName, columnName, definition) {
+  const allowedColumns = ALLOWED_TABLE_COLUMNS[tableName];
+  if (!allowedColumns) {
+    console.warn(`Unsupported table requested: ${tableName}. Skipping column ensure.`);
+    return;
+  }
+  if (!allowedColumns.has(columnName)) {
+    console.warn(`Unsupported column requested: ${tableName}.${columnName}. Skipping.`);
+    return;
+  }
+  const columns = tableColumns(tableName);
+  if (!columns.includes(columnName)) {
+    db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+    console.log(`Added column ${columnName} to ${tableName}`);
+  }
+}
+
+console.log(`Initializing database schema at ${dbPath}`);
+
+ensureTable(`
+  CREATE TABLE IF NOT EXISTS resumes (
+    id TEXT PRIMARY KEY,
+    content TEXT NOT NULL,
+    resume_data TEXT NOT NULL,
+    job_details TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )
+`);
+
+ensureTable(`
+  CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    name TEXT,
+    email_confirmed INTEGER NOT NULL DEFAULT 0,
+    email_confirmed_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )
+`);
+
+ensureTable(`
+  CREATE TABLE IF NOT EXISTS email_verification_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )
+`);
+
+ensureIndex(`
+  CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user_id
+  ON email_verification_tokens(user_id)
+`);
+
+ensureIndex(`
+  CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
+`);
+
+ensureTable(`
+  CREATE TABLE IF NOT EXISTS profile_parsed_fields (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    upload_id TEXT,
+    parsed_summary TEXT,
+    personal_info TEXT,
+    experience TEXT,
+    skills TEXT,
+    education TEXT,
+    certifications TEXT,
+    awards TEXT,
+    hobbies TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (upload_id) REFERENCES resumes(id) ON DELETE SET NULL
+  )
+`);
+
+// Ensure newly introduced columns exist for older databases
+ensureColumn('profile_parsed_fields', 'upload_id', 'TEXT');
+ensureColumn('profile_parsed_fields', 'parsed_summary', 'TEXT');
+ensureColumn('profile_parsed_fields', 'personal_info', 'TEXT');
+ensureColumn('profile_parsed_fields', 'experience', 'TEXT');
+ensureColumn('profile_parsed_fields', 'skills', 'TEXT');
+ensureColumn('profile_parsed_fields', 'education', 'TEXT');
+ensureColumn('profile_parsed_fields', 'certifications', 'TEXT');
+ensureColumn('profile_parsed_fields', 'awards', 'TEXT');
+ensureColumn('profile_parsed_fields', 'hobbies', 'TEXT');
+ensureColumn('profile_parsed_fields', 'created_at', "TEXT NOT NULL DEFAULT (datetime('now'))");
+ensureColumn('profile_parsed_fields', 'updated_at', "TEXT NOT NULL DEFAULT (datetime('now'))");
+
+ensureIndex(`
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_profile_parsed_fields_user_upload
+  ON profile_parsed_fields(user_id, upload_id)
+`);
+
+ensureIndex(`
+  CREATE INDEX IF NOT EXISTS idx_profile_parsed_fields_upload
+  ON profile_parsed_fields(upload_id)
+`);
+
+ensureTable(`
+  CREATE TABLE IF NOT EXISTS profile_parsed_fields_history (
+    id TEXT PRIMARY KEY,
+    parsed_resume_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    upload_id TEXT,
+    snapshot TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (parsed_resume_id) REFERENCES profile_parsed_fields(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (upload_id) REFERENCES resumes(id) ON DELETE SET NULL
+  )
+`);
+
+ensureIndex(`
+  CREATE INDEX IF NOT EXISTS idx_profile_parsed_history_user_upload
+  ON profile_parsed_fields_history(user_id, upload_id, created_at DESC)
+`);
+
+ensureIndex(`
+  CREATE INDEX IF NOT EXISTS idx_profile_parsed_history_resume
+  ON profile_parsed_fields_history(parsed_resume_id)
+`);
+
+console.log('Database schema initialized successfully.');
+
+db.close();

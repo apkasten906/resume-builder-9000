@@ -13,6 +13,7 @@ Summary of changes
 - Remove duplicate `Content-Type` assignment in Next.js proxy route `apps/web/src/app/api/resume-details/route.ts` (headers are set by `buildAuthHeaders`).
 - Extracted `UploadItem` test type into `apps/web/tests/helpers/types.ts` and updated tests to import it.
 - Make client-side resume details entries generate stable-ish IDs when missing to avoid using array index as React keys: `apps/web/src/components/resume-details/ResumeDetailsClient.tsx`.
+- Added a dedicated resume text parser (`packages/api/src/utils/resumeTextParser.ts`) that extracts summary, experience, skills, education, and personal info. Resume uploads now hydrate the resume-details editor automatically, and a new Playwright spec (`apps/web/tests/e2e/parsed-resume-details.spec.ts`) ensures the Brian Faker PDF populates every section.
 
 Testing performed
 

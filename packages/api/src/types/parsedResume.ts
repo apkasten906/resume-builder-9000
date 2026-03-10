@@ -55,6 +55,17 @@ export const ParsedResumeFieldsSchema = z.object({
 
 export type ParsedResumeFields = z.infer<typeof ParsedResumeFieldsSchema>;
 
+export const ParsedResumeHistoryEntrySchema = z.object({
+  id: z.string(),
+  parsedResumeId: z.string(),
+  userId: z.string(),
+  uploadId: z.string().nullable(),
+  snapshot: ParsedResumeFieldsSchema,
+  createdAt: z.string(),
+});
+
+export type ParsedResumeHistoryEntry = z.infer<typeof ParsedResumeHistoryEntrySchema>;
+
 export const ParsedResumeUpsertSchema = ParsedResumeFieldsSchema.pick({
   parsedSummary: true,
   personalInfo: true,
@@ -67,3 +78,9 @@ export const ParsedResumeUpsertSchema = ParsedResumeFieldsSchema.pick({
 }).partial();
 
 export type ParsedResumeUpsertInput = z.infer<typeof ParsedResumeUpsertSchema>;
+
+export const ParsedResumeRestoreSchema = z.object({
+  historyId: z.string(),
+});
+
+export type ParsedResumeRestoreInput = z.infer<typeof ParsedResumeRestoreSchema>;

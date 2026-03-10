@@ -1,4 +1,8 @@
-import type { ParsedResumeUpdateRequest, ResumeDetailsApiResponse } from '@/types/resume-details';
+import type {
+  ParsedResumeUpdateRequest,
+  ResumeDetailsApiResponse,
+  ParsedResumeRestoreRequest,
+} from '@/types/resume-details';
 
 /**
  * Type-Safe API Service Generator
@@ -106,4 +110,4 @@ export interface ParseJobDescriptionResponse {
   keywords?: string[];
 }
 
-export type { ParsedResumeUpdateRequest, ResumeDetailsApiResponse };
+export type { ParsedResumeUpdateRequest, ParsedResumeRestoreRequest, ResumeDetailsApiResponse };

@@ -98,7 +98,11 @@ export default defineConfig({
           command: 'npm run dev',
           cwd: path.join(repoRoot, 'packages/api'),
           url: `${apiBaseUrl}/api/health`,
-          reuseExistingServer: !process.env.CI,
+          // Allow forcing reuse of existing servers even in CI by setting
+          // PLAYWRIGHT_REUSE_EXISTING=true. Defaults to disabling reuse in CI.
+          reuseExistingServer:
+            String(process.env.PLAYWRIGHT_REUSE_EXISTING).toLowerCase() === 'true' ||
+            !process.env.CI,
           stdout: 'pipe',
           stderr: 'pipe',
           timeout: 120000,
@@ -112,7 +116,9 @@ export default defineConfig({
           command: 'npm run dev',
           cwd: path.join(repoRoot, 'apps/web'),
           url: webBaseUrl,
-          reuseExistingServer: !process.env.CI,
+          reuseExistingServer:
+            String(process.env.PLAYWRIGHT_REUSE_EXISTING).toLowerCase() === 'true' ||
+            !process.env.CI,
           stdout: 'pipe',
           stderr: 'pipe',
           timeout: 180000,

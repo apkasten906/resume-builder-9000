@@ -67,6 +67,6 @@ export default async function Page() {
 
 ## Testing
 
-- Use Jest and React Testing Library
+- Use Vitest and React Testing Library
 - Focus on user interactions rather than implementation
 - Test key user flows and edge cases

@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 
 import { logger } from './utils/logger.js';
 import { StoredResume, DatabaseRow } from './types/database.js';
@@ -34,18 +34,10 @@ export function connectDatabase(): SQLiteDatabase {
 
   // Get DB path from environment or use default
   const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'resume.db');
-  // Ensure parent directory exists before opening the database file
   const dbDir = path.dirname(dbPath);
-  try {
-    if (!fs.existsSync(dbDir)) {
-      logger.info(`Database directory ${dbDir} does not exist - creating...`);
-      fs.mkdirSync(dbDir, { recursive: true });
-    }
-  } catch (err) {
-    logger.error('Failed to create database directory', { err });
-    throw err;
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
   }
-
   logger.info(`Opening new database connection to ${dbPath}`);
   db = new Database(dbPath, {
     fileMustExist: false,
@@ -86,6 +78,39 @@ export function connectDatabase(): SQLiteDatabase {
     )
   `);
 
+  let parsedFieldColumns: Array<{ name: string }> = [];
+  try {
+    const pragmaStatement = db.prepare('PRAGMA table_info(profile_parsed_fields)');
+    if (typeof pragmaStatement.all === 'function') {
+      const columnsResult = pragmaStatement.all() as Array<{ name: string }> | undefined;
+      if (Array.isArray(columnsResult)) {
+        parsedFieldColumns = columnsResult;
+      }
+    }
+  } catch (error) {
+    logger.warn('Unable to inspect profile_parsed_fields columns', { error });
+  }
+
+  const parsedFieldColumnNames = new Set(parsedFieldColumns.map(col => col.name));
+  const ensureParsedColumn = (column: string, definition: string): void => {
+    if (!parsedFieldColumnNames.has(column)) {
+      db.exec(`ALTER TABLE profile_parsed_fields ADD COLUMN ${column} ${definition}`);
+      parsedFieldColumnNames.add(column);
+    }
+  };
+
+  ensureParsedColumn('upload_id', 'TEXT');
+  ensureParsedColumn('parsed_summary', 'TEXT');
+  ensureParsedColumn('personal_info', 'TEXT');
+  ensureParsedColumn('experience', 'TEXT');
+  ensureParsedColumn('skills', 'TEXT');
+  ensureParsedColumn('education', 'TEXT');
+  ensureParsedColumn('certifications', 'TEXT');
+  ensureParsedColumn('awards', 'TEXT');
+  ensureParsedColumn('hobbies', 'TEXT');
+  ensureParsedColumn('created_at', "TEXT NOT NULL DEFAULT (datetime('now'))");
+  ensureParsedColumn('updated_at', "TEXT NOT NULL DEFAULT (datetime('now'))");
+
   db.exec(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_profile_parsed_fields_user_upload
     ON profile_parsed_fields(user_id, upload_id)
@@ -106,6 +131,30 @@ export function connectDatabase(): SQLiteDatabase {
       email_confirmed_at TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS profile_parsed_fields_history (
+      id TEXT PRIMARY KEY,
+      parsed_resume_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      upload_id TEXT,
+      snapshot TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (parsed_resume_id) REFERENCES profile_parsed_fields(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (upload_id) REFERENCES resumes(id) ON DELETE SET NULL
+    )
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_profile_parsed_history_user_upload
+    ON profile_parsed_fields_history(user_id, upload_id, created_at DESC)
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_profile_parsed_history_resume
+    ON profile_parsed_fields_history(parsed_resume_id)
   `);
 
   db.exec(`

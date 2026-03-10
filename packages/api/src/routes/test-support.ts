@@ -56,6 +56,18 @@ function ensureTestAccess(req: Request, res: Response, next: NextFunction): void
   const secret = process.env.TEST_ROUTE_SECRET || '';
   const provided = req.get('x-test-secret') || '';
 
+  // If the correct secret is provided, allow access regardless of client IP.
+  // This makes E2E/dev flows robust when the API is reached via Docker bridge
+  // or other non-local addresses while still requiring explicit knowledge of
+  // the secret. Do not mount these routes in production.
+  if (secret && provided === secret) {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console -- debug visibility for local dev
+      console.info('[test-support] ensureTestAccess: bypass via secret match');
+    }
+    return next();
+  }
+
   // Extract client IP, considering proxy headers and socket remote address
   let ip =
     req.headers['x-forwarded-for']

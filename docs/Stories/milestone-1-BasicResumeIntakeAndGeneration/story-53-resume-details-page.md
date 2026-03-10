@@ -14,6 +14,9 @@
 - Built a protected Resume Details UI (`/resume-details?id=<uploadId>`) with inline editing, array controls, and text-selection mapping to summary, skills, experience, education, and awards.
 - Wired the resume upload flow to auto-populate parsed fields for authenticated users and updated dashboard links to target the new Resume Details experience.
 - Added integration and routing tests covering the repository, auth requirements, and new link expectations.
+- Implemented optimistic save status indicators in the Resume Details client so edits are reflected immediately while sync completes.
+- Persisted a parsed-field change history with API and UI support so editors can review earlier snapshots for each upload.
+- Enabled restoring parsed resume fields from any historical snapshot with new API endpoints, proxy routes, and UI controls.
 
 ## Files changed (high level)
 
@@ -45,9 +48,9 @@
 
 ## Next steps
 
-1. Extend Playwright coverage for the Resume Details interaction flows.
-2. Explore optimistic UI updates when saving parsed fields.
-3. Investigate adding collaborative comments or change history for parsed data refinements.
+1. ✅ Provide an export control on Resume Details to download parsed fields as JSON for offline editing.
+2. ☐ Allow deleting parsed resume history snapshots from the UI.
+3. ☐ Surface field-level diffs when comparing history snapshots.
 
 - Issue: resume-builder-9000 #53
 

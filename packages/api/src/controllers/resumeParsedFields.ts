@@ -4,8 +4,14 @@ import { getResumeFromDb } from '../db.js';
 import {
   upsertParsedResume,
   getParsedResumeByUser,
+  getParsedResumeHistoryByUser,
+  restoreParsedResumeFromHistory,
 } from '../repositories/parsedResumeRepository.js';
-import type { ParsedResumeUpsertInput } from '../types/parsedResume.js';
+import type {
+  ParsedResumeFields,
+  ParsedResumeUpsertInput,
+  ParsedResumeHistoryEntry,
+} from '../types/parsedResume.js';
 import { ParsedResumeUpsertSchema, ParsedPersonalInfoSchema } from '../types/parsedResume.js';
 import type { AuthenticatedUser } from '../services/authService.js';
 
@@ -16,6 +22,11 @@ interface AuthenticatedRequest extends Request {
 const UpdatePayloadSchema = ParsedResumeUpsertSchema.extend({
   personalInfo: ParsedPersonalInfoSchema.optional(),
 }).strict();
+
+interface ParsedFieldsResponse {
+  parsedFields: ParsedResumeFields;
+  history: ParsedResumeHistoryEntry[];
+}
 
 function buildDefaultsFromResume(
   resume: ReturnType<typeof getResumeFromDb>
@@ -62,6 +73,10 @@ function buildDefaultsFromResume(
   };
 }
 
+function respondWithParsedFields(res: Response, payload: ParsedFieldsResponse): void {
+  res.json(payload);
+}
+
 export async function getResumeParsedFields(req: Request, res: Response): Promise<void> {
   const authedRequest = req as AuthenticatedRequest;
   const uploadId = req.params.id;
@@ -73,8 +88,9 @@ export async function getResumeParsedFields(req: Request, res: Response): Promis
   logger.debug('Fetching parsed resume fields', { uploadId, userId: authedRequest.user.id });
 
   const existing = getParsedResumeByUser(authedRequest.user.id, uploadId);
+  const history = getParsedResumeHistoryByUser(authedRequest.user.id, uploadId);
   if (existing) {
-    res.json(existing);
+    respondWithParsedFields(res, { parsedFields: existing, history });
     return;
   }
 
@@ -86,7 +102,7 @@ export async function getResumeParsedFields(req: Request, res: Response): Promis
 
   const defaults = buildDefaultsFromResume(resume);
   const created = upsertParsedResume(authedRequest.user.id, uploadId, defaults);
-  res.json(created);
+  respondWithParsedFields(res, { parsedFields: created, history: [] });
 }
 
 export async function updateResumeParsedFields(req: Request, res: Response): Promise<void> {
@@ -106,5 +122,37 @@ export async function updateResumeParsedFields(req: Request, res: Response): Pro
   const payload = parseResult.data;
 
   const updated = upsertParsedResume(authedRequest.user.id, uploadId, payload);
-  res.json(updated);
+  const history = getParsedResumeHistoryByUser(authedRequest.user.id, uploadId);
+  respondWithParsedFields(res, { parsedFields: updated, history });
+}
+
+export async function getResumeParsedFieldsHistory(req: Request, res: Response): Promise<void> {
+  const authedRequest = req as AuthenticatedRequest;
+  const uploadId = req.params.id;
+  if (!uploadId) {
+    res.status(400).json({ error: 'Missing upload id' });
+    return;
+  }
+
+  const history = getParsedResumeHistoryByUser(authedRequest.user.id, uploadId);
+  res.json({ history });
+}
+
+export async function restoreResumeParsedFields(req: Request, res: Response): Promise<void> {
+  const authedRequest = req as AuthenticatedRequest;
+  const uploadId = req.params.id;
+  const historyId = req.params.historyId;
+  if (!uploadId || !historyId) {
+    res.status(400).json({ error: 'Missing identifiers' });
+    return;
+  }
+
+  const restored = restoreParsedResumeFromHistory(authedRequest.user.id, uploadId, historyId);
+  if (!restored) {
+    res.status(404).json({ error: 'History entry not found' });
+    return;
+  }
+
+  const history = getParsedResumeHistoryByUser(authedRequest.user.id, uploadId);
+  respondWithParsedFields(res, { parsedFields: restored, history });
 }

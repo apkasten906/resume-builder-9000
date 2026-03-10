@@ -7,6 +7,8 @@ import { connectDatabase, closeDatabase, insertResume } from '../../src/db.js';
 import {
   upsertParsedResume,
   getParsedResumeByUser,
+  getParsedResumeHistoryByUser,
+  restoreParsedResumeFromHistory,
 } from '../../src/repositories/parsedResumeRepository.js';
 import type { ParsedResumeUpsertInput } from '../../src/types/parsedResume.js';
 import type { StoredResume } from '../../src/types/database.js';
@@ -23,6 +25,7 @@ function createTestPaths(): string {
 
 describe('parsed resume repository', () => {
   let TEST_DB_PATH: string;
+  let userCounter = 0;
 
   beforeEach(() => {
     TEST_DB_PATH = createTestPaths();
@@ -49,16 +52,18 @@ describe('parsed resume repository', () => {
 
   function seedUserAndResume(): { userId: string; uploadId: string } {
     const db = connectDatabase();
-    const userId = 'user-123';
+    userCounter += 1;
+    const userId = `user-${userCounter}`;
+    const email = `user${userCounter}@example.com`;
     db.prepare(
       `INSERT INTO users (id, email, password_hash, name, email_confirmed, created_at)
-       VALUES (?, 'user@example.com', 'hash', 'Test User', 1, datetime('now'))`
-    ).run(userId);
+       VALUES (?, ?, 'hash', 'Test User', 1, datetime('now'))`
+    ).run(userId, email);
 
     const resumeData: ResumeData = {
       personalInfo: {
         fullName: 'Test User',
-        email: 'user@example.com',
+        email,
       },
       summary: 'Summary content',
       experience: [
@@ -88,7 +93,7 @@ describe('parsed resume repository', () => {
     };
 
     const resumeToInsert: Omit<StoredResume, 'id'> = {
-      content: 'resume.pdf',
+      content: `resume-${userCounter}.pdf`,
       resumeData,
       jobDetails,
       createdAt: new Date().toISOString(),
@@ -175,6 +180,126 @@ describe('parsed resume repository', () => {
 
     const fetched = getParsedResumeByUser(userId, uploadId);
     expect(fetched?.skills).toContain('Node.js');
+  });
+
+  it('records a history entry when updating an existing parsed resume', () => {
+    const { userId, uploadId } = seedUserAndResume();
+
+    upsertParsedResume(userId, uploadId, {
+      parsedSummary: 'Initial summary',
+      experience: [],
+      skills: ['TypeScript'],
+    });
+
+    const historyBefore = getParsedResumeHistoryByUser(userId, uploadId);
+    expect(historyBefore).toHaveLength(0);
+
+    upsertParsedResume(userId, uploadId, {
+      parsedSummary: 'Updated summary',
+      skills: ['TypeScript', 'Node.js'],
+    });
+
+    const historyAfter = getParsedResumeHistoryByUser(userId, uploadId);
+    expect(historyAfter).toHaveLength(1);
+    expect(historyAfter[0]?.snapshot.parsedSummary).toBe('Initial summary');
+    expect(historyAfter[0]?.snapshot.skills).toContain('TypeScript');
+  });
+
+  it('does not create duplicate history entries when saving identical data', () => {
+    const { userId, uploadId } = seedUserAndResume();
+
+    const payload = {
+      parsedSummary: 'Initial summary',
+      personalInfo: {
+        name: 'Alex Candidate',
+        emails: ['alex@example.com'],
+        phones: ['555-0100'],
+        addresses: ['123 Main St'],
+        websites: ['https://example.com'],
+      },
+      experience: [
+        {
+          id: 'exp-1',
+          title: 'Engineer',
+          description: 'Built features.',
+        },
+      ],
+      skills: ['TypeScript'],
+      education: [],
+      certifications: [],
+      awards: [],
+      hobbies: [],
+    } as const;
+
+    const initial = upsertParsedResume(userId, uploadId, payload);
+    const historyBefore = getParsedResumeHistoryByUser(userId, uploadId);
+    expect(historyBefore).toHaveLength(0);
+
+    const unchanged = upsertParsedResume(userId, uploadId, payload);
+    expect(unchanged.updatedAt).toBe(initial.updatedAt);
+
+    const historyAfter = getParsedResumeHistoryByUser(userId, uploadId);
+    expect(historyAfter).toHaveLength(0);
+
+    const stored = getParsedResumeByUser(userId, uploadId);
+    expect(stored?.updatedAt).toBe(initial.updatedAt);
+  });
+
+  it('restores parsed resume fields from a history snapshot', () => {
+    const { userId, uploadId } = seedUserAndResume();
+
+    upsertParsedResume(userId, uploadId, {
+      parsedSummary: 'First summary',
+      skills: ['TypeScript'],
+    });
+
+    upsertParsedResume(userId, uploadId, {
+      parsedSummary: 'Second summary',
+      skills: ['TypeScript', 'Node.js'],
+    });
+
+    const history = getParsedResumeHistoryByUser(userId, uploadId);
+    expect(history).toHaveLength(1);
+
+    const restored = restoreParsedResumeFromHistory(userId, uploadId, history[0]!.id);
+    expect(restored).toBeDefined();
+    expect(restored?.parsedSummary).toBe('First summary');
+    expect(restored?.skills).toEqual(['TypeScript']);
+
+    const persisted = getParsedResumeByUser(userId, uploadId);
+    expect(persisted?.parsedSummary).toBe('First summary');
+    expect(persisted?.skills).toEqual(['TypeScript']);
+
+    const historyAfterRestore = getParsedResumeHistoryByUser(userId, uploadId);
+    expect(historyAfterRestore).toHaveLength(2);
+    expect(historyAfterRestore[0]?.snapshot.parsedSummary).toBe('Second summary');
+  });
+
+  it('returns undefined when history entry is missing or does not match the upload', () => {
+    const { userId, uploadId } = seedUserAndResume();
+
+    upsertParsedResume(userId, uploadId, {
+      parsedSummary: 'Current summary',
+    });
+
+    const missing = restoreParsedResumeFromHistory(userId, uploadId, 'unknown-history');
+    expect(missing).toBeUndefined();
+
+    const otherUpload = seedUserAndResume();
+    upsertParsedResume(otherUpload.userId, otherUpload.uploadId, {
+      parsedSummary: 'Other summary',
+      skills: ['Python'],
+    });
+    upsertParsedResume(otherUpload.userId, otherUpload.uploadId, {
+      parsedSummary: 'Updated other summary',
+      skills: ['Python', 'Rust'],
+    });
+
+    const otherHistory = getParsedResumeHistoryByUser(otherUpload.userId, otherUpload.uploadId);
+    expect(otherHistory).toHaveLength(1);
+
+    const mismatch = restoreParsedResumeFromHistory(userId, uploadId, otherHistory[0]!.id);
+    expect(mismatch).toBeUndefined();
   });
 
   it('returns undefined when no record exists', () => {

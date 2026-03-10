@@ -6,12 +6,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": "./",
-    "paths": {
-      "@rb9k/core/testLogger": ["packages/core/dist/testLogger"],
-      "@rb9k/core": ["packages/core/dist/index"]
-    }
+    "forceConsistentCasingInFileNames": true
   },
   "exclude": [
     "packages/core/templates/**/*",

@@ -1,12 +1,17 @@
 import { randomUUID } from 'crypto';
 import { connectDatabase } from '../db.js';
+import { logger } from '../utils/logger.js';
 import type {
   ParsedResumeFields,
   ParsedResumeUpsertInput,
   ParsedPersonalInfo,
   ParsedExperience,
   ParsedEducation,
+  ParsedResumeHistoryEntry,
 } from '../types/parsedResume.js';
+import { ParsedResumeHistoryEntrySchema, ParsedResumeFieldsSchema } from '../types/parsedResume.js';
+
+type SQLiteDatabase = ReturnType<typeof connectDatabase>;
 
 interface ParsedResumeRow {
   id: string;
@@ -24,6 +29,15 @@ interface ParsedResumeRow {
   updated_at: string;
 }
 
+interface ParsedResumeHistoryRow {
+  id: string;
+  parsed_resume_id: string;
+  user_id: string;
+  upload_id: string | null;
+  snapshot: string;
+  created_at: string;
+}
+
 const DEFAULT_PERSONAL_INFO: ParsedPersonalInfo = {
   name: undefined,
   emails: [],
@@ -32,20 +46,9 @@ const DEFAULT_PERSONAL_INFO: ParsedPersonalInfo = {
   websites: [],
 };
 
-// Prefer structuredClone when available (Node 17+ / modern runtimes). Fallback to
-// JSON-based deep clone which preserves basic JSON-safe data.
+// Parsed resume structures only contain JSON-serializable primitives/arrays,
+// so JSON cloning is safe for copying their shape.
 function clone<T>(value: T): T {
-  // Prefer a type-safe check for structuredClone on globalThis when available.
-  const sc =
-    'structuredClone' in globalThis
-      ? (globalThis as unknown as { structuredClone: (v: unknown) => unknown }).structuredClone
-      : undefined;
-
-  if (typeof sc === 'function') {
-    return sc(value) as T;
-  }
-
-  // Fallback for older Node versions / runtimes (JSON-safe deep clone)
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
@@ -53,7 +56,38 @@ const EMPTY_EXPERIENCE: ParsedExperience[] = [];
 const EMPTY_EDUCATION: ParsedEducation[] = [];
 const EMPTY_STRINGS: string[] = [];
 
+function createEmptyParsedResume(): ParsedResumeFields {
+  return {
+    id: '',
+    userId: '',
+    uploadId: null,
+    parsedSummary: undefined,
+    personalInfo: clone(DEFAULT_PERSONAL_INFO),
+    experience: clone(EMPTY_EXPERIENCE),
+    skills: clone(EMPTY_STRINGS),
+    education: clone(EMPTY_EDUCATION),
+    certifications: clone(EMPTY_STRINGS),
+    awards: clone(EMPTY_STRINGS),
+    hobbies: clone(EMPTY_STRINGS),
+    createdAt: '',
+    updatedAt: '',
+  };
+}
+
 type ParsedResumeRecord = ParsedResumeFields;
+
+function toUpsertInput(snapshot: ParsedResumeRecord): ParsedResumeUpsertInput {
+  return {
+    parsedSummary: snapshot.parsedSummary ?? undefined,
+    personalInfo: clone(snapshot.personalInfo),
+    experience: clone(snapshot.experience),
+    skills: clone(snapshot.skills),
+    education: clone(snapshot.education),
+    certifications: clone(snapshot.certifications),
+    awards: clone(snapshot.awards),
+    hobbies: clone(snapshot.hobbies),
+  };
+}
 
 function parseJsonField<T>(value: string | null, fallback: T): T {
   if (!value) {
@@ -68,6 +102,23 @@ function parseJsonField<T>(value: string | null, fallback: T): T {
 
 function serialize(value: unknown): string {
   return JSON.stringify(value ?? null);
+}
+
+function parseSnapshot(snapshot: string): ParsedResumeFields {
+  try {
+    const parsed = JSON.parse(snapshot) as unknown;
+    const validation = ParsedResumeFieldsSchema.safeParse(parsed);
+    if (validation.success) {
+      return validation.data;
+    }
+  } catch (error) {
+    logger.error('Failed to parse resume snapshot', { error });
+    logger.warn('Falling back to empty parsed resume snapshot due to parse failure', {
+      snapshot: snapshot,
+    });
+    // Ignore parse errors and fall back to an empty structure
+  }
+  return createEmptyParsedResume();
 }
 
 function mapRow(row: ParsedResumeRow): ParsedResumeRecord {
@@ -88,9 +139,54 @@ function mapRow(row: ParsedResumeRow): ParsedResumeRecord {
   };
 }
 
-// Build a simple param descriptor for uploadId. Avoid returning raw SQL fragments
-// that get injected into queries; instead choose the correct prepared statement
-// branch at the callsite so the query stays parameterized.
+function mapHistoryRow(row: ParsedResumeHistoryRow): ParsedResumeHistoryEntry {
+  const candidate: ParsedResumeHistoryEntry = {
+    id: row.id,
+    parsedResumeId: row.parsed_resume_id,
+    userId: row.user_id,
+    uploadId: row.upload_id,
+    snapshot: parseSnapshot(row.snapshot),
+    createdAt: row.created_at,
+  };
+  return ParsedResumeHistoryEntrySchema.parse(candidate);
+}
+
+function toUndefined<T>(value: T | null | undefined): T | undefined {
+  return value === null ? undefined : value;
+}
+
+function normalizePersonalInfo(info: ParsedPersonalInfo | null | undefined): ParsedPersonalInfo {
+  const normalized = info ?? clone(DEFAULT_PERSONAL_INFO);
+  return {
+    name: toUndefined(normalized.name),
+    emails: Array.isArray(normalized.emails) ? normalized.emails : clone(EMPTY_STRINGS),
+    phones: Array.isArray(normalized.phones) ? normalized.phones : clone(EMPTY_STRINGS),
+    addresses: Array.isArray(normalized.addresses) ? normalized.addresses : clone(EMPTY_STRINGS),
+    websites: Array.isArray(normalized.websites) ? normalized.websites : clone(EMPTY_STRINGS),
+  };
+}
+
+function ensureArray<T>(value: T[] | null | undefined, fallback: T[]): T[] {
+  return Array.isArray(value) ? value : clone(fallback);
+}
+
+function normalizeRecordForFingerprint(record: ParsedResumeRecord) {
+  return {
+    parsedSummary: toUndefined(record.parsedSummary),
+    personalInfo: normalizePersonalInfo(record.personalInfo),
+    experience: ensureArray(record.experience, EMPTY_EXPERIENCE),
+    skills: ensureArray(record.skills, EMPTY_STRINGS),
+    education: ensureArray(record.education, EMPTY_EDUCATION),
+    certifications: ensureArray(record.certifications, EMPTY_STRINGS),
+    awards: ensureArray(record.awards, EMPTY_STRINGS),
+    hobbies: ensureArray(record.hobbies, EMPTY_STRINGS),
+  };
+}
+
+function fingerprintRecord(record: ParsedResumeRecord): string {
+  return JSON.stringify(normalizeRecordForFingerprint(record));
+}
+
 function buildQueryParams(uploadId: string | null): { isNull: boolean; args: readonly unknown[] } {
   if (uploadId === null) {
     return { isNull: true, args: [] };
@@ -104,24 +200,30 @@ export function getParsedResumeByUser(
 ): ParsedResumeRecord | undefined {
   const db = connectDatabase();
   const { isNull, args } = buildQueryParams(uploadId);
-
-  let row: ParsedResumeRow | undefined;
-  if (isNull) {
-    row = db
-      .prepare(
-        `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id IS NULL LIMIT 1`
-      )
-      .get(userId) as ParsedResumeRow | undefined;
-  } else {
-    row = db
-      .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id = ? LIMIT 1`)
-      .get(userId, ...args) as ParsedResumeRow | undefined;
-  }
-
+  const query = isNull
+    ? `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id IS NULL LIMIT 1`
+    : `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id = ? LIMIT 1`;
+  const row = db.prepare(query).get(userId, ...(isNull ? [] : args)) as ParsedResumeRow | undefined;
   if (!row) {
     return undefined;
   }
   return mapRow(row);
+}
+
+function recordHistory(db: SQLiteDatabase, existing: ParsedResumeRow): void {
+  const historyId = randomUUID();
+  const snapshot = serialize(mapRow(existing));
+  const createdAt = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO profile_parsed_fields_history (
+        id,
+        parsed_resume_id,
+        user_id,
+        upload_id,
+        snapshot,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?)`
+  ).run(historyId, existing.id, existing.user_id, existing.upload_id, snapshot, createdAt);
 }
 
 export function upsertParsedResume(
@@ -132,18 +234,12 @@ export function upsertParsedResume(
   const db = connectDatabase();
   const now = new Date().toISOString();
   const { isNull, args } = buildQueryParams(uploadId);
-  let existing: ParsedResumeRow | undefined;
-  if (isNull) {
-    existing = db
-      .prepare(
-        `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id IS NULL LIMIT 1`
-      )
-      .get(userId) as ParsedResumeRow | undefined;
-  } else {
-    existing = db
-      .prepare(`SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id = ? LIMIT 1`)
-      .get(userId, ...args) as ParsedResumeRow | undefined;
-  }
+  const selectExistingQuery = isNull
+    ? `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id IS NULL LIMIT 1`
+    : `SELECT * FROM profile_parsed_fields WHERE user_id = ? AND upload_id = ? LIMIT 1`;
+  const existing = db.prepare(selectExistingQuery).get(userId, ...(isNull ? [] : args)) as
+    | ParsedResumeRow
+    | undefined;
 
   const personalInfo = payload.personalInfo ?? DEFAULT_PERSONAL_INFO;
   const experience = payload.experience ? clone(payload.experience) : clone(EMPTY_EXPERIENCE);
@@ -206,6 +302,32 @@ export function upsertParsedResume(
     };
   }
 
+  const existingRecord = mapRow(existing);
+  const nextRecord: ParsedResumeRecord = {
+    id: existing.id,
+    userId: existing.user_id,
+    uploadId: existing.upload_id,
+    parsedSummary: payload.parsedSummary ?? undefined,
+    personalInfo,
+    experience,
+    skills,
+    education,
+    certifications,
+    awards,
+    hobbies,
+    createdAt: existing.created_at,
+    updatedAt: now,
+  };
+
+  const existingFingerprint = fingerprintRecord(existingRecord);
+  const nextFingerprint = fingerprintRecord(nextRecord);
+
+  if (existingFingerprint === nextFingerprint) {
+    return existingRecord;
+  }
+
+  recordHistory(db, existing);
+
   db.prepare(
     `UPDATE profile_parsed_fields
      SET parsed_summary = ?,
@@ -231,19 +353,59 @@ export function upsertParsedResume(
     existing.id
   );
 
-  return {
-    id: existing.id,
-    userId: existing.user_id,
-    uploadId: existing.upload_id,
-    parsedSummary: payload.parsedSummary ?? undefined,
-    personalInfo,
-    experience,
-    skills,
-    education,
-    certifications,
-    awards,
-    hobbies,
-    createdAt: existing.created_at,
-    updatedAt: now,
-  };
+  return nextRecord;
+}
+
+export function getParsedResumeHistoryByUser(
+  userId: string,
+  uploadId: string | null
+): ParsedResumeHistoryEntry[] {
+  const db = connectDatabase();
+  const { isNull, args } = buildQueryParams(uploadId);
+  const historyQuery = isNull
+    ? `SELECT *
+       FROM profile_parsed_fields_history
+       WHERE user_id = ? AND upload_id IS NULL
+       ORDER BY datetime(created_at) DESC`
+    : `SELECT *
+       FROM profile_parsed_fields_history
+       WHERE user_id = ? AND upload_id = ?
+       ORDER BY datetime(created_at) DESC`;
+  const rows = db
+    .prepare(historyQuery)
+    .all(userId, ...(isNull ? [] : args)) as ParsedResumeHistoryRow[];
+
+  return rows.map(mapHistoryRow);
+}
+
+export function restoreParsedResumeFromHistory(
+  userId: string,
+  uploadId: string | null,
+  historyId: string
+): ParsedResumeRecord | undefined {
+  const db = connectDatabase();
+  const historyRow = db
+    .prepare(
+      `SELECT *
+       FROM profile_parsed_fields_history
+       WHERE id = ? AND user_id = ?
+       LIMIT 1`
+    )
+    .get(historyId, userId) as ParsedResumeHistoryRow | undefined;
+
+  if (!historyRow) {
+    return undefined;
+  }
+
+  if (uploadId === null) {
+    if (historyRow.upload_id !== null) {
+      return undefined;
+    }
+  } else if (historyRow.upload_id !== uploadId) {
+    return undefined;
+  }
+
+  const entry = mapHistoryRow(historyRow);
+  const payload = toUpsertInput(entry.snapshot);
+  return upsertParsedResume(userId, uploadId, payload);
 }

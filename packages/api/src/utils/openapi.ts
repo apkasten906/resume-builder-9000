@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { createDocument, createSchema } from 'zod-openapi';
 import { ResumeDataSchema, JobDetailsSchema } from '@rb9k/core';
+import {
+  ParsedEducationSchema,
+  ParsedExperienceSchema,
+  ParsedPersonalInfoSchema,
+  ParsedResumeFieldsSchema,
+  ParsedResumeHistoryEntrySchema,
+  ParsedResumeUpsertSchema,
+} from '../types/parsedResume.js';
 
 const StoredResumeSchema = z.object({
   id: z.string(),
@@ -34,6 +42,12 @@ const schemas = {
   StoredResume: createSchema(StoredResumeSchema).schema,
   User: createSchema(UserSchema).schema,
   Application: createSchema(ApplicationSchema).schema,
+  ParsedPersonalInfo: createSchema(ParsedPersonalInfoSchema).schema,
+  ParsedExperience: createSchema(ParsedExperienceSchema).schema,
+  ParsedEducation: createSchema(ParsedEducationSchema).schema,
+  ParsedResumeFields: createSchema(ParsedResumeFieldsSchema).schema,
+  ParsedResumeUpdate: createSchema(ParsedResumeUpsertSchema).schema,
+  ParsedResumeHistoryEntry: createSchema(ParsedResumeHistoryEntrySchema).schema,
 };
 
 export const openApiSpec = createDocument({
@@ -48,6 +62,13 @@ export const openApiSpec = createDocument({
   servers: [{ url: 'http://localhost:4000', description: 'Local Development Server' }],
   components: {
     schemas,
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
   },
   paths: {
     '/api/health': {
@@ -253,6 +274,236 @@ export const openApiSpec = createDocument({
               },
             },
           },
+        },
+      },
+    },
+    '/api/resumes/{id}/parsed-fields': {
+      get: {
+        summary: 'Get parsed resume fields for an upload',
+        description:
+          'Retrieve parsed resume fields for the authenticated user. Creates defaults when no parsed data exists yet.',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Resume upload identifier',
+          },
+        ],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Parsed resume fields for the requested upload',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    parsedFields: { $ref: '#/components/schemas/ParsedResumeFields' },
+                    history: {
+                      type: 'array',
+                      items: { $ref: '#/components/schemas/ParsedResumeHistoryEntry' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: 'Missing upload identifier',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Unauthorized' },
+          404: {
+            description: 'Parsed fields not found for the provided upload',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      put: {
+        summary: 'Update parsed resume fields for an upload',
+        description: 'Persist parsed resume updates for the authenticated user.',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Resume upload identifier',
+          },
+        ],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ParsedResumeUpdate' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Parsed resume fields saved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    parsedFields: { $ref: '#/components/schemas/ParsedResumeFields' },
+                    history: {
+                      type: 'array',
+                      items: { $ref: '#/components/schemas/ParsedResumeHistoryEntry' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: 'Invalid payload',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string' },
+                    details: {
+                      type: 'object',
+                      properties: {
+                        fieldErrors: { type: 'object' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Unauthorized' },
+        },
+      },
+    },
+    '/api/resumes/{id}/parsed-fields/history': {
+      get: {
+        summary: 'Get parsed resume change history',
+        description:
+          'Retrieve the historical snapshots of parsed resume fields for the authenticated user.',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Resume upload identifier',
+          },
+        ],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Parsed resume history entries',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    history: {
+                      type: 'array',
+                      items: { $ref: '#/components/schemas/ParsedResumeHistoryEntry' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: 'Missing upload identifier',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Unauthorized' },
+        },
+      },
+    },
+    '/api/resumes/{id}/parsed-fields/history/{historyId}/restore': {
+      post: {
+        summary: 'Restore parsed resume fields from history',
+        description: 'Restore parsed resume data using a previously recorded history snapshot.',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Resume upload identifier',
+          },
+          {
+            name: 'historyId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            description: 'History snapshot identifier',
+          },
+        ],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Parsed resume restored successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    parsedFields: { $ref: '#/components/schemas/ParsedResumeFields' },
+                    history: {
+                      type: 'array',
+                      items: { $ref: '#/components/schemas/ParsedResumeHistoryEntry' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: 'Missing identifiers',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Unauthorized' },
+          404: { description: 'History entry not found' },
         },
       },
     },
