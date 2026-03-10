@@ -1,4 +1,100 @@
-# Copilot Processing - Docker Build Setup
+## Copilot Processing - Docker Build Setup
+
+## Current Request (2026-03-10) - TS Resolution + Jest Removal
+
+- Fix Playwright E2E spec mock typing issues around the `resume` payload.
+- Remove Jest (not used in this repo) to eliminate tooling noise and accidental parsing of Playwright `.spec.ts` files.
+- Migrate away from deprecated root `tsconfig.json` `baseUrl`/`paths` usage by using package `exports` instead.
+- Validate the repo with `npm run test:unit` and `npm run lint`.
+
+## Action Plan - TS/Jest Cleanup
+
+- [x] Align E2E mocked resume payload with `@rb9k/core` types without mutating readonly data
+- [x] Add `exports` subpaths to `packages/core/package.json` and remove root `tsconfig.json` path mapping
+- [x] Remove Jest dependencies and configs (repo standard is Vitest + Playwright)
+- [x] Validate: `npm run test:unit`
+- [x] Validate: `npm run lint`
+
+### Outcome
+
+- Unit tests pass (Vitest).
+- Lint passes.
+- Jest removed; Playwright specs no longer get parsed by Jest tooling.
+
+### Summary
+
+- Updated Playwright E2E mock data in `apps/web/tests/e2e/resume-details-interactions.spec.ts` to match `@rb9k/core` types.
+- Removed root `tsconfig.json` `baseUrl`/`paths` and added `exports` in `packages/core/package.json` for `@rb9k/core` and `@rb9k/core/testLogger`.
+- Removed Jest and Jest types from workspace dependencies (repo standard is Vitest + Playwright).
+- Verified via `npm run test:unit` and `npm run lint`.
+
+## Current Request (2026-03-10)
+
+- Run unit tests and debug failures.
+- Context: recent change in [apps/web/tests/e2e/resume-details-interactions.spec.ts](apps/web/tests/e2e/resume-details-interactions.spec.ts) to fix a type mismatch in the mocked `resume` payload.
+- Goal: get the unit test suite green (or identify and document the specific failing tests and root cause).
+
+## Action Plan - Unit Tests & Debug
+
+- [x] 1. Establish baseline: run `npm run test:unit` and capture failures
+- [x] 2. Triage failures: identify whether they are type-checking, runtime, snapshot, or environment issues
+- [x] 3. Fix root cause: make minimal code/test changes to resolve the failing unit tests
+- [x] 4. Re-run unit tests: confirm suite is green
+- [x] 5. Record outcome: add a short summary of what failed and what was changed
+
+### Findings (Unit Test Run)
+
+- Failures were not related to recent Playwright changes.
+- Root cause: native addon `better-sqlite3` failed to load due to Node ABI mismatch.
+  - Error: module was compiled against `NODE_MODULE_VERSION 137`, but current Node requires `NODE_MODULE_VERSION 141`.
+  - Current toolchain: `node v25.2.1`, `process.versions.modules = 141`.
+
+### Remediation Attempt
+
+- `npm rebuild better-sqlite3 sqlite3` failed because the Visual Studio VC++ toolset is missing.
+- Attempted to install VS Build Tools via `winget` failed with exit code `8006`.
+- Next step: add VC++ workload to existing VS 2022 Community install (requires elevation/UAC).
+
+### Resolution
+
+- Switched Node from v25 (ABI 141) to Node LTS v24.14.0 (ABI 137).
+  - Node 25 prevented installing Node LTS due to MSI downgrade protection; required uninstalling `OpenJS.NodeJS` first.
+- Rebuilt `better-sqlite3` under Node 24: `npm rebuild better-sqlite3`.
+  - Verified binding load: `require('better-sqlite3')` succeeded.
+- Re-ran unit tests: `npm run test:unit`.
+  - Result: 25 passed, 1 skipped (files); 144 passed, 3 skipped (tests).
+
+## Current Request (2026-03-10) - Tooling Diagnostics
+
+- Goal: stop Jest (and the VS Code Jest extension) from attempting to parse/run Playwright E2E `.spec.ts` files and throwing Babel parse errors (e.g., on `import type`).
+
+Note: This has now been superseded by removing Jest from the repo.
+
+### Action Plan - Tooling
+
+- [x] Add a minimal Jest config to prevent accidental discovery of repo files as tests
+- [x] Configure VS Code Jest extension to run on-demand and use the repo config
+- [ ] Verify VS Code is using the workspace TypeScript version (if editor diagnostics persist)
+
+### Changes Made
+
+- Updated `jest.config.cjs` to discover **zero tests** reliably:
+  - `testRegex: ['a^']`
+  - `passWithNoTests: true`
+  - ignore common build output folders (`apps/web/.next/`, `packages/*/dist/`)
+- Updated `.vscode/settings.json` to keep the Jest extension from auto-running:
+  - `jest.runMode: on-demand`
+  - `jest.autoRun: { watch: false, onSave: off }`
+  - `jest.jestCommandLine` pinned to `jest.config.cjs`
+
+### Verification
+
+- `node ./node_modules/jest/bin/jest.js --config jest.config.cjs --listTests` now returns 0 tests.
+
+### Summary (Tooling Diagnostics)
+
+- Jest is now effectively disabled for this repo (0 tests discovered), preventing it from parsing Playwright E2E `.spec.ts` files.
+- If VS Code still shows TypeScript deprecation diagnostics (e.g., around `baseUrl`), ensure the editor is using the workspace TypeScript version (Command Palette → “TypeScript: Select TypeScript Version” → “Use Workspace Version”), then reload the window.
 
 ## User Request
 
@@ -1903,3 +1999,19 @@ Note: According to issue comment, all changes were implemented in commit `8407e0
 4. `apps/web/src/app/register/page.tsx` - JSON parse error logging
 5. `packages/api/src/routes/test-support.ts` - Protected console logging
 6. `scripts/test-email-verification.ps1` - Environment variable validation
+
+## Final Summary (Dec 29, 2025)
+
+- Implemented server-side max upload size derived from environment variable `MAX_UPLOAD_MB` and converted from megabytes to bytes for enforcement in [packages/api/src/utils/fileValidation.ts](packages/api/src/utils/fileValidation.ts).
+- Added safe filename handling via `sanitizeFilename()` in [packages/api/src/utils/sanitize.ts](packages/api/src/utils/sanitize.ts) and applied it in [packages/api/src/controllers/resume.ts](packages/api/src/controllers/resume.ts) for stored `content` and `jobDetails.title` to prevent unsafe characters and directory components.
+- Introduced configurable retry with exponential backoff for external email sending in [packages/api/src/services/emailService.ts](packages/api/src/services/emailService.ts) using `EMAIL_RETRY_ATTEMPTS` and `EMAIL_RETRY_DELAY_MS`.
+- Verified existing file type normalization and deny-by-default validation paths are in place; size limits also enforced at Multer level.
+- Lint completed successfully. No SSRF sinks found where user-provided URLs are fetched server-side; current URL usage is validation-only.
+
+Environment variables to configure:
+
+- `MAX_UPLOAD_MB` (default 5)
+- `EMAIL_RETRY_ATTEMPTS` (default 3)
+- `EMAIL_RETRY_DELAY_MS` (default 500)
+
+These changes align with the recommendations to normalize file extensions, enforce size limits in bytes, avoid path traversal, and externalize configuration for safer operations.

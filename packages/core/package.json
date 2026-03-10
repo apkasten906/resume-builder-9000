@@ -5,6 +5,16 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./testLogger": {
+      "types": "./dist/testLogger.d.ts",
+      "default": "./dist/testLogger.js"
+    }
+  },
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc",

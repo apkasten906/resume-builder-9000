@@ -16,7 +16,11 @@ interface UploadedFile {
 
 import { fileTypeFromBuffer } from 'file-type';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+// Derive max upload size from environment in megabytes, default to 5MB.
+// Convert MB to bytes for enforcement server-side.
+const MAX_UPLOAD_MB = Number.parseInt(process.env.MAX_UPLOAD_MB || '5', 10);
+const MAX_FILE_SIZE =
+  (Number.isFinite(MAX_UPLOAD_MB) && MAX_UPLOAD_MB > 0 ? MAX_UPLOAD_MB : 5) * 1024 * 1024;
 const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt', '.md'];
 const ALLOWED_MIME_TYPES = [
   'application/pdf',

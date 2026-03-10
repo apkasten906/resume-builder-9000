@@ -13,6 +13,7 @@ import { upsertParsedResume } from '../repositories/parsedResumeRepository.js';
 import type { ParsedExperience } from '../types/parsedResume.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { extractResumeFieldsFromText } from '../utils/resumeTextParser.js';
+import { sanitizeFilename } from '../utils/sanitize.js';
 import {
   getResumeParsedFields,
   updateResumeParsedFields,
@@ -338,13 +339,14 @@ export const postResumeHandler = async (req: Request, res: Response): Promise<vo
         projects: [],
       };
 
+      const safeName = sanitizeFilename(file.originalname || 'uploaded-resume');
       const jobDetailsTyped = {
-        title: file.originalname || 'Uploaded Resume',
-        description: `Uploaded resume ${file.originalname || ''}`,
+        title: safeName || 'Uploaded Resume',
+        description: `Uploaded resume ${safeName || ''}`,
       };
 
       const storedId = insertResume({
-        content: file.originalname || 'uploaded-resume',
+        content: safeName || 'uploaded-resume',
         resumeData: resumeDataTyped,
         jobDetails: jobDetailsTyped,
         createdAt,

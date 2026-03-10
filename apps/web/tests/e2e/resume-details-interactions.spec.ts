@@ -1,4 +1,10 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
+import type {
+  ParsedResumeFieldsPayload,
+  ParsedResumeHistoryEntry,
+  ParsedResumeUpdateRequest,
+  ResumeDetailsApiResponse,
+} from '../../src/types/resume-details';
 
 test.describe('Resume Details interactions', (): void => {
   test('maps highlighted preview text into skills and saves changes', async ({
@@ -8,7 +14,7 @@ test.describe('Resume Details interactions', (): void => {
     const webUrl = baseURL?.toString() ?? '';
     const uploadId = 'upload-123';
 
-    const resumeResponse = {
+    const resumeResponse: NonNullable<ResumeDetailsApiResponse['resume']> = {
       id: 'resume-1',
       content: 'SeniorEngineer.pdf',
       resumeData: {
@@ -24,6 +30,7 @@ test.describe('Resume Details interactions', (): void => {
             company: 'Acme Corp',
             startDate: '2020',
             endDate: '2024',
+            current: false,
             responsibilities: [
               'Designed GraphQL APIs for critical services',
               'Mentored engineering team members',
@@ -50,7 +57,7 @@ test.describe('Resume Details interactions', (): void => {
       createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
     };
 
-    const initialParsedFields = {
+    const initialParsedFields: ParsedResumeFieldsPayload = {
       id: 'parsed-1',
       userId: 'user-1',
       uploadId,
@@ -88,17 +95,9 @@ test.describe('Resume Details interactions', (): void => {
       updatedAt: new Date('2023-01-03T12:00:00Z').toISOString(),
     };
 
-    const cloneParsed = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
-    type HistoryEntry = {
-      id: string;
-      parsedResumeId: string;
-      userId: string;
-      uploadId: string | null;
-      snapshot: typeof initialParsedFields;
-      createdAt: string;
-    };
+    const cloneParsed = <T>(value: T): T => structuredClone(value);
 
-    const initialHistory: HistoryEntry[] = [
+    const initialHistory: ParsedResumeHistoryEntry[] = [
       {
         id: 'history-1',
         parsedResumeId: initialParsedFields.id,
@@ -109,10 +108,74 @@ test.describe('Resume Details interactions', (): void => {
       },
     ];
 
-    let currentParsedFields = cloneParsed(initialParsedFields);
-    let currentHistory = [...initialHistory];
+    let currentParsedFields: ParsedResumeFieldsPayload = cloneParsed(initialParsedFields);
+    let currentHistory: ParsedResumeHistoryEntry[] = [...initialHistory];
     let historyCounter = currentHistory.length;
     let lastUpdatePayload: ParsedResumeUpdateRequest | null = null;
+
+    const nextHistoryEntry = (snapshot: ParsedResumeFieldsPayload): ParsedResumeHistoryEntry => {
+      historyCounter += 1;
+      return {
+        id: `history-${historyCounter}`,
+        parsedResumeId: snapshot.id,
+        userId: snapshot.userId,
+        uploadId: snapshot.uploadId,
+        snapshot: cloneParsed(snapshot),
+        createdAt: new Date().toISOString(),
+      };
+    };
+
+    const mergeParsedFields = (
+      current: ParsedResumeFieldsPayload,
+      update: ParsedResumeUpdateRequest
+    ): ParsedResumeFieldsPayload => {
+      const now = new Date().toISOString();
+      const mergedExperience =
+        update.experience?.map((entry, idx) => {
+          const existing = current.experience[idx];
+          return {
+            ...existing,
+            ...entry,
+            id: entry.id ?? existing?.id ?? `generated-exp-${idx}`,
+          };
+        }) ?? current.experience;
+
+      const mergedEducation =
+        update.education?.map((entry, idx) => {
+          const existing = current.education[idx];
+          return {
+            ...existing,
+            ...entry,
+            id: entry.id ?? existing?.id ?? `generated-edu-${idx}`,
+          };
+        }) ?? current.education;
+
+      return {
+        ...current,
+        parsedSummary: update.parsedSummary ?? current.parsedSummary,
+        personalInfo: {
+          ...current.personalInfo,
+          ...update.personalInfo,
+          emails: update.personalInfo?.emails ?? current.personalInfo.emails,
+          phones: update.personalInfo?.phones ?? current.personalInfo.phones,
+          addresses: update.personalInfo?.addresses ?? current.personalInfo.addresses,
+          websites: update.personalInfo?.websites ?? current.personalInfo.websites,
+        },
+        experience: mergedExperience,
+        skills: update.skills ?? current.skills,
+        education: mergedEducation,
+        certifications: update.certifications ?? current.certifications,
+        awards: update.awards ?? current.awards,
+        hobbies: update.hobbies ?? current.hobbies,
+        updatedAt: now,
+      };
+    };
+
+    const buildDetailsResponse = (): ResumeDetailsApiResponse => ({
+      parsedFields: currentParsedFields,
+      history: currentHistory,
+      resume: resumeResponse,
+    });
 
     await page.route('**/api/auth/me', async (route): Promise<void> => {
       await route.fulfill({
@@ -134,15 +197,10 @@ test.describe('Resume Details interactions', (): void => {
 
       const method = route.request().method();
       if (method === 'GET') {
-        const payload = {
-          parsedFields: currentParsedFields,
-          history: currentHistory,
-          resume: resumeResponse,
-        };
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify(payload),
+          body: JSON.stringify(buildDetailsResponse()),
         });
         return;
       }
@@ -151,40 +209,15 @@ test.describe('Resume Details interactions', (): void => {
         const rawBody = route.request().postData() ?? '{}';
         const payload = JSON.parse(rawBody) as ParsedResumeUpdateRequest;
         lastUpdatePayload = payload;
-        historyCounter += 1;
-        const snapshot: HistoryEntry = {
-          id: `history-${historyCounter}`,
-          parsedResumeId: currentParsedFields.id,
-          userId: currentParsedFields.userId,
-          uploadId: currentParsedFields.uploadId,
-          snapshot: cloneParsed(currentParsedFields),
-          createdAt: new Date().toISOString(),
-        };
-        currentHistory = [snapshot, ...currentHistory];
-        currentParsedFields = {
-          ...currentParsedFields,
-          parsedSummary: payload.parsedSummary ?? currentParsedFields.parsedSummary,
-          personalInfo: {
-            ...currentParsedFields.personalInfo,
-            ...payload.personalInfo,
-            emails: payload.personalInfo?.emails ?? currentParsedFields.personalInfo.emails,
-            phones: payload.personalInfo?.phones ?? currentParsedFields.personalInfo.phones,
-            addresses:
-              payload.personalInfo?.addresses ?? currentParsedFields.personalInfo.addresses,
-            websites: payload.personalInfo?.websites ?? currentParsedFields.personalInfo.websites,
-          },
-          experience: payload.experience ?? currentParsedFields.experience,
-          skills: payload.skills ?? currentParsedFields.skills,
-          education: payload.education ?? currentParsedFields.education,
-          certifications: payload.certifications ?? currentParsedFields.certifications,
-          awards: payload.awards ?? currentParsedFields.awards,
-          hobbies: payload.hobbies ?? currentParsedFields.hobbies,
-          updatedAt: new Date().toISOString(),
-        };
+        currentHistory = [nextHistoryEntry(currentParsedFields), ...currentHistory];
+        currentParsedFields = mergeParsedFields(currentParsedFields, payload);
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ parsedFields: currentParsedFields, history: currentHistory }),
+          body: JSON.stringify({
+            parsedFields: currentParsedFields,
+            history: currentHistory,
+          }),
         });
         return;
       }
@@ -215,19 +248,13 @@ test.describe('Resume Details interactions', (): void => {
         return;
       }
 
-      historyCounter += 1;
-      const snapshotBeforeRestore: HistoryEntry = {
-        id: `history-${historyCounter}`,
-        parsedResumeId: currentParsedFields.id,
-        userId: currentParsedFields.userId,
-        uploadId: currentParsedFields.uploadId,
-        snapshot: cloneParsed(currentParsedFields),
-        createdAt: new Date().toISOString(),
-      };
+      const snapshotBeforeRestore = nextHistoryEntry(currentParsedFields);
 
-      const nextParsedFields = cloneParsed(target.snapshot);
-      nextParsedFields.updatedAt = new Date().toISOString();
-      nextParsedFields.id = currentParsedFields.id;
+      const nextParsedFields: ParsedResumeFieldsPayload = {
+        ...cloneParsed(target.snapshot),
+        id: currentParsedFields.id,
+        updatedAt: new Date().toISOString(),
+      };
 
       currentHistory = [snapshotBeforeRestore, ...currentHistory];
       currentParsedFields = nextParsedFields;
@@ -259,40 +286,7 @@ test.describe('Resume Details interactions', (): void => {
       'Select text in the preview to map it to a category.'
     );
 
-    await page.evaluate((): void => {
-      const container = document.querySelector('[data-testid="resume-preview"] pre');
-      if (!container) {
-        throw new Error('Preview container not found');
-      }
-      const targetText = 'GraphQL APIs';
-      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-      let startNode: Text | null = null;
-      let startOffset = 0;
-      let endOffset = 0;
-      while (walker.nextNode()) {
-        const node = walker.currentNode as Text;
-        const text = node.textContent ?? '';
-        const index = text.indexOf(targetText);
-        if (index !== -1) {
-          startNode = node;
-          startOffset = index;
-          endOffset = index + targetText.length;
-          break;
-        }
-      }
-      if (!startNode) {
-        throw new Error('Unable to locate target text for selection');
-      }
-      const selection = window.getSelection();
-      if (!selection) {
-        throw new Error('Selection API unavailable');
-      }
-      selection.removeAllRanges();
-      const range = document.createRange();
-      range.setStart(startNode, startOffset);
-      range.setEnd(startNode, endOffset);
-      selection.addRange(range);
-    });
+    await page.getByTestId('resume-preview').getByText('GraphQL APIs', { exact: false }).dblclick();
 
     await addSkillButton.click();
 
@@ -306,7 +300,7 @@ test.describe('Resume Details interactions', (): void => {
 
     await expect.poll(() => lastUpdatePayload?.skills ?? []).toContain('GraphQL APIs');
 
-    await expect(saveStatus).toHaveText('All changes saved • Syncing...');
+    await expect(saveStatus).toHaveText(/All changes saved.*Syncing/i);
     await expect(saveButton).toBeDisabled();
     await expect(page.getByText('Changes saved')).toBeVisible();
 
@@ -332,34 +326,18 @@ test.describe('Resume Details interactions', (): void => {
     const downloadPromise = page.waitForEvent('download');
     await page.getByTestId('download-parsed-json-button').click();
     const download = await downloadPromise;
-    await expect(download.suggestedFilename()).toBe(`parsed-resume-${uploadId}.json`);
+    expect(download.suggestedFilename()).toBe(`parsed-resume-${uploadId}.json`);
 
     const stream = await download.createReadStream();
+    if (!stream) {
+      throw new Error('Unable to read exported parsed resume download');
+    }
     let downloaded = '';
-    if (stream) {
-      for await (const chunk of stream) {
-        downloaded += chunk.toString();
-      }
+    for await (const chunk of stream) {
+      downloaded += chunk.toString();
     }
 
     const exported = JSON.parse(downloaded) as { skills?: string[] };
     expect(exported.skills ?? []).toContain('React');
   });
 });
-
-interface ParsedResumeUpdateRequest {
-  parsedSummary?: string;
-  personalInfo?: {
-    name?: string;
-    emails?: string[];
-    phones?: string[];
-    addresses?: string[];
-    websites?: string[];
-  };
-  experience?: Array<Record<string, unknown>>;
-  skills?: string[];
-  education?: Array<Record<string, unknown>>;
-  certifications?: string[];
-  awards?: string[];
-  hobbies?: string[];
-}

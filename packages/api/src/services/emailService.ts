@@ -103,18 +103,42 @@ export async function sendVerificationEmail({
         console.log('   Subject:', subject);
       }
 
-      const result = await resendClient.emails.send({
-        from: process.env.RESEND_FROM_EMAIL,
-        to,
-        subject,
-        text,
-        html,
-      });
+      // Retry with exponential backoff for transient failures
+      const maxAttempts = Number.parseInt(process.env.EMAIL_RETRY_ATTEMPTS || '3', 10) || 3;
+      const initialDelayMs = Number.parseInt(process.env.EMAIL_RETRY_DELAY_MS || '500', 10) || 500;
+      let attempt = 0;
+      let lastError: unknown = null;
+      let result: Awaited<ReturnType<typeof resendClient.emails.send>> | null = null;
 
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('✅ Email sent successfully via Resend:', result);
-        console.log('   Email ID:', result.data?.id);
-        console.log('   Check your inbox at:', to);
+      while (attempt < maxAttempts) {
+        try {
+          result = await resendClient.emails.send({
+            from: process.env.RESEND_FROM_EMAIL,
+            to,
+            subject,
+            text,
+            html,
+          });
+          break;
+        } catch (err) {
+          lastError = err;
+          attempt += 1;
+          if (attempt >= maxAttempts) break;
+          const backoff = initialDelayMs * Math.pow(2, attempt - 1);
+          await new Promise(resolve => setTimeout(resolve, backoff));
+        }
+      }
+
+      if (result) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('✅ Email sent successfully via Resend:', result);
+          console.log('   Email ID:', result.data?.id);
+          console.log('   Check your inbox at:', to);
+        }
+      } else {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('❌ Failed to send email via Resend after retries:', lastError);
+        }
       }
     } catch (error) {
       // Log error but don't throw - email outbox still has the message for testing
